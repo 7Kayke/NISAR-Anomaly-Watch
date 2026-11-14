@@ -5,6 +5,7 @@
   "evento": {
     "data": "2026-10-16",
     "descricao": "Incêndio Norte (CAL FIRE): ~570 acres, Portico Del Norte e Eminencia Del Norte, San Clemente",
+    "area_oficial_ha": 230.7,
     "fonte": "https://www.fire.ca.gov/incidents/2026/10/16/norte-fire/updates/620cae70-c20f-4b85-b7e3-553145c2f022"
   },
   "nisar": {

@@ -22,7 +22,17 @@ from deltal.layers import compute_layers, PARAMS
 from deltal.validate import metrics
 from deltal import report
 
-TRUTH_PARAMS = {"dnbr_min": 0.27, "ndvi_pre_min": 0.2, "min_area_m2": 4000.0}
+# Verdade de campo: dNBR > 0,1 (limite inferior de "queima de baixa severidade") sem filtro de NDVI,
+# porque o capim seco de outubro também queima. Na 1ª rodada (dNBR > 0,27 + NDVI > 0,2) a cicatriz
+# saiu com 121 ha contra ~231 ha do CAL FIRE; com dNBR > 0,1 o grupo principal dá ~227 ha.
+TRUTH_PARAMS = {"dnbr_min": 0.1, "ndvi_pre_min": None, "min_area_m2": 10000.0}
+
+# Calibração por banda. "C" (Sentinel-1) foi calibrada no caso de TREINO (Incêndio Norte) e congelada;
+# as métricas desse caso são de treino, não de teste. "L" (NISAR) ainda não calibrada.
+CALIBRATION = {
+    "C": {"veg_drop_db": -6.0, "min_area_m2": 40000.0},
+    "L": {},
+}
 
 
 def step(ficha, name, fn):
@@ -61,22 +71,36 @@ def main():
         pre, post = s2_pair(grid, ev_date)
         r0, c0, w0, m0 = s2_load(pre, grid)
         r1, c1, w1, m1 = s2_load(post, grid)
-        dnbr = nbr(r0["B08"], r0["B12"]) - nbr(r1["B08"], r1["B12"])
-        veg_pre = ndvi(r0["B08"], r0["B04"]) > TRUTH_PARAMS["ndvi_pre_min"]
+        with np.errstate(invalid="ignore"):
+            dnbr = nbr(r0["B08"], r0["B12"]) - nbr(r1["B08"], r1["B12"])
+        if TRUTH_PARAMS["ndvi_pre_min"] is None:
+            veg_pre = np.ones(dnbr.shape, bool)
+        else:
+            veg_pre = ndvi(r0["B08"], r0["B04"]) > TRUTH_PARAMS["ndvi_pre_min"]
         valid = c0 & c1 & ~w0 & ~w1 & np.isfinite(dnbr)
-        burned = valid & veg_pre & (dnbr > TRUTH_PARAMS["dnbr_min"])
+        with np.errstate(invalid="ignore"):
+            burned = valid & veg_pre & (dnbr > TRUTH_PARAMS["dnbr_min"])
         burned, sizes = min_area_filter(burned, int(TRUTH_PARAMS["min_area_m2"] / grid.pixel_area_m2))
         ficha["fontes"]["sentinel2"] = {"antes": m0, "depois": m1, "colecao": "sentinel-2-l2a (Planetary Computer)"}
-        ficha["resultados"]["verdade_sentinel2"] = {"area_queimada_ha": burned.sum() * grid.pixel_area_m2 / 1e4,
-                                                    "grupos": sizes, "pixels_validos": int(valid.sum())}
+        area = burned.sum() * grid.pixel_area_m2 / 1e4
+        entry = {"area_queimada_ha": area, "maior_grupo_ha": (max(sizes) if sizes else 0) * grid.pixel_area_m2 / 1e4,
+                 "grupos": sizes, "pixels_validos": int(valid.sum())}
+        oficial = case["evento"].get("area_oficial_ha")
+        if oficial:
+            entry["area_oficial_ha"] = oficial
+            entry["razao_maior_grupo_oficial"] = entry["maior_grupo_ha"] / oficial
+        ficha["resultados"]["verdade_sentinel2"] = entry
         report.save_png(out / "s2_dnbr.png", dnbr, cmap="RdYlGn_r", vmin=-0.5, vmax=0.8,
                         title=f"Sentinel-2 dNBR {m0['data']} → {m1['data']}")
         report.overlay_png(out / "s2_cicatriz.png", report.false_color(r1), truth=burned,
                            title="Cicatriz (contorno branco) sobre Sentinel-2 depois, falsa cor")
-        arrays.update(dnbr=dnbr, truth=burned, truth_valid=valid)
-        return burned, valid, r1
+        land = c0 & c1 & ~w0 & ~w1
+        arrays.update(dnbr=dnbr, truth=burned, truth_valid=valid, land=land)
+        return burned, valid, land
     s2res = step(ficha, "sentinel2", s2)
-    truth, truth_valid, s2_after = s2res if s2res else (None, None, None)
+    truth, truth_valid, land = s2res if s2res else (None, None, None)
+    ficha["calibracao"] = {"banda_C": CALIBRATION["C"], "banda_L": CALIBRATION["L"] or "padrão (não calibrada)",
+                           "caso_de_treino": "Incêndio Norte (2026-10-16)"}
 
     # 2) Sentinel-1 RTC -------------------------------------------------------------
     def s1():
@@ -84,7 +108,9 @@ def main():
         gap, key, it0, it1 = s1_pair(grid, ev_date)
         b0, m0 = s1_load(it0, grid)
         b1, m1 = s1_load(it1, grid)
-        res = compute_layers(b0["vv"], b1["vv"], b0["vh"], b1["vh"], grid.pixel_area_m2)
+        v = None if land is None else (land & np.isfinite(b0["vv"]) & np.isfinite(b1["vv"]))
+        res = compute_layers(b0["vv"], b1["vv"], b0["vh"], b1["vh"], grid.pixel_area_m2,
+                             valid=v, params=CALIBRATION["C"])
         entry = {"stats": res["stats"], "intervalo_dias": gap, "orbita": list(key)}
         if truth is not None:
             v = truth_valid & np.isfinite(res["lr_cross"])
@@ -115,7 +141,9 @@ def main():
             (g0, m0), (g1, m1) = [sn.read_gcov_subset(g, grid) for g in grans]
             if (m0["pista"], m0["direcao"], m0["quadro"]) != (m1["pista"], m1["direcao"], m1["quadro"]):
                 raise ValueError("Cenas NISAR de geometrias diferentes: não comparar")
-            res = compute_layers(g0["HHHH"], g1["HHHH"], g0["HVHV"], g1["HVHV"], grid.pixel_area_m2)
+            v = None if land is None else (land & np.isfinite(g0["HHHH"]) & np.isfinite(g1["HHHH"]))
+            res = compute_layers(g0["HHHH"], g1["HHHH"], g0["HVHV"], g1["HVHV"], grid.pixel_area_m2,
+                                 valid=v, params=CALIBRATION["L"])
             entry = {"stats": res["stats"]}
             if truth is not None:
                 v = truth_valid & np.isfinite(res["lr_cross"])
