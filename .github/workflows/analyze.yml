@@ -1,0 +1,66 @@
+name: Analisar caso
+
+on:
+  workflow_dispatch:
+    inputs:
+      case:
+        description: "Arquivo do caso (ex.: cases/norte_fire.json)"
+        default: "cases/norte_fire.json"
+        required: true
+      skip_nisar:
+        description: "Pular o NISAR (use enquanto os Secrets do Earthdata não estiverem configurados)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: analyze
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Testes sintéticos
+        run: python -m pytest -q tests
+
+      - name: Rodar o caso
+        env:
+          CASE: ${{ inputs.case }}
+          SKIP_NISAR: ${{ inputs.skip_nisar }}
+          EARTHDATA_USERNAME: ${{ secrets.EARTHDATA_USERNAME }}
+          EARTHDATA_PASSWORD: ${{ secrets.EARTHDATA_PASSWORD }}
+        run: |
+          NAME=$(basename "$CASE" .json)
+          FLAG=""
+          if [ "$SKIP_NISAR" = "true" ]; then FLAG="--skip-nisar"; fi
+          python run_case.py --case "$CASE" --out "docs/results/$NAME" $FLAG
+
+      - name: Guardar tudo como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados
+          path: docs/results
+
+      - name: Publicar resultados no repositório
+        env:
+          CASE: ${{ inputs.case }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/results
+          git commit -m "Resultados: $CASE" || echo "Nada novo para publicar"
+          git push

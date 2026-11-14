@@ -1,0 +1,17 @@
+{
+  "nome": "Incêndio Norte, San Clemente e San Juan Capistrano (Califórnia)",
+  "bbox": [-117.72, 33.42, -117.58, 33.53],
+  "resolucao_m": 20,
+  "evento": {
+    "data": "2026-10-16",
+    "descricao": "Incêndio Norte (CAL FIRE): ~570 acres, Portico Del Norte e Eminencia Del Norte, San Clemente",
+    "fonte": "https://www.fire.ca.gov/incidents/2026/10/16/norte-fire/updates/620cae70-c20f-4b85-b7e3-553145c2f022"
+  },
+  "nisar": {
+    "granulos": [
+      "NISAR_L2_PR_GCOV_033_034_A_018_4005_DHDH_A_20261014T130749_20261014T130824_P05023_N_F_J_001",
+      "NISAR_L2_PR_GCOV_034_034_A_018_4005_DHDH_A_20261026T130749_20261026T130824_P05036_N_F_J_001"
+    ],
+    "short_names": ["NISAR_L2_GCOV_PROVISIONAL_V1", "NISAR_L2_GCOV_V1"]
+  }
+}
