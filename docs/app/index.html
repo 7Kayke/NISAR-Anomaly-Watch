@@ -1,0 +1,535 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NISAR Waltz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Fira+Sans:wght@400;500;700&family=Overpass:wght@600;800&display=swap">
+<style>
+/* Layout: one study area. Change map + timeline + clicked-pixel panel first, then findings, accuracy, the point's story, polarizations, data, context. */
+:root {
+  --bg: #07173F; --panel: #0B2257; --deep: #061235; --line: #1F3C7A; --line-strong: #3A5A94;
+  --fg: #E8EEF7; --muted: #A9BAD4; --soft: #CBD7EA;
+  --accent: #EAFE07; --asc: #2E96F5; --desc: #C77DFF; --sm: #3BD18A; --rain: #6FA8DC; --bad: #FF8A8A;
+  --display: "Overpass", "Fira Sans", system-ui, sans-serif; --body: "Fira Sans", system-ui, sans-serif; --mono: "Fira Code", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--asc); } a:hover { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 72px; display: flex; flex-direction: column; gap: 52px; }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+header.top .bar { max-width: 1280px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: baseline; gap: 10px; } .brand b { font-family: var(--display); font-weight: 800; font-size: 20px; } .brand span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+nav.steps { display: flex; flex-wrap: wrap; gap: 2px; } nav.steps a { text-decoration: none; color: var(--fg); font-size: 14px; padding: 10px 10px; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center; } nav.steps a:hover { background: var(--panel); color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+.seg button { background: transparent; color: var(--fg); border: 0; font: 500 14px var(--body); padding: 0 14px; min-height: 40px; cursor: pointer; } .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.hero { padding-top: 32px; display: flex; flex-direction: column; gap: 10px; max-width: 880px; }
+.eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(32px, 5vw, 52px); line-height: 1.05; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 3vw, 32px); margin: 0; text-wrap: balance; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 18px; margin: 0; }
+.lead { font-size: 18px; color: var(--soft); margin: 0; max-width: 72ch; }
+.muted { color: var(--muted); } .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+section { display: flex; flex-direction: column; gap: 16px; scroll-margin-top: 76px; }
+.row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: transparent; color: var(--fg); border-radius: 999px; padding: 0 14px; min-height: 40px; font: 500 14px var(--body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip.tog[aria-pressed="true"] { background: var(--panel); color: var(--fg); }
+.chip.tog[aria-pressed="false"] { opacity: 0.55; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; flex: none; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: #07173F; font: 700 15px var(--body); cursor: pointer; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.field select, .field input[type="date"] { background: var(--deep); color: var(--fg); border: 1px solid var(--line-strong); border-radius: 8px; min-height: 44px; padding: 0 10px; font: 15px var(--body); }
+/* map */
+.mapcol { flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.mapstage { position: relative; background: var(--deep); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.mapstage canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; cursor: crosshair; }
+.mapstage canvas.top { position: absolute; inset: 0; pointer-events: none; }
+.swipe { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--accent); pointer-events: none; }
+.swipe span { position: absolute; top: 8px; transform: translateX(-50%); background: var(--accent); color: #07173F; font: 700 12px var(--mono); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.marker { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid var(--accent); border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 2px #07173F; }
+.maplabel { position: absolute; left: 10px; bottom: 10px; background: rgba(6,18,53,0.9); border: 1px solid var(--line-strong); border-radius: 8px; padding: 6px 10px; font: 13px var(--mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 13px; color: var(--soft); }
+.ramp { height: 10px; width: 160px; border-radius: 5px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); min-height: 32px; }
+.timeline { display: flex; flex-direction: column; gap: 6px; }
+.tlbar { position: relative; height: 26px; border-radius: 6px; background: var(--deep); border: 1px solid var(--line); overflow: hidden; }
+.tlbar .band { position: absolute; top: 0; bottom: 0; }
+.tlbar .tick { position: absolute; top: 4px; bottom: 4px; width: 2px; background: var(--asc); }
+.tlbar .tick.sel { background: var(--accent); width: 4px; top: 0; bottom: 0; }
+.tlrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.side { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; } .kv dt { color: var(--muted); } .kv dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.card .val { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1.1; }
+.tag { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.t-visivel .tag, .t-visivel .val { color: var(--asc); } .t-invisivel .tag, .t-invisivel .val { color: var(--sm); } .t-chao .tag, .t-chao .val { color: var(--desc); }
+.t-lento .tag, .t-lento .val { color: var(--accent); } .t-qualidade .tag, .t-qualidade .val { color: var(--bad); }
+.barlist { display: flex; flex-direction: column; gap: 6px; }
+.barrow { display: grid; grid-template-columns: minmax(120px, 190px) 1fr 76px; gap: 10px; align-items: center; font-size: 14px; }
+.barrow .b { height: 12px; border-radius: 6px; } .barrow .n { font-family: var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.tablewrap { overflow-x: auto; } table { border-collapse: collapse; font: 13px var(--mono); font-variant-numeric: tabular-nums; } th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px; }
+.chartbox { position: relative; } .chartbox svg { display: block; width: 100%; height: auto; }
+.tip { position: absolute; pointer-events: none; background: #020A22; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; font: 13px/1.45 var(--mono); white-space: nowrap; z-index: 2; }
+details summary { cursor: pointer; color: var(--asc); font-size: 14px; min-height: 32px; }
+ul.plain { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: var(--soft); }
+.gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; } .gloss dt { font-family: var(--display); font-weight: 600; font-size: 17px; } .gloss dd { margin: 4px 0 0; color: var(--soft); font-size: 15px; }
+.empty { border: 1px dashed var(--line-strong); border-radius: 12px; padding: 18px; color: var(--muted); }
+footer { color: var(--muted); font-size: 14px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 18px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+@media (max-width: 700px) { nav.steps { display: none; } .barrow { grid-template-columns: 110px 1fr 64px; } }
+</style>
+
+<header class="top">
+  <div class="bar">
+    <div class="brand"><b>Delta L</b><span data-i18n="brandSub"></span></div>
+    <nav class="steps" aria-label="Sections">
+      <a href="#map" data-i18n="navMap"></a><a href="#what" data-i18n="navWhat"></a><a href="#trust" data-i18n="navTrust"></a>
+      <a href="#point" data-i18n="navPoint"></a><a href="#pol" data-i18n="navPol"></a><a href="#data" data-i18n="navData"></a>
+    </nav>
+    <div class="seg" role="group" aria-label="Language"><button type="button" id="lang-en" aria-pressed="true">EN</button><button type="button" id="lang-pt" aria-pressed="false">PT</button></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow" data-i18n="eyebrow"></div>
+    <h1 id="area-title"></h1>
+    <p class="lead" id="area-lead"></p>
+  </div>
+
+  <section id="map" aria-labelledby="map-h">
+    <h2 id="map-h" data-i18n="mapTitle"></h2>
+    <div class="panel" style="display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end">
+      <div class="field"><label for="geo" data-i18n="geoLabel"></label><select id="geo"></select></div>
+      <div class="field" style="min-width:min(100%,420px);flex:1 1 420px"><span id="layers-label" data-i18n="layerLabel"></span><div class="chips" role="group" aria-labelledby="layers-label" id="layers"></div></div>
+      <div class="field"><span data-i18n="modeLabel"></span><div class="seg" role="group" aria-label="View mode"><button type="button" id="mode-one" aria-pressed="true" data-i18n="modeOne"></button><button type="button" id="mode-swipe" aria-pressed="false" data-i18n="modeSwipe"></button></div></div>
+    </div>
+    <div class="row">
+      <div class="mapcol">
+        <div class="chips" id="classfilter" role="group" aria-label="Change classes"></div>
+        <div class="mapstage" id="stage">
+          <canvas id="cv" role="img" aria-label="Change map of the study area"></canvas>
+          <canvas id="cv2" class="top" aria-hidden="true"></canvas>
+          <div class="swipe" id="swipe" hidden><span id="swipe-l"></span></div>
+          <div class="marker" id="marker" hidden></div>
+          <div class="maplabel" id="maplabel"></div>
+        </div>
+        <div id="swipe-ctl" hidden><label class="field" for="swipe-r"><span data-i18n="swipeHelp"></span></label><input type="range" id="swipe-r" min="0" max="100" value="50"></div>
+        <div class="legend" id="legend"></div>
+        <div class="timeline panel">
+          <div class="tlrow">
+            <div class="chips">
+              <button type="button" class="btn" id="play" aria-pressed="false" data-i18n="play"></button>
+              <div class="field"><label for="anim-n" data-i18n="animDates"></label><select id="anim-n"><option value="all"></option><option value="14" selected></option></select></div>
+            </div>
+            <span id="date-now" class="mono" style="font-size:18px;color:var(--fg)"></span>
+          </div>
+          <label for="tslider" class="muted" style="font-size:13px" data-i18n="dateHelp"></label>
+          <input type="range" id="tslider" min="0" max="0" value="0">
+          <div class="tlbar" id="tlbar" aria-hidden="true"></div>
+          <div class="tlrow" id="tlhint"></div>
+          <div class="chips" id="swipe-dates" hidden>
+            <div class="field"><label for="before" data-i18n="before"></label><select id="before"></select></div>
+            <div class="field"><label for="after" data-i18n="after"></label><select id="after"></select></div>
+          </div>
+        </div>
+      </div>
+      <aside class="side" aria-live="polite">
+        <div class="panel" id="pixel"></div>
+        <div class="panel" id="pixchart"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="what" aria-labelledby="what-h">
+    <div class="eyebrow" data-i18n="whatEye"></div>
+    <h2 id="what-h" data-i18n="whatTitle"></h2>
+    <div class="row">
+      <div class="panel" style="flex:1 1 420px"><h3 data-i18n="areaByClass"></h3><div class="barlist" id="classbars" style="margin-top:10px"></div></div>
+      <div class="panel" style="flex:1 1 420px"><h3 data-i18n="dropsWhen"></h3><p class="muted" style="margin:4px 0 10px;font-size:14px" data-i18n="dropsSub"></p><div class="barlist" id="dropbars"></div></div>
+    </div>
+    <div class="panel"><h3 data-i18n="whyTitle"></h3><p class="muted" style="margin:4px 0 10px;font-size:14px" data-i18n="whySub"></p><ul class="plain" id="why"></ul></div>
+    <div class="cards" id="invisible"></div>
+  </section>
+
+  <section id="trust" aria-labelledby="trust-h">
+    <div class="eyebrow" data-i18n="trustEye"></div>
+    <h2 id="trust-h" data-i18n="trustTitle"></h2>
+    <p class="lead" style="font-size:16px" data-i18n="trustLead"></p>
+    <div class="panel tablewrap" id="agree"></div>
+    <div class="panel"><h3 data-i18n="limTitle"></h3><ul class="plain" id="lims"></ul></div>
+  </section>
+
+  <section id="point" aria-labelledby="point-h">
+    <div class="eyebrow" data-i18n="pointEye"></div>
+    <h2 id="point-h"><span data-i18n="pointTitle"></span> <span id="pt-name" class="muted"></span></h2>
+    <div class="cards" id="ptcards"></div>
+    <div class="charts" id="ptcharts"></div>
+  </section>
+
+  <section id="pol" aria-labelledby="pol-h">
+    <div class="eyebrow" data-i18n="polEye"></div>
+    <h2 id="pol-h" data-i18n="polTitle"></h2>
+    <dl class="gloss" id="gloss"></dl>
+    <div class="panel"><h3 data-i18n="futureTitle"></h3><ul class="plain" id="future"></ul></div>
+  </section>
+
+  <section id="data" aria-labelledby="data-h">
+    <div class="eyebrow" data-i18n="dataEye"></div>
+    <h2 id="data-h" data-i18n="dataTitle"></h2>
+    <p class="lead" style="font-size:16px" data-i18n="dataLead"></p>
+    <div class="chips">
+      <button type="button" class="btn" id="copy-pix" data-i18n="copyPix"></button>
+      <a class="btn ghost" id="dl-point" href="#" target="_blank" rel="noopener" data-i18n="dlPoint"></a>
+      <a class="btn ghost" id="dl-mesh" href="#" target="_blank" rel="noopener" data-i18n="dlMesh"></a>
+      <span id="copy-msg" class="muted" role="status"></span>
+    </div>
+    <div class="panel tablewrap"><table id="files"></table></div>
+  </section>
+
+  <footer>
+    <div data-i18n="foot1"></div>
+    <div data-i18n="foot2"></div>
+  </footer>
+</main>
+
+<script>
+(() => {
+const T = {
+en: {
+ brandSub: "NISAR surface-change waltz", navMap: "Change map", navWhat: "What changed", navTrust: "How sure", navPoint: "The point", navPol: "Polarizations", navData: "Data",
+ eyebrow: "NASA–ISRO SAR · L-band radar · one study area",
+ mapTitle: "The change map", geoLabel: "Satellite pass (direction and angle)", layerLabel: "What the map shows", modeLabel: "View", modeOne: "One date", modeSwipe: "Before / after",
+ swipeHelp: "Drag to compare before (left) and after (right)", play: "Play the waltz", pause: "Pause", animDates: "Dates in the animation", animAll: "all passes", anim14: "first, last + 12 between",
+ dateHelp: "Date of the radar image", before: "Before", after: "After",
+ lyHV: "Radar HV (vegetation)", lyHH: "Radar HH (water and soil)", lyClass: "Changes", lyWhen: "When it changed", lyTrend: "Slow change", lyMoist: "Response to rain", lyCoh: "Ground coherence",
+ lgHV: "HV dB: dark = little vegetation structure, bright = dense branches", lgHH: "HH dB: very dark = open water, bright = wet soil or water under vegetation",
+ lgWhen: "first date after the abrupt change", lgTrend: "dB per month relative to the area: purple = losing, orange = gaining", lgMoist: "correlation with the previous 7 days of rain: green = follows the rain",
+ lgCoh: "0 = surface changed between passes, 1 = stayed the same (average of all pairs)", noCoh: "Coherence map not available for this area yet.",
+ tlBeta: "beta data", tlGap: "no data", tlPause: "production pause",
+ pixTitle: "Clicked place", pixHint: "Click anywhere on the map to see that place's story.", lat: "Latitude", lon: "Longitude", clsLbl: "Change", changed: "Changed between", trend: "Slow change", moist: "Rain response", dbmo: "dB/month",
+ pixChart: "This place over time", hv: "HV", hh: "HH",
+ whatEye: "What the radar saw", whatTitle: "What changed in the area", areaByClass: "Area by type of change", dropsWhen: "When the abrupt drops happened", dropsSub: "Hectares that lost radar brightness (HV) between each pair of passes.",
+ whyTitle: "Why (hypotheses)", whySub: "Physical drivers suggested by the timing and the rain. These are hypotheses to be checked in the field.",
+ whyDry: "Drops between {a} and {b} ({ha} ha) with only {mm} mm of rain: consistent with fire or with vegetation drying in the dry season.",
+ whyWet: "Drops between {a} and {b} ({ha} ha) after {mm} mm of rain: consistent with flooding or flattened vegetation, not fire.",
+ whyRise: "{ha} ha brightened abruptly: regrowth after rain, water under vegetation, or new structures.",
+ whyWater: "{ha} ha flooded only on some dates: the seasonal pulse of water on the floodplain.",
+ whyRhythm: "{ha} ha keep a strong rhythm without a single step: seasonal fields and wetlands breathing with the rain.",
+ trustEye: "Accuracy without another satellite", trustTitle: "How sure are we?", trustLead: "Each pass direction looks from another side and at another hour. When one sees an abrupt change, we check whether the others see it in the same place within 13 days.",
+ seenBy: "Seen by", confirmedBy: "Confirmed by", pixels: "pixels", confirmed: "confirmed", noAgree: "Agreement appears when at least two pass directions cover the area.",
+ limTitle: "Limits we declare", pointEye: "One fixed point", pointTitle: "The point's full story:",
+ polEye: "Reading radar", polTitle: "Which polarizations show what",
+ futureTitle: "What NISAR can do next here",
+ future: ["S-band (ISRO) on the same passes: compare canopy (9 cm) with trunk and soil (24 cm).", "Water-level link: compare flooded area with the Paraguay River gauge, date by date.", "Fire alerts at night and through smoke, from the 12-day cycle and the six pass directions.", "Other sensors (optical, thermal) as a second check, added later as a carousel."],
+ dataEye: "Data", dataTitle: "Only NISAR, four filters", dataLead: "GCOV (radar brightness), GUNW (interferometry) and SME2 (soil moisture) from NASA's catalog, with four filters: period since launch, the file covers the area, one version per pass (validated over provisional) and the product's own masks. Daily rain from NASA POWER as context.",
+ copyPix: "Copy this place's series (CSV)", dlPoint: "Open point data (JSON)", dlMesh: "Open NISAR grid (GeoJSON)", copied: "Copied. Paste it into a spreadsheet.", copyFail: "Could not copy here. Use the JSON link.",
+ filesH: ["File", "What it has", "Format"],
+ files: [["hh_db_serie.tif / hv_db_serie.tif", "HH and HV in dB, one band per date", "GeoTIFF (QGIS, ArcGIS)"], ["mapas.tif", "change class, date, slow change, rain response", "GeoTIFF"], ["cubo.nc", "everything as a time × y × x cube", "NetCDF (Python, R)"], ["mudancas.geojson", "change polygons with area and dates", "GeoJSON (web maps)"], ["serie_area.csv", "the area's curve date by date", "CSV (spreadsheets)"], ["ficha_tecnica.json", "all parameters, files and numbers of the run", "JSON"]],
+ foot1: "Data: NISAR L2 GCOV, L2 GUNW and L3 SME2 (NASA/JPL, ASF DAAC); daily rain and soil wetness context from NASA POWER.",
+ foot2: "Built by team Delta L for NASA Space Apps 2026. Parts of the code were written with help from an AI assistant (Claude) and reviewed by the team. Provisional NISAR data may change.",
+ noArea: "The change map for this area is still being collected on the team computer.",
+ gloss: [["HH", "Sent and received horizontally. Very sensitive to water: wet soil is brighter, open water very dark, and water under trees very bright (double bounce between water and trunks)."],
+  ["HV", "Sent horizontally, received vertically. It only comes back after bouncing inside branches and leaves, so it measures vegetation structure. Fire and clearing make it drop."],
+  ["Coherence (GUNW)", "How similar the fine pattern of the ground is between two passes. Burning, ploughing, flooding or trampling make it drop even when the image looks the same."],
+  ["Soil moisture (SME2)", "Water in the top soil, in m³ of water per m³ of soil, from NISAR itself."],
+  ["dB", "Radar brightness on a log scale: +3 dB is twice the energy, −3 dB half."],
+  ["L-band (24 cm)", "Goes through clouds, smoke and part of the canopy, day and night."]],
+ cls: { "1": "stable", "2": "strong seasonal rhythm", "3": "abrupt drop (fire, clearing)", "4": "abrupt rise", "5": "flooded on some dates", "6": "permanent water", "7": "slow loss", "8": "slow gain" }
+},
+pt: {
+ brandSub: "a valsa das mudanças no NISAR", navMap: "Mapa de mudanças", navWhat: "O que mudou", navTrust: "Quão certo", navPoint: "O ponto", navPol: "Polarizações", navData: "Dados",
+ eyebrow: "NASA–ISRO SAR · radar banda L · uma área de estudo",
+ mapTitle: "O mapa de mudanças", geoLabel: "Passagem do satélite (direção e ângulo)", layerLabel: "O que o mapa mostra", modeLabel: "Visão", modeOne: "Uma data", modeSwipe: "Antes / depois",
+ swipeHelp: "Arraste para comparar o antes (esquerda) e o depois (direita)", play: "Tocar a valsa", pause: "Pausar", animDates: "Datas na animação", animAll: "todas as passagens", anim14: "primeira, última + 12 no meio",
+ dateHelp: "Data da imagem de radar", before: "Antes", after: "Depois",
+ lyHV: "Radar HV (vegetação)", lyHH: "Radar HH (água e solo)", lyClass: "Mudanças", lyWhen: "Quando mudou", lyTrend: "Mudança lenta", lyMoist: "Resposta à chuva", lyCoh: "Coerência do chão",
+ lgHV: "HV em dB: escuro = pouca estrutura de vegetação, claro = galhos densos", lgHH: "HH em dB: muito escuro = água aberta, claro = solo molhado ou água sob a vegetação",
+ lgWhen: "primeira data depois da mudança abrupta", lgTrend: "dB por mês em relação à área: roxo = perdendo, laranja = ganhando", lgMoist: "correlação com a chuva dos 7 dias anteriores: verde = acompanha a chuva",
+ lgCoh: "0 = a superfície mudou entre passagens, 1 = ficou igual (média de todos os pares)", noCoh: "O mapa de coerência desta área ainda não está disponível.",
+ tlBeta: "dados beta", tlGap: "sem dados", tlPause: "pausa na produção",
+ pixTitle: "Lugar clicado", pixHint: "Clique em qualquer lugar do mapa para ver a história dele.", lat: "Latitude", lon: "Longitude", clsLbl: "Mudança", changed: "Mudou entre", trend: "Mudança lenta", moist: "Resposta à chuva", dbmo: "dB/mês",
+ pixChart: "Este lugar ao longo do tempo", hv: "HV", hh: "HH",
+ whatEye: "O que o radar viu", whatTitle: "O que mudou na área", areaByClass: "Área por tipo de mudança", dropsWhen: "Quando as quedas abruptas aconteceram", dropsSub: "Hectares que perderam brilho no radar (HV) entre cada par de passagens.",
+ whyTitle: "Por quê (hipóteses)", whySub: "Causas físicas sugeridas pela época e pela chuva. São hipóteses para conferir em campo.",
+ whyDry: "Quedas entre {a} e {b} ({ha} ha) com só {mm} mm de chuva: compatível com fogo ou com a vegetação secando na estiagem.",
+ whyWet: "Quedas entre {a} e {b} ({ha} ha) depois de {mm} mm de chuva: compatível com alagamento ou vegetação acamada, não com fogo.",
+ whyRise: "{ha} ha clarearam de repente: rebrota depois da chuva, água sob a vegetação ou novas estruturas.",
+ whyWater: "{ha} ha alagaram só em algumas datas: o pulso sazonal da água na planície.",
+ whyRhythm: "{ha} ha mantêm um ritmo forte sem um degrau único: campos e áreas úmidas respirando com a chuva.",
+ trustEye: "Assertividade sem outro satélite", trustTitle: "Quão certos estamos?", trustLead: "Cada direção de passagem olha de outro lado e em outra hora. Quando uma vê uma mudança abrupta, conferimos se as outras veem o mesmo, no mesmo lugar, em até 13 dias.",
+ seenBy: "Vista por", confirmedBy: "Confirmada por", pixels: "pixels", confirmed: "confirmados", noAgree: "A concordância aparece quando pelo menos duas direções de passagem cobrem a área.",
+ limTitle: "Limitações que declaramos", pointEye: "Um ponto fixo", pointTitle: "A história completa do ponto:",
+ polEye: "Lendo o radar", polTitle: "Que polarização mostra o quê",
+ futureTitle: "O que o NISAR pode fazer a seguir aqui",
+ future: ["Banda S (ISRO) nas mesmas passagens: comparar a copa (9 cm) com tronco e solo (24 cm).", "Ligação com o nível do rio: comparar a área alagada com a régua do rio Paraguai, data a data.", "Alerta de fogo à noite e através da fumaça, com o ciclo de 12 dias e as seis direções de passagem.", "Outros sensores (óptico, térmico) como segunda checagem, no carrossel depois."],
+ dataEye: "Dados", dataTitle: "Só NISAR, quatro filtros", dataLead: "GCOV (brilho do radar), GUNW (interferometria) e SME2 (umidade do solo) do catálogo da NASA, com quatro filtros: período desde o lançamento, o arquivo cobre a área, uma versão por passagem (validada antes da provisória) e as máscaras do próprio produto. Chuva diária do NASA POWER como contexto.",
+ copyPix: "Copiar a série deste lugar (CSV)", dlPoint: "Abrir dados do ponto (JSON)", dlMesh: "Abrir malha do NISAR (GeoJSON)", copied: "Copiado. Cole numa planilha.", copyFail: "Não deu para copiar aqui. Use o link do JSON.",
+ filesH: ["Arquivo", "O que tem", "Formato"],
+ files: [["hh_db_serie.tif / hv_db_serie.tif", "HH e HV em dB, uma banda por data", "GeoTIFF (QGIS, ArcGIS)"], ["mapas.tif", "classe, data, mudança lenta, resposta à chuva", "GeoTIFF"], ["cubo.nc", "tudo num cubo tempo × y × x", "NetCDF (Python, R)"], ["mudancas.geojson", "polígonos das mudanças com área e datas", "GeoJSON (mapas web)"], ["serie_area.csv", "a curva da área, data a data", "CSV (planilhas)"], ["ficha_tecnica.json", "todos os parâmetros, arquivos e números da rodada", "JSON"]],
+ foot1: "Dados: NISAR L2 GCOV, L2 GUNW e L3 SME2 (NASA/JPL, ASF DAAC); chuva diária e umidade do solo do NASA POWER como contexto.",
+ foot2: "Feito pela equipe Delta L para o NASA Space Apps 2026. Parte do código teve ajuda de um assistente de IA (Claude) e foi revisada pela equipe. Dados provisórios do NISAR podem mudar.",
+ noArea: "O mapa de mudanças desta área ainda está sendo coletado no computador da equipe.",
+ gloss: [["HH", "Enviado e recebido na horizontal. Muito sensível à água: solo molhado fica mais claro, água aberta muito escura, e água sob as árvores muito clara (o duplo quique entre água e troncos)."],
+  ["HV", "Enviado na horizontal, recebido na vertical. Só volta depois de quicar dentro de galhos e folhas, então mede a estrutura da vegetação. Fogo e desmate fazem cair."],
+  ["Coerência (GUNW)", "O quanto o padrão fino do chão se parece entre duas passagens. Queimada, arado, alagamento ou pisoteio fazem cair mesmo quando a imagem parece igual."],
+  ["Umidade do solo (SME2)", "Água na camada de cima do solo, em m³ de água por m³ de solo, medida pelo próprio NISAR."],
+  ["dB", "Brilho do radar em escala logarítmica: +3 dB é o dobro de energia, −3 dB a metade."],
+  ["Banda L (24 cm)", "Atravessa nuvem, fumaça e parte da copa, de dia e de noite."]],
+ cls: { "1": "estável", "2": "ritmo sazonal forte", "3": "queda abrupta (fogo, desmate)", "4": "subida abrupta", "5": "alagou em algumas datas", "6": "água permanente", "7": "perda lenta", "8": "ganho lento" }
+}};
+let lang = "en";
+try { lang = localStorage.getItem("dl-lang") || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"); } catch (e) {}
+const t = (k) => T[lang][k] ?? T.en[k] ?? k;
+const fill = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, n = 1) => v == null || Number.isNaN(v) ? "–" : (lang === "pt" ? Number(v).toFixed(n).replace(".", ",") : Number(v).toFixed(n));
+const fdate = (iso) => { if (!iso) return "–"; const [y, m, d] = String(iso).slice(0, 10).split("-"); return lang === "pt" ? `${d}/${m}/${y}` : `${y}-${m}-${d}`; };
+const geoName = (g) => { const [tr, dir, fr] = g.split("_"); return `${dir === "A" ? (lang === "pt" ? "Madrugada" : "Dawn") : (lang === "pt" ? "Noite" : "Evening")} · ${dir}${tr}-${fr}`; };
+const BETA_END = "2026-01-20", GAPS = [["2026-07-27", "2026-08-10", "tlGap"], ["2026-10-23", "2026-11-09", "tlPause"]];
+
+const S = { region: null, area: null, geo: null, meta: null, hv: null, hh: null, maps: null, coh: null, layer: "class", t: 0, before: 0, after: 0,
+            mode: "one", classOn: { 1: false, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 8: true }, pix: null, playing: null, point: null, mesh: null };
+
+// ---------- colour ramps ----------
+const lerp = (stops, x) => { x = Math.max(0, Math.min(1, x)); for (let i = 1; i < stops.length; i++) if (x <= stops[i][0]) { const [a, ca] = stops[i - 1], [b, cb] = stops[i]; const u = (x - a) / (b - a || 1); return ca.map((c, j) => Math.round(c + (cb[j] - c) * u)); } return stops.at(-1)[1]; };
+const R_WHEN = [[0, [13, 8, 135]], [0.5, [204, 71, 120]], [1, [240, 249, 33]]];
+const R_DIV_PO = [[0, [118, 42, 131]], [0.5, [26, 40, 80]], [1, [230, 145, 56]]];
+const R_DIV_BG = [[0, [140, 81, 10]], [0.5, [26, 40, 80]], [1, [53, 151, 143]]];
+const R_COH = [[0, [68, 1, 84]], [0.5, [33, 145, 140]], [1, [253, 231, 37]]];
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+
+// ---------- data ----------
+async function getJSON(u) { const r = await fetch(u); if (!r.ok) throw new Error(u); return r.json(); }
+async function getBin(u) { const r = await fetch(u); if (!r.ok) throw new Error(u); return new Uint8Array(await r.arrayBuffer()); }
+async function loadGeo(id) {
+  S.geo = S.area.geometrias.find((g) => g.id === id) || S.area.geometrias[0];
+  const base = "data/" + S.geo.pasta + "/";
+  S.meta = await getJSON(base + "app.json");
+  [S.hv, S.hh, S.maps] = await Promise.all([getBin(base + "hv_u8.bin"), getBin(base + "hh_u8.bin"), getBin(base + "mapas_u8.bin")]);
+  const [T_] = S.meta.forma; S.t = T_ - 1; S.before = 0; S.after = T_ - 1;
+  $("tslider").max = T_ - 1; $("tslider").value = S.t;
+  const opts = S.meta.datas.map((d, i) => `<option value="${i}">${fdate(d)}</option>`).join("");
+  $("before").innerHTML = opts; $("after").innerHTML = opts; $("before").value = 0; $("after").value = T_ - 1;
+  if (!S.pix) { const p = S.region.area_ponto || (S.region.pontos?.[0]); if (p) S.pix = lonlatToPix(p.lon, p.lat); }
+  renderAll();
+}
+// ---------- geometry helpers ----------
+function pixToLonLat(x, y) { const c = S.meta.cantos_lonlat, [, H, W] = S.meta.forma; const u = (x + 0.5) / W, v = (y + 0.5) / H;
+  const top = [c.no[0] + (c.ne[0] - c.no[0]) * u, c.no[1] + (c.ne[1] - c.no[1]) * u], bot = [c.so[0] + (c.se[0] - c.so[0]) * u, c.so[1] + (c.se[1] - c.so[1]) * u];
+  return [top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v]; }
+function lonlatToPix(lon, lat) { const c = S.meta.cantos_lonlat, [, H, W] = S.meta.forma;
+  const u = (lon - c.no[0]) / (c.ne[0] - c.no[0]), v = (lat - c.no[1]) / (c.so[1] - c.no[1]);
+  const x = Math.round(u * W - 0.5), y = Math.round(v * H - 0.5); return x >= 0 && y >= 0 && x < W && y < H ? [x, y] : null; }
+const dbOf = (u) => u === 0 ? null : -30 + (u - 1) / 254 * 30;
+const mapVal = (k, i) => { const [, H, W] = S.meta.forma; return S.maps[k * H * W + i]; };
+const layerVal = (k, i) => { const u = mapVal(k, i); if (!u) return null; const L = S.meta.camadas[k]; if (L.unidade === "codigo" || L.unidade === "indice_data") return u - 1; return L.lo + (u - 1) / 254 * (L.hi - L.lo); };
+
+// ---------- render map ----------
+function paint(cv, tIndex) {
+  const [, H, W] = S.meta.forma; cv.width = W; cv.height = H; const ctx = cv.getContext("2d"); const img = ctx.createImageData(W, H); const d = img.data; const N = H * W;
+  const base = (arr, ti, lo, hi) => { for (let i = 0; i < N; i++) { const u = arr[ti * N + i]; const o = i * 4; if (!u) { d[o + 3] = 0; continue; }
+      const db = -30 + (u - 1) / 254 * 30; const g = Math.max(0, Math.min(255, Math.round((db - lo) / (hi - lo) * 255))); d[o] = g; d[o + 1] = g; d[o + 2] = g; d[o + 3] = 255; } };
+  const L = S.layer;
+  if (L === "hv") base(S.hv, tIndex, -26, -8);
+  else if (L === "hh") base(S.hh, tIndex, -22, 0);
+  else {
+    base(S.hv, tIndex, -26, -8); // radar backdrop, dimmed
+    for (let i = 0; i < N; i++) { d[i * 4] *= 0.45; d[i * 4 + 1] *= 0.45; d[i * 4 + 2] *= 0.5; }
+    const cls = S.meta.classes;
+    for (let i = 0; i < N; i++) { const o = i * 4; let rgb = null;
+      if (L === "class") { const c = mapVal(0, i) - 1; if (c > 0 && S.classOn[c] && cls[c]) rgb = hex(cls[c].cor); }
+      else if (L === "when") { const k = layerVal(1, i); if (k != null && k > 0) rgb = lerp(R_WHEN, (k - 1) / Math.max(1, S.meta.datas.length - 2)); }
+      else if (L === "trend") { const v = layerVal(2, i); if (v != null && Math.abs(v) > 0.08) rgb = lerp(R_DIV_PO, (v + 1) / 2); }
+      else if (L === "moist") { const v = layerVal(3, i); if (v != null && Math.abs(v) > 0.3) rgb = lerp(R_DIV_BG, (v + 1) / 2); }
+      else if (L === "coh" && S.coh) { const u = S.coh[i]; if (u) rgb = lerp(R_COH, (u - 1) / 254); }
+      if (rgb) { d[o] = rgb[0]; d[o + 1] = rgb[1]; d[o + 2] = rgb[2]; d[o + 3] = 255; } }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function renderMap() {
+  if (!S.meta) { $("stage").innerHTML = `<div class="empty" style="margin:16px">${esc(t("noArea"))}</div>`; return; }
+  const swipe = S.mode === "swipe" && (S.layer === "hv" || S.layer === "hh");
+  paint($("cv"), swipe ? S.before : S.t);
+  $("cv2").hidden = !swipe; $("swipe").hidden = !swipe; $("swipe-ctl").hidden = !swipe; $("swipe-dates").hidden = !swipe;
+  if (swipe) { paint($("cv2"), S.after); const r = +$("swipe-r").value; $("cv2").style.clipPath = `inset(0 0 0 ${r}%)`; $("swipe").style.left = r + "%";
+    $("swipe-l").textContent = `${fdate(S.meta.datas[S.before])} | ${fdate(S.meta.datas[S.after])}`; }
+  const showDate = S.layer === "hv" || S.layer === "hh" || S.layer === "class" || S.layer === "when" || S.layer === "trend" || S.layer === "moist";
+  $("maplabel").textContent = (S.layer === "hv" || S.layer === "hh") ? (swipe ? "" : fdate(S.meta.datas[S.t])) : `${fdate(S.meta.datas[0])} → ${fdate(S.meta.datas.at(-1))}`;
+  $("maplabel").hidden = !showDate || swipe;
+  $("date-now").textContent = fdate(S.meta.datas[S.t]);
+  placeMarker(); renderLegend(); renderTimeline();
+}
+function placeMarker() { const m = $("marker"); if (!S.pix || !S.meta) { m.hidden = true; return; } const [, H, W] = S.meta.forma; m.hidden = false; m.style.left = ((S.pix[0] + 0.5) / W * 100) + "%"; m.style.top = ((S.pix[1] + 0.5) / H * 100) + "%"; }
+function renderLegend() {
+  const L = S.layer, el = $("legend");
+  const ramp = (stops) => `linear-gradient(90deg, ${stops.map(([p, c]) => `rgb(${c.join(",")}) ${p * 100}%`).join(",")})`;
+  if (L === "class") { el.innerHTML = ""; return; }
+  if (L === "hv") el.innerHTML = `<span class="ramp" style="background:linear-gradient(90deg,#000,#fff)"></span><span>−26 … −8 dB</span><span>${esc(t("lgHV"))}</span>`;
+  if (L === "hh") el.innerHTML = `<span class="ramp" style="background:linear-gradient(90deg,#000,#fff)"></span><span>−22 … 0 dB</span><span>${esc(t("lgHH"))}</span>`;
+  if (L === "when") el.innerHTML = `<span>${fdate(S.meta.datas[1])}</span><span class="ramp" style="background:${ramp(R_WHEN)}"></span><span>${fdate(S.meta.datas.at(-1))}</span><span>${esc(t("lgWhen"))}</span>`;
+  if (L === "trend") el.innerHTML = `<span>−1</span><span class="ramp" style="background:${ramp(R_DIV_PO)}"></span><span>+1 ${esc(t("dbmo"))}</span><span>${esc(t("lgTrend"))}</span>`;
+  if (L === "moist") el.innerHTML = `<span>r −1</span><span class="ramp" style="background:${ramp(R_DIV_BG)}"></span><span>+1</span><span>${esc(t("lgMoist"))}</span>`;
+  if (L === "coh") el.innerHTML = S.coh ? `<span>0</span><span class="ramp" style="background:${ramp(R_COH)}"></span><span>1</span><span>${esc(t("lgCoh"))}</span>` : `<span>${esc(t("noCoh"))}</span>`;
+}
+function renderClassFilter() {
+  const el = $("classfilter"); if (S.layer !== "class" || !S.meta) { el.innerHTML = ""; el.hidden = true; return; } el.hidden = false;
+  const ha = S.geo.classes_ha || {}; const byName = {}; Object.entries(S.meta.classes).forEach(([c, v]) => { byName[c] = ha[v.nome]; });
+  el.innerHTML = [3, 5, 6, 4, 2, 7, 8, 1].map((c) => `<button type="button" class="chip tog" data-c="${c}" aria-pressed="${S.classOn[c]}"><span class="swatch" style="background:${S.meta.classes[c].cor}"></span>${esc(T[lang].cls[c])}${byName[c] != null ? ` <span class="mono muted">${fmt(byName[c], 0)} ha</span>` : ""}</button>`).join("");
+  el.querySelectorAll("[data-c]").forEach((b) => b.addEventListener("click", () => { const c = +b.dataset.c; S.classOn[c] = !S.classOn[c]; renderClassFilter(); renderMap(); }));
+}
+function renderLayers() {
+  const L = [["class", "lyClass"], ["hv", "lyHV"], ["hh", "lyHH"], ["when", "lyWhen"], ["trend", "lyTrend"], ["moist", "lyMoist"], ["coh", "lyCoh"]];
+  $("layers").innerHTML = L.map(([k, n]) => `<button type="button" class="chip" data-l="${k}" aria-pressed="${S.layer === k}">${esc(t(n))}</button>`).join("");
+  $("layers").querySelectorAll("[data-l]").forEach((b) => b.addEventListener("click", () => { S.layer = b.dataset.l; renderLayers(); renderClassFilter(); renderMap(); }));
+}
+function renderTimeline() {
+  const ds = S.meta.datas; const t0 = Date.parse(ds[0]) - 6 * 864e5, t1 = Date.parse(ds.at(-1)) + 6 * 864e5; const X = (d) => ((Date.parse(d) - t0) / (t1 - t0) * 100);
+  let h = "";
+  if (ds[0] < BETA_END) h += `<div class="band" style="left:0;width:${Math.max(0, X(BETA_END))}%;background:rgba(255,255,255,0.08)" title="${esc(t("tlBeta"))}"></div>`;
+  GAPS.forEach(([a, b, k]) => { const l = Math.max(0, X(a)), r = Math.min(100, X(b)); if (r > l) h += `<div class="band" style="left:${l}%;width:${r - l}%;background:${k === "tlGap" ? "rgba(255,138,138,0.25)" : "rgba(234,254,7,0.15)"}"></div>`; });
+  ds.forEach((d, i) => { h += `<div class="tick${i === S.t ? " sel" : ""}" style="left:${X(d)}%"></div>`; });
+  $("tlbar").innerHTML = h;
+  $("tlhint").innerHTML = `<span>${fdate(ds[0])}</span><span><span class="swatch" style="background:rgba(255,255,255,0.25)"></span> ${esc(t("tlBeta"))} · <span class="swatch" style="background:rgba(255,138,138,0.5)"></span> ${esc(t("tlGap"))} · <span class="swatch" style="background:rgba(234,254,7,0.4)"></span> ${esc(t("tlPause"))}</span><span>${fdate(ds.at(-1))}</span>`;
+}
+// ---------- clicked pixel ----------
+function pixSeries(p) { const [T_, H, W] = S.meta.forma; const i = p[1] * W + p[0]; const out = [];
+  for (let k = 0; k < T_; k++) { const a = S.hv[k * H * W + i], b = S.hh[k * H * W + i]; out.push({ d: S.meta.datas[k], hv: dbOf(a), hh: dbOf(b) }); } return out; }
+function renderPixel() {
+  const el = $("pixel"), ch = $("pixchart");
+  if (!S.pix || !S.meta) { el.innerHTML = `<h3>${esc(t("pixTitle"))}</h3><p class="muted">${esc(t("pixHint"))}</p>`; ch.innerHTML = ""; return; }
+  const [, H, W] = S.meta.forma; const i = S.pix[1] * W + S.pix[0]; const [lon, lat] = pixToLonLat(...S.pix);
+  const c = layerVal(0, i), k = layerVal(1, i), tr = layerVal(2, i), r = layerVal(3, i);
+  el.innerHTML = `<h3>${esc(t("pixTitle"))}</h3><dl class="kv" style="margin-top:8px">
+    <dt>${esc(t("lat"))}, ${esc(t("lon"))}</dt><dd>${fmt(lat, 4)}, ${fmt(lon, 4)}</dd>
+    <dt>${esc(t("clsLbl"))}</dt><dd style="font-family:var(--body)"><span class="swatch" style="background:${c != null && S.meta.classes[c] ? S.meta.classes[c].cor : "transparent"}"></span> ${esc(c != null ? T[lang].cls[c] || "–" : "–")}</dd>
+    <dt>${esc(t("changed"))}</dt><dd>${k != null && k > 0 ? `${fdate(S.meta.datas[k - 1])} → ${fdate(S.meta.datas[k])}` : "–"}</dd>
+    <dt>${esc(t("trend"))}</dt><dd>${tr != null ? `${fmt(tr, 2)} ${esc(t("dbmo"))}` : "–"}</dd>
+    <dt>${esc(t("moist"))}</dt><dd>${r != null ? `r ${fmt(r, 2)}` : "–"}</dd></dl>
+    <p class="muted" style="margin:8px 0 0;font-size:13px">${esc(t("pixHint"))}</p>`;
+  const s = pixSeries(S.pix); const g = lineChart(s.map((x) => ({ t: Date.parse(x.d), a: x.hv, b: x.hh })), S.t);
+  ch.innerHTML = `<h3>${esc(t("pixChart"))}</h3><div class="chartbox">${g}</div><div class="legend"><span><span class="swatch" style="background:var(--asc)"></span> HV</span><span><span class="swatch" style="background:var(--sm)"></span> HH</span><span class="muted">dB</span></div>`;
+}
+function lineChart(rows, sel) {
+  const Wc = 520, Hc = 220, L = 40, Rr = 10, Tp = 10, B = 28; const ts = rows.map((r) => r.t); const x0 = Math.min(...ts) - 3 * 864e5, x1 = Math.max(...ts) + 3 * 864e5;
+  const vals = rows.flatMap((r) => [r.a, r.b]).filter((v) => v != null); if (!vals.length) return `<p class="muted">–</p>`;
+  let y0 = Math.floor(Math.min(...vals)) - 1, y1 = Math.ceil(Math.max(...vals)) + 1;
+  const X = (v) => L + (v - x0) / (x1 - x0) * (Wc - L - Rr), Y = (v) => Tp + (1 - (v - y0) / (y1 - y0)) * (Hc - Tp - B);
+  let s = `<svg viewBox="0 0 ${Wc} ${Hc}" role="img" aria-label="HV and HH at the clicked place over time"><rect width="${Wc}" height="${Hc}" fill="#0B2257"></rect>`;
+  const step = (y1 - y0) > 10 ? 4 : 2; for (let v = Math.ceil(y0 / step) * step; v <= y1; v += step) s += `<line x1="${L}" x2="${Wc - Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#1F3C7A"></line><text x="${L - 5}" y="${Y(v) + 4}" fill="#A9BAD4" font-size="11" text-anchor="end" font-family="Fira Code, monospace">${v}</text>`;
+  const MN = lang === "pt" ? ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  let m = new Date(x0); m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1)); while (m.getTime() < x1) { s += `<text x="${X(m.getTime())}" y="${Hc - 8}" fill="#A9BAD4" font-size="11" text-anchor="middle" font-family="Fira Code, monospace">${MN[m.getUTCMonth()]}</text>`; m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1)); }
+  const line = (key, col) => { let d = ""; let prev = null; rows.forEach((r) => { if (r[key] == null) { prev = null; return; } d += `${prev ? "L" : "M"}${X(r.t).toFixed(1)} ${Y(r[key]).toFixed(1)} `; prev = r; });
+    return `<path d="${d}" fill="none" stroke="${col}" stroke-width="2"></path>` + rows.filter((r) => r[key] != null).map((r) => `<circle cx="${X(r.t).toFixed(1)}" cy="${Y(r[key]).toFixed(1)}" r="3" fill="${col}"></circle>`).join(""); };
+  s += line("b", "#3BD18A") + line("a", "#2E96F5");
+  if (rows[sel]) s += `<line x1="${X(rows[sel].t)}" x2="${X(rows[sel].t)}" y1="${Tp}" y2="${Hc - B}" stroke="#EAFE07" stroke-dasharray="3 3"></line>`;
+  return s + "</svg>";
+}
+$("cv").addEventListener("click", (e) => { if (!S.meta) return; const r = e.currentTarget.getBoundingClientRect(); const [, H, W] = S.meta.forma;
+  S.pix = [Math.min(W - 1, Math.floor((e.clientX - r.left) / r.width * W)), Math.min(H - 1, Math.floor((e.clientY - r.top) / r.height * H))]; placeMarker(); renderPixel(); });
+// ---------- timeline / play / swipe ----------
+$("tslider").addEventListener("input", (e) => { S.t = +e.target.value; renderMap(); renderPixel(); });
+$("swipe-r").addEventListener("input", () => renderMap());
+$("before").addEventListener("change", (e) => { S.before = +e.target.value; renderMap(); });
+$("after").addEventListener("change", (e) => { S.after = +e.target.value; renderMap(); });
+$("mode-one").addEventListener("click", () => { S.mode = "one"; $("mode-one").setAttribute("aria-pressed", "true"); $("mode-swipe").setAttribute("aria-pressed", "false"); renderMap(); });
+$("mode-swipe").addEventListener("click", () => { S.mode = "swipe"; if (S.layer !== "hv" && S.layer !== "hh") { S.layer = "hv"; renderLayers(); renderClassFilter(); } $("mode-swipe").setAttribute("aria-pressed", "true"); $("mode-one").setAttribute("aria-pressed", "false"); renderMap(); });
+function animFrames() { const n = S.meta.datas.length; if ($("anim-n").value === "all" || n <= 14) return [...Array(n).keys()]; const out = new Set([0, n - 1]); for (let i = 1; i <= 12; i++) out.add(Math.round(i * (n - 1) / 13)); return [...out].sort((a, b) => a - b); }
+$("play").addEventListener("click", () => {
+  if (S.playing) { clearInterval(S.playing); S.playing = null; $("play").textContent = t("play"); $("play").setAttribute("aria-pressed", "false"); return; }
+  if (S.layer !== "hv" && S.layer !== "hh") { S.layer = "hv"; renderLayers(); renderClassFilter(); }
+  const fr = animFrames(); let j = 0; $("play").textContent = t("pause"); $("play").setAttribute("aria-pressed", "true");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  S.playing = setInterval(() => { S.t = fr[j]; $("tslider").value = S.t; renderMap(); renderPixel(); j = (j + 1) % fr.length; }, reduce ? 1600 : 800);
+});
+$("geo").addEventListener("change", (e) => { S.pix = S.pix; loadGeo(e.target.value); });
+
+// ---------- what changed / why / trust ----------
+function sumRain(a, b) { const c = S.area.clima?.chuva_mm; if (!c) return null; let s = 0; Object.entries(c).forEach(([d, v]) => { if (d > a && d <= b) s += v; }); return s; }
+function renderWhat() {
+  if (!S.geo) { ["classbars", "dropbars", "why", "invisible"].forEach((id) => { $(id).innerHTML = ""; }); return; }
+  const ha = S.geo.classes_ha || {}; const total = Object.values(ha).reduce((a, b) => a + b, 0) || 1; const names = Object.fromEntries(Object.entries(S.meta.classes).map(([c, v]) => [v.nome, c]));
+  $("classbars").innerHTML = Object.entries(ha).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([n, v]) => { const c = names[n];
+    return `<div class="barrow"><span><span class="swatch" style="background:${S.meta.classes[c]?.cor}"></span> ${esc(T[lang].cls[c] || n)}</span><span class="b" style="width:${Math.max(2, 100 * v / total)}%;background:${S.meta.classes[c]?.cor}"></span><span class="n">${fmt(v, 0)} ha</span></div>`; }).join("");
+  const drops = Object.entries(S.geo.quedas_por_intervalo_ha || {}); const mx = Math.max(1, ...drops.map((d) => d[1]));
+  $("dropbars").innerHTML = drops.length ? drops.map(([k, v]) => { const [a, b] = k.split("→"); return `<div class="barrow"><span class="mono">${fdate(a)} → ${fdate(b)}</span><span class="b" style="width:${Math.max(2, 100 * v / mx)}%;background:#FF6B00"></span><span class="n">${fmt(v, 0)} ha</span></div>`; }).join("") : `<p class="muted">–</p>`;
+  const why = [];
+  drops.sort((a, b) => b[1] - a[1]).slice(0, 3).forEach(([k, v]) => { const [a, b] = k.split("→"); const mm = sumRain(a, b);
+    if (mm == null) return; why.push(fill(t(mm < 15 ? "whyDry" : "whyWet"), { a: fdate(a), b: fdate(b), ha: fmt(v, 0), mm: fmt(mm, 0) })); });
+  if (ha[S.meta.classes[4]?.nome] > 0) why.push(fill(t("whyRise"), { ha: fmt(ha[S.meta.classes[4].nome], 0) }));
+  if (ha[S.meta.classes[5]?.nome] > 0) why.push(fill(t("whyWater"), { ha: fmt(ha[S.meta.classes[5].nome], 0) }));
+  if (ha[S.meta.classes[2]?.nome] > 0) why.push(fill(t("whyRhythm"), { ha: fmt(ha[S.meta.classes[2].nome], 0) }));
+  $("why").innerHTML = why.map((w) => `<li>${esc(w)}</li>`).join("") || `<li>–</li>`;
+  const vi = S.geo.valsa_invisivel || {};
+  const cards = [];
+  if (vi.correlacao_area_HH_vs_chuva_antecedente != null) cards.push(["invisivel", `r ${fmt(vi.correlacao_area_HH_vs_chuva_antecedente, 2)}`, lang === "pt" ? "O brilho HH da área inteira acompanha a chuva dos 7 dias anteriores: a água no solo, invisível ao olho." : "The whole area's HH brightness follows the previous 7 days of rain: water in the soil, invisible to the eye."]);
+  if (vi.pixels_que_respondem_a_chuva_pct != null) cards.push(["invisivel", `${fmt(vi.pixels_que_respondem_a_chuva_pct, 0)}%`, lang === "pt" ? "dos pixels respondem forte à chuva (r > 0,6): onde a água entra e sai do solo." : "of the pixels respond strongly to rain (r > 0.6): where water goes in and out of the soil."]);
+  if (vi.tendencia_mediana_db_mes != null) cards.push(["lento", `${fmt(vi.tendencia_mediana_db_mes, 2)} ${t("dbmo")}`, lang === "pt" ? "Tendência mediana do HV na área: a valsa lenta, que nenhuma imagem isolada mostra." : "Median HV trend in the area: the slow waltz no single image shows."]);
+  $("invisible").innerHTML = cards.map(([k, v, txt]) => `<article class="card t-${k}"><span class="tag">${esc(k === "invisivel" ? (lang === "pt" ? "valsa invisível" : "invisible waltz") : (lang === "pt" ? "mudança lenta" : "slow change"))}</span><span class="val">${esc(v)}</span><p style="margin:0;color:var(--soft)">${esc(txt)}</p></article>`).join("");
+}
+function renderTrust() {
+  const ag = S.area?.assertividade;
+  if (!ag) { $("agree").innerHTML = `<p class="muted">${esc(t("noAgree"))}</p>`; }
+  else { let h = `<table><thead><tr><th>${esc(t("clsLbl"))}</th><th>${esc(t("seenBy"))}</th><th>${esc(t("pixels"))}</th><th>${esc(t("confirmedBy"))}</th><th>% ${esc(t("confirmed"))}</th></tr></thead><tbody>`;
+    Object.entries(ag).forEach(([nm, rows]) => rows.forEach((r) => { h += `<tr><td style="font-family:var(--body)">${esc(T[lang].cls[nm === "queda_abrupta" ? 3 : 4])}</td><td>${esc(geoName(r.vista_por))}</td><td>${r.pixels}</td><td>${esc(geoName(r.confirmada_por))}</td><td><strong style="color:var(--accent)">${fmt(r.confirmados_pct, 1)}%</strong></td></tr>`; }));
+    $("agree").innerHTML = h + "</tbody></table>"; }
+  const lims = [];
+  if (S.area?.geometrias?.length) { const g = S.area.geometrias; lims.push(lang === "pt" ? `${g.length} direções de passagem; a principal tem ${g[0].passagens} datas (${fdate(g[0].primeira)} a ${fdate(g[0].ultima)}).` : `${g.length} pass directions; the main one has ${g[0].passagens} dates (${fdate(g[0].primeira)} to ${fdate(g[0].ultima)}).`); }
+  (S.point?.limitacoes || []).forEach((l) => lims.push(l[lang] || l.en));
+  lims.push(lang === "pt" ? "As causas são hipóteses: o radar mostra o que mudou e quando; o porquê precisa de confirmação em campo." : "Causes are hypotheses: radar shows what changed and when; the why needs field confirmation.");
+  $("lims").innerHTML = lims.map((l) => `<li>${esc(l)}</li>`).join("");
+}
+// ---------- point story ----------
+function renderPoint() {
+  const P = S.point; if (!P) { $("pt-name").textContent = ""; $("ptcards").innerHTML = `<div class="empty">${esc(t("noArea"))}</div>`; $("ptcharts").innerHTML = ""; return; }
+  $("pt-name").textContent = `${P.nome} (${fmt(P.lat, 3)}, ${fmt(P.lon, 3)})`;
+  const tagN = { visivel: ["visible waltz", "valsa visível"], invisivel: ["invisible waltz", "valsa invisível"], chao: ["ground", "chão"], lento: ["slow change", "mudança lenta"], qualidade: ["quality check", "qualidade"] };
+  $("ptcards").innerHTML = P.achados.map((a) => `<article class="card t-${esc(a.tipo)}"><span class="tag">${esc((tagN[a.tipo] || [a.tipo, a.tipo])[lang === "pt" ? 1 : 0])}</span><span class="val">${esc(typeof a.valor === "object" ? a.valor[lang] || a.valor.en : a.valor)}</span><p style="margin:0;color:var(--soft)">${esc(a[lang] || a.en)}</p></article>`).join("");
+  const byG = {}; P.serie.filter((s) => !s.anom).forEach((s) => { (byG[s.g] = byG[s.g] || []).push(s); });
+  const main = Object.keys(byG).sort((a, b) => byG[b].length - byG[a].length)[0];
+  $("ptcharts").innerHTML = main ? `<figure class="panel" style="margin:0;max-width:820px"><figcaption><h3>${esc(geoName(main))}</h3><span class="muted">HV · HH (dB)</span></figcaption><div class="chartbox">${lineChart(byG[main].map((s) => ({ t: Date.parse(s.d), a: s.hv, b: s.hh })), -1)}</div></figure>` : "";
+  $("dl-point").href = "data/" + (S.region.pontos?.[0]?.arquivo || "");
+}
+// ---------- copy ----------
+$("copy-pix").addEventListener("click", async () => { if (!S.pix || !S.meta) return; const [lon, lat] = pixToLonLat(...S.pix);
+  const rows = [["date", "pass", "lat", "lon", "hv_db", "hh_db"]].concat(pixSeries(S.pix).map((r) => [r.d, S.geo.id, lat.toFixed(5), lon.toFixed(5), r.hv?.toFixed(2) ?? "", r.hh?.toFixed(2) ?? ""]));
+  try { await navigator.clipboard.writeText(rows.map((r) => r.join(",")).join("\n")); $("copy-msg").textContent = t("copied"); } catch (e) { $("copy-msg").textContent = t("copyFail"); } });
+
+// ---------- i18n + boot ----------
+function renderStatic() {
+  document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  $("lang-en").setAttribute("aria-pressed", String(lang === "en")); $("lang-pt").setAttribute("aria-pressed", String(lang === "pt"));
+  $("anim-n").options[0].textContent = t("animAll"); $("anim-n").options[1].textContent = t("anim14");
+  if (S.playing) $("play").textContent = t("pause");
+  $("gloss").innerHTML = T[lang].gloss.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join("");
+  $("future").innerHTML = T[lang].future.map((x) => `<li>${esc(x)}</li>`).join("");
+  $("files").innerHTML = `<thead><tr>${T[lang].filesH.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${T[lang].files.map((r) => `<tr>${r.map((c, i) => `<td${i ? ' style="font-family:var(--body)"' : ""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  if (S.region) { $("area-title").textContent = S.region.nome; $("area-lead").textContent = (lang === "pt" ? S.region.contexto_pt : S.region.contexto_en) || ""; }
+  if (S.area) $("geo").innerHTML = S.area.geometrias.map((g) => `<option value="${esc(g.id)}"${g.id === S.geo?.id ? " selected" : ""}>${esc(geoName(g.id))} · ${g.passagens} ${lang === "pt" ? "datas" : "dates"}</option>`).join("");
+}
+function renderAll() { renderStatic(); renderLayers(); renderClassFilter(); renderMap(); renderPixel(); renderWhat(); renderTrust(); renderPoint(); }
+["en", "pt"].forEach((l) => $("lang-" + l).addEventListener("click", () => { lang = l; try { localStorage.setItem("dl-lang", l); } catch (e) {} renderAll(); }));
+(async () => {
+  renderStatic();
+  let regs = []; try { regs = await getJSON("data/regioes.json"); } catch (e) {}
+  S.region = regs.find((r) => r.area) || regs[0] || null;
+  if (!S.region) { renderAll(); return; }
+  S.area = S.region.area;
+  if (S.region.malha) $("dl-mesh").href = "data/" + S.region.malha; else $("dl-mesh").hidden = true;
+  if (S.region.pontos?.length) { try { S.point = await getJSON("data/" + S.region.pontos[0].arquivo); } catch (e) {} } else $("dl-point").hidden = true;
+  if (S.area?.coerencia) { try { S.coh = await getBin("data/" + S.area.coerencia); } catch (e) {} }
+  if (S.area?.geometrias?.length) await loadGeo(S.area.geometrias[0].id); else renderAll();
+})();
+})();
+</script>

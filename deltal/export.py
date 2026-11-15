@@ -111,3 +111,60 @@ mudancas.geojson  polígonos das mudanças (EPSG:4326) com classe, área em ha, 
 serie_area.csv    mediana do HH e do HV da área em cada data
 """, encoding="utf-8")
     return d
+
+
+def app_layers(out, grid, dates, hh, hv, res, inv, S, geometry, max_px=600):
+    """Camadas leves para o aplicativo (canvas no navegador):
+       hv_u8.bin / hh_u8.bin  (T, H, W) uint8: 0 = sem dado; 1..255 = -30..0 dB
+       mapas_u8.bin           (6, H, W) uint8: classe, quebra (índice da data), tendência, r umidade HH, ritmo, delta
+       app.json               datas, forma, escalas, cantos em lon/lat, classes e cores
+    Reduz para no máximo max_px por lado (média em dB), para caber no GitHub Pages."""
+    from pyproj import Transformer
+    d = Path(out) / "app"
+    d.mkdir(parents=True, exist_ok=True)
+    st = max(1, int(np.ceil(max(grid.width, grid.height) / max_px)))
+    def red(a, how="mean"):
+        a = np.asarray(a, "float64")
+        H, W = a.shape[-2] // st * st, a.shape[-1] // st * st
+        a = a[..., :H, :W]
+        if st == 1:
+            return a
+        sh = a.shape[:-2] + (H // st, st, W // st, st)
+        if how == "mode":
+            return a[..., ::st, ::st]
+        with np.errstate(invalid="ignore"):
+            return np.nanmean(a.reshape(sh), axis=(-3, -1))
+    def u8(x, lo, hi):
+        return np.where(np.isfinite(x), np.clip((x - lo) / (hi - lo) * 254 + 1, 1, 255), 0).astype("uint8")
+    hvr, hhr = red(hv), red(hh)
+    u8(hvr, -30, 0).tofile(d / "hv_u8.bin")
+    u8(hhr, -30, 0).tofile(d / "hh_u8.bin")
+    k = res["quebra_indice"].astype("float64"); k[k < 1] = np.nan
+    layers = [("classe", red(res["classe"], "mode"), 0, 254, "codigo"),
+              ("quebra", red(k, "mode"), 0, 254, "indice_data"),
+              ("tendencia", red(res["tendencia_db_mes"]), -1.0, 1.0, "dB_mes"),
+              ("r_umidade_hh", red(inv["HH"][0]) if inv else np.full(hvr.shape[1:], np.nan), -1.0, 1.0, "r"),
+              ("ritmo", red(res["residuo_db"]), 0.0, 4.0, "dB"),
+              ("delta", red(res["delta_db"]), -8.0, 8.0, "dB")]
+    stack = []
+    for name, a, lo, hi, unit in layers:
+        if unit in ("codigo", "indice_data"):
+            stack.append(np.where(np.isfinite(a), np.clip(a, 0, 254) + 1, 0).astype("uint8"))
+        else:
+            stack.append(u8(a, lo, hi))
+    np.array(stack).tofile(d / "mapas_u8.bin")
+    H, W = hvr.shape[1:]
+    tr = Transformer.from_crs(grid.crs, 4326, always_xy=True)
+    t = grid.transform
+    x0, y0 = t.c, t.f
+    x1, y1 = t.c + t.a * W * st, t.f + t.e * H * st
+    corners = {k_: list(tr.transform(x, y)) for k_, (x, y) in
+               {"no": (x0, y0), "ne": (x1, y0), "so": (x0, y1), "se": (x1, y1)}.items()}
+    meta = {"geometria": geometry, "datas": dates, "forma": [len(dates), int(H), int(W)], "resolucao_m": grid.resolution * st,
+            "escala_db": [-30, 0], "cantos_lonlat": corners, "crs_grade": str(grid.crs),
+            "camadas": [{"nome": n, "lo": lo, "hi": hi, "unidade": u} for n, _, lo, hi, u in layers],
+            "classes": {str(c): {"nome": S.CLASSES[c], "cor": S.CLASS_COLORS[c]} for c in S.CLASSES},
+            "curva_area_hh": [None if not np.isfinite(v) else round(float(v), 3) for v in res["curva_cena_hh"]],
+            "curva_area_hv": [None if not np.isfinite(v) else round(float(v), 3) for v in res["curva_cena_hv"]]}
+    (d / "app.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+    return d

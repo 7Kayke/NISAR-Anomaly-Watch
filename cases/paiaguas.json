@@ -1,0 +1,22 @@
+{
+  "nome": "Paiaguás, Pantanal (célula NISAR A031-169 x D111-098)",
+  "bbox": [
+    -56.933,
+    -18.338,
+    -56.813,
+    -18.218
+  ],
+  "resolucao_m": 20,
+  "serie": {
+    "inicio": "2025-07-30"
+  },
+  "somente_nisar": true,
+  "clima_nasa_power": true,
+  "todas_geometrias": true,
+  "ponto": {
+    "lat": -18.278,
+    "lon": -56.873
+  },
+  "contexto": "Planície do Pantanal entre o Taquari e o Paraguai: campos alagáveis, baías, cordilheiras de mata. Em 2026: cheia abaixo da média, seca com emergência ambiental, área queimada em MS +345% até agosto. NISAR cobre a partir de junho/2026, com 6 geometrias.",
+  "contexto_en": "Pantanal floodplain between the Taquari and Paraguay rivers: seasonally flooded grasslands, bays and forest ridges. In 2026: below-average flood, drought with environmental emergency, burned area in Mato Grosso do Sul up 345% by August. NISAR covers it from June 2026 with six pass directions."
+}
