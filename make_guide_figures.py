@@ -54,65 +54,60 @@ def d(s):
 
 
 # ---------------------------------------------------------------- maps from mapas.tif (Paiaguás)
-HA_NOTE = {"en": "ha = hectare (100 × 100 m)", "pt": "ha = hectare (100 × 100 m)"}
-PAL = {1: "#C9CED6", 2: "#A06CD5", 3: "#FF3B30", 4: "#FFD60A", 5: "#00C8FF", 6: "#1F3FBF", 7: "#FF8FAB", 8: "#34C759"}
+HA_NOTE = {"en": "1 ha (hectare) = 100 m × 100 m, a little larger than a football pitch",
+           "pt": "1 ha (hectare) = 100 m × 100 m, um pouco maior que um campo de futebol"}
+# white = no change, so every coloured pixel stands out; one hue per class, never two reds
+PAL = {1: "#FFFFFF", 2: "#9C36B5", 3: "#E03131", 4: "#2B8A3E", 5: "#22B8CF", 6: "#1C3FAA", 7: "#F76707", 8: "#82C91E"}
+# one colour per 12-day interval, cool before the September rains, warm after
+WHEN = ["#1971C2", "#22B8CF", "#2F9E44", "#F76707", "#E03131", "#AE3EC9", "#F59F00", "#0B7285", "#862E9C", "#5C940D"]
 
 
 def fmt_ha(v, lang):
     return f"{int(round(v)):,}".replace(",", "." if lang == "pt" else ",")
 
 
+def _map_legend(fig, title, img, rows, lang):
+    """Map on the left on white; legend on the right: colour, label · hectares; hectare note at the bottom."""
+    ax = fig.add_axes([0.0, 0.03, 0.56, 0.86]); ax.imshow(img, interpolation="nearest"); ax.set_axis_off()
+    fig.text(0.005, 0.95, title, fontsize=16, fontweight="bold", color=INK)
+    y = 0.84 - max(0, 8 - len(rows)) * 0.03
+    for col, lab, ha in rows:
+        fig.patches.append(matplotlib.patches.FancyBboxPatch((0.6, y - 0.008), 0.03, 0.045, boxstyle="round,pad=0.003", transform=fig.transFigure,
+                                                             facecolor=col, edgecolor="#8A93A6", linewidth=0.8))
+        fig.text(0.645, y + 0.014, lab, fontsize=14, color=INK, va="center")
+        fig.text(0.99, y + 0.014, f"{fmt_ha(ha, lang)} ha", fontsize=14, color=INK, va="center", ha="right", family="DejaVu Sans Mono")
+        y -= 0.088
+    fig.text(0.6, 0.07, HA_NOTE[lang].replace(", ", ",\n", 1), fontsize=13, color="#FFFFFF", linespacing=1.4,
+             bbox=dict(boxstyle="round,pad=0.55", facecolor="#13275A", edgecolor="#2E4A8A"))
+
+
 def class_maps(folder, name, lang, dates):
-    """Classes: map + a readable legend table (colour, class, hectares, % of the area). When: abrupt changes in two
-    contrasting colours over a light map, plus a bar chart of hectares per 12-day interval."""
     import rasterio
     from scipy import ndimage
     with rasterio.open(folder / "dados" / "mapas.tif") as r:
         cls = r.read(1); brk = r.read(2); px_ha = abs(r.transform.a * r.transform.e) / 1e4
-    valid = cls > 0; tot = valid.sum() * px_ha
-    rgb = np.zeros(cls.shape + (3,)) + matplotlib.colors.to_rgb("#0B1530")
+    nod = matplotlib.colors.to_rgb(BG)
+    rgb = np.zeros(cls.shape + (3,)) + nod
     for c, col in PAL.items():
         rgb[cls == c] = matplotlib.colors.to_rgb(col)
-    fig = plt.figure(figsize=(11, 6.4))
-    ax = fig.add_axes([0.0, 0.08, 0.5, 0.84]); ax.imshow(rgb, interpolation="nearest"); ax.set_axis_off()
-    fig.text(0.0, 0.96, "What changed, pixel by pixel · 13 × 13 km" if lang == "en" else "O que mudou, pixel a pixel · 13 × 13 km", fontsize=15, fontweight="bold", color=INK)
-    rows = sorted([(c, (cls == c).sum() * px_ha) for c in PAL if (cls == c).sum()], key=lambda x: -x[1])
-    y = 0.86
-    fig.text(0.54, y, "Class" if lang == "en" else "Classe", fontsize=12, color=INK2); fig.text(0.86, y, "ha", fontsize=12, color=INK2, ha="right"); fig.text(0.98, y, "%", fontsize=12, color=INK2, ha="right")
-    for c, ha in rows:
-        y -= 0.085
-        fig.patches.append(matplotlib.patches.FancyBboxPatch((0.54, y - 0.012), 0.022, 0.04, boxstyle="round,pad=0.002", transform=fig.transFigure, color=PAL[c]))
-        fig.text(0.575, y, CLS[c][1] if lang == "en" else CLS[c][2], fontsize=13, color=INK, va="bottom")
-        fig.text(0.86, y, fmt_ha(ha, lang), fontsize=13, color=INK, ha="right", va="bottom", family="DejaVu Sans Mono")
-        fig.text(0.98, y, (f"{ha / tot * 100:.1f}" if lang == "en" else f"{ha / tot * 100:.1f}".replace(".", ",")), fontsize=13, color=INK, ha="right", va="bottom", family="DejaVu Sans Mono")
-    fig.text(0.54, 0.06, HA_NOTE[lang], fontsize=11.5, color=INK2)
+    rows = [(PAL[c], CLS[c][1] if lang == "en" else CLS[c][2], (cls == c).sum() * px_ha) for c in PAL if (cls == c).sum()]
+    fig = plt.figure(figsize=(11, 6.6))
+    _map_legend(fig, "What changed, pixel by pixel" if lang == "en" else "O que mudou, pixel a pixel", rgb, rows, lang)
     save(fig, f"{name}_classes", lang)
-    # ---- when
-    k = np.where(np.isfinite(brk) & (brk >= 1) & np.isin(cls, [3, 4, 5]), brk, np.nan).astype(float)
+    # when: interval of the abrupt step, one colour per interval
+    k = np.where(np.isfinite(brk) & (brk >= 1) & np.isin(cls, [3, 4, 5]), brk, 0).astype(int)
+    k = ndimage.grey_dilation(k, size=(3, 3))                       # one pixel wider, so 20 m changes stay visible on screen
     n = len(dates) - 1
-    split = next((i for i in range(1, len(dates)) if dates[i] >= "2026-09-08"), n)        # first interval that starts on/after Sep 8
-    early = np.isfinite(k) & (k < split + 1); late = np.isfinite(k) & (k >= split + 1)
-    grow = lambda m: ndimage.binary_dilation(m, iterations=2)
-    base = np.zeros(cls.shape + (3,)) + matplotlib.colors.to_rgb("#0B1530"); base[valid] = matplotlib.colors.to_rgb("#D5DAE2")
-    base[grow(early)] = matplotlib.colors.to_rgb("#2F6BFF"); base[grow(late)] = matplotlib.colors.to_rgb("#FF3B30")
-    fig = plt.figure(figsize=(11, 6.4))
-    ax = fig.add_axes([0.0, 0.08, 0.5, 0.84]); ax.imshow(base, interpolation="nearest"); ax.set_axis_off()
-    fig.text(0.0, 0.96, "When the abrupt changes happened" if lang == "en" else "Quando aconteceram as mudanças abruptas", fontsize=15, fontweight="bold", color=INK)
+    img = np.zeros(cls.shape + (3,)) + nod; img[cls > 0] = (1, 1, 1)
     lab = [f"{d(dates[i]).day} {MON[lang][d(dates[i]).month - 1]} → {d(dates[i + 1]).day} {MON[lang][d(dates[i + 1]).month - 1]}" for i in range(n)]
-    vals = [np.nansum(k == i + 1) * px_ha for i in range(n)]
-    keep = [i for i in range(n) if vals[i] > 0]
-    bx = fig.add_axes([0.66, 0.2, 0.32, 0.66])
-    bx.barh(range(len(keep)), [vals[i] for i in keep], color=["#2F6BFF" if i < split else "#FF3B30" for i in keep], height=0.65)
-    bx.set_yticks(range(len(keep))); bx.set_yticklabels([lab[i] for i in keep], fontsize=12); bx.invert_yaxis()
-    for j, i in enumerate(keep):
-        bx.text(vals[i] + max(vals) * 0.02, j, f"{fmt_ha(vals[i], lang)} ha", va="center", fontsize=12, color=INK)
-    bx.set_xlim(0, max(vals) * 1.35); bx.set_xticks([]); [sp.set_visible(False) for sp in bx.spines.values()]
-    bx.set_title("Hectares per 12-day interval" if lang == "en" else "Hectares por intervalo de 12 dias", fontsize=13)
-    e, l = sum(vals[:split]), sum(vals[split:])
-    fig.text(0.54, 0.86, "", fontsize=1)
-    fig.text(0.56, 0.12, ("■ before Sep 8" if lang == "en" else "■ antes de 8/set") + f" · {fmt_ha(e, lang)} ha", color="#6F9BFF", fontsize=12.5)
-    fig.text(0.56, 0.075, ("■ Sep 8 onward" if lang == "en" else "■ a partir de 8/set") + f" · {fmt_ha(l, lang)} ha", color="#FF6B60", fontsize=12.5)
-    fig.text(0.56, 0.025, HA_NOTE[lang], fontsize=10.5, color=INK2)
+    kk = np.where(np.isfinite(brk) & (brk >= 1) & np.isin(cls, [3, 4, 5]), brk, np.nan)
+    rows = []
+    for i in [i for i in range(n) if np.nansum(kk == i + 1) > 0]:       # colours go to intervals that have changes, in order
+        col = WHEN[len(rows) % len(WHEN)]
+        img[(k == i + 1) & (cls > 0)] = matplotlib.colors.to_rgb(col)
+        rows.append((col, lab[i], np.nansum(kk == i + 1) * px_ha))
+    fig = plt.figure(figsize=(11, 6.6))
+    _map_legend(fig, "When the abrupt changes happened" if lang == "en" else "Quando aconteceram as mudanças abruptas", img, rows, lang)
     save(fig, f"{name}_when", lang)
 
 
@@ -172,17 +167,20 @@ def point_history(folder, name, lang, rain=None, soil=None, mode="hv"):
         fig, a1 = plt.subplots(figsize=(10, 5.2))
     else:
         fig, (a1, a2) = plt.subplots(2, 1, figsize=(10, 7.4), sharex=True, gridspec_kw={"height_ratios": [1.2, 1]})
+    if mode == "hv":                                            # one line: the pass that covers the whole square
+        keep = [g for g in keep if g.startswith("031")][:1] or keep[:1]
     for g in keep:
         rr = sorted([r for r in rows if r["geometria"] == g and r[col]], key=lambda r: r["data"])
-        a1.plot([d(r["data"]) for r in rr], [float(r[col]) for r in rr], "-o", color=TRACK.get(g[:3], "#FFFFFF"), lw=2.4, ms=6, label=tr(g))
+        a1.plot([d(r["data"]) for r in rr], [float(r[col]) for r in rr], "-o", color=("#7FE8FF" if mode == "hv" else TRACK.get(g[:3], "#FFFFFF")), lw=2.6, ms=7, label=tr(g))
     a1.set_ylabel(("HV (dB) · vegetation" if lang == "en" else "HV (dB) · vegetação") if mode == "hv" else ("HH (dB) · soil and water" if lang == "en" else "HH (dB) · solo e água"), fontsize=12)
     a1.grid(alpha=.35); a1.tick_params(labelsize=11)
-    a1.legend(fontsize=12, ncol=4, loc="lower left", bbox_to_anchor=(0, 1.0), handlelength=1.8, columnspacing=1.4)
+    if mode != "hv":
+        a1.legend(fontsize=12, ncol=4, loc="lower left", bbox_to_anchor=(0, 1.0), handlelength=1.8, columnspacing=1.4)
     if mode == "hv":
-        a1.axvspan(d("2026-09-08"), d("2026-09-27"), color="#EAFE07", alpha=.12)
+        a1.axvspan(d("2026-09-08"), d("2026-09-20"), color="#FFD43B", alpha=.16)
         y = a1.get_ylim()[1]
-        a1.text(d("2026-09-17"), y, ("Sep 8–27: HV falls ~0.7 dB" if lang == "en" else "8 a 27/set: o HV cai ~0,7 dB"), ha="center", va="top", fontsize=12, color="#EAFE07", fontweight="bold")
-        a1.set_title("Vegetation at the tracked point, by pass direction" if lang == "en" else "Vegetação no ponto acompanhado, por direção de passagem", pad=34, fontsize=15)
+        a1.text(d("2026-09-14"), y, ("Sep 8–20: HV falls 0.8 dB" if lang == "en" else "8 a 20/set: o HV cai 0,8 dB"), ha="center", va="top", fontsize=12.5, color="#FFD43B", fontweight="bold")
+        a1.set_title("Vegetation (HV) at the tracked point" if lang == "en" else "Vegetação (HV) no ponto acompanhado", pad=14, fontsize=15)
         dfmt(a1, lang)
     else:
         beta = [d(r["data"]) for r in rows if r.get("maturidade") == "beta"]
@@ -289,8 +287,8 @@ def main():
         rain = {k: v for k, v in rain.items() if sd[0] <= k <= sd[-1] and v >= 0}; soil = {k: v for k, v in soil.items() if sd[0] <= k <= sd[-1] and v >= 0}
         rhythm("matopiba", lang, sd, sj["curva_cena_hh"], sj["curva_cena_hv"], rain, soil)
     # GUNW pairs: two panels, Portuguese titles in the top ~32 px
-    for f, nm, ti in [("par_20260908_20260920_031A.png", "pair_sep", {"en": "Sep 8 → Sep 20, 2026 · track 31 ascending", "pt": "08/09 → 20/09/2026 · pista 31 ascendente"}),
-                      ("par_20260628_20260710_031A.png", "pair_jul", {"en": "Jun 28 → Jul 10, 2026 · track 31 ascending", "pt": "28/06 → 10/07/2026 · pista 31 ascendente"})]:
+    for f, nm, ti in [("par_20260908_20260920_031A.png", "pair_sep", {"en": "Passes of Sep 8 and Sep 20, 2026, compared", "pt": "Passagens de 08/09 e 20/09/2026, comparadas"}),
+                      ("par_20260628_20260710_031A.png", "pair_jul", {"en": "Passes of Jun 28 and Jul 10, 2026, compared", "pt": "Passagens de 28/06 e 10/07/2026, comparadas"})]:
         src = R / "paiaguas" / "gunw" / f; W = Image.open(src).width
         retitle(src, f"paiaguas_{nm}", {l: [ti[l], ((10, "Displacement (cm, relative)" if l == "en" else "Deslocamento (cm, relativo)"), (W // 2 + 30, "Coherence (0 = changed, 1 = same)" if l == "en" else "Coerência (0 = mudou, 1 = igual)"))] for l in ("en", "pt")}, 30)
     retitle(R / "norte_fire_funil" / "nisar_mudanca_hv.png", "norte_hv", {"en": "HV change (dB) · red = darkened", "pt": "Mudança no HV (dB) · vermelho = escureceu"}, 34)
