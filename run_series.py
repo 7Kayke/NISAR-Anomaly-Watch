@@ -196,11 +196,13 @@ def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
     hh, hv, dates, used, masks, idents = [], [], [], [], [], []
     for n, (snm, g) in enumerate(chosen, 1):
         name = g["umm"]["GranuleUR"]
+        t_read = time.time()
         log(f"  lendo {n}/{len(chosen)} {name[:60]}...")
         try:
             arrs, m = read_cached(g, grid, cache)
         except Exception as e:
             ficha["erros"][name] = f"{type(e).__name__}: {e}"; traceback.print_exc(); continue
+        log(f"    ok em {time.time() - t_read:.0f} s")
         hh.append(to_db(boxcar_linear(arrs["HHHH"], 3))); hv.append(to_db(boxcar_linear(arrs["HVHV"], 3)))
         dates.append(datetime.strptime(m["inicio"], "%Y%m%dT%H%M%S").strftime("%Y-%m-%d"))
         used.append({"data": dates[-1], "arquivo": name, "colecao": snm, "crid": m.get("crid"), "ciclo": m.get("ciclo"),
@@ -342,6 +344,9 @@ def main():
     ap.add_argument("--case", required=True); ap.add_argument("--out", required=True)
     ap.add_argument("--start"); ap.add_argument("--end"); ap.add_argument("--max-dates", type=int, default=40)
     ap.add_argument("--res", type=float, help="resolução da grade em metros (ex.: 200 para o quadro inteiro)")
+    ap.add_argument("--recorte", type=float, help="teste rápido: quadrado de N graus no centro da área (ex.: 0.2 = ~22 km)")
+    ap.add_argument("--uma-geometria", action="store_true", help="só a geometria principal")
+    ap.add_argument("--sem-gunw", action="store_true"); ap.add_argument("--sem-inventario", action="store_true")
     ap.add_argument("--skip-truth", action="store_true"); ap.add_argument("--skip-dem", action="store_true")
     a = ap.parse_args()
     case = json.loads(Path(a.case).read_text(encoding="utf-8"))
@@ -360,7 +365,13 @@ def main():
         log(f"ajustando a área ao quadro {geometry} ...")
         bbox, npass = fit_to_frame(bbox, start, end, geometry, sn)
         log(f"  área comum a {npass} passagens: {bbox}")
-    grid = make_grid(bbox, a.res or case.get("resolucao_m", 20))
+    if a.recorte:
+        cx, cy = (bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2
+        h = a.recorte / 2
+        bbox = [round(cx - h, 4), round(cy - h, 4), round(cx + h, 4), round(cy + h, 4)]
+        log(f"recorte de teste {a.recorte}° no centro: {bbox}")
+    grid = make_grid(bbox, a.res or (20 if a.recorte else case.get("resolucao_m", 20)))
+    log(f"grade {grid.width} x {grid.height} pixels de {grid.resolution} m")
     px = grid.pixel_area_m2
     ev = (case.get("evento") or {}).get("data")
     ficha = {"nome": case["nome"], "gerado_em": datetime.now().isoformat(timespec="seconds"), "versao_pipeline": __version__,
@@ -369,10 +380,11 @@ def main():
              "metodo": S.__doc__.strip(), "parametros": S.PARAMS, "erros": {}}
 
     # 1) funil + metadados
-    try:
+    if not a.sem_inventario:
+      try:
         import run_inventory
         ficha["inventario"] = run_inventory.run(case, out, start, end, grid.bbox, geometry)["por_produto"]
-    except Exception as e:
+      except Exception as e:
         ficha["erros"]["inventario"] = f"{type(e).__name__}: {e}"; traceback.print_exc()
     # geometrias: a pedida e todas as outras com >= 4 passagens cobrindo a área
     _, _, _, geoms = sn.funnel_series(grid, start, end)
@@ -380,7 +392,7 @@ def main():
     for k, v in sorted(geoms.items(), key=lambda kv: -kv[1]):
         t, d, f = k.split("_")
         gk = (int(t), d, int(f))
-        if v >= 4 and gk not in geo_list and case.get("todas_geometrias", True):
+        if v >= 4 and gk not in geo_list and case.get("todas_geometrias", True) and not (a.uma_geometria and geo_list):
             geo_list.append(gk)
     log(f"geometrias para analisar: {geo_list} (passagens por geometria: {geoms})")
     clima_all = None
@@ -401,12 +413,13 @@ def main():
         if r:
             results[f"{gk[0]:03d}_{gk[1]}_{gk[2]:03d}"] = r[0]
             index += [f"## Pista {gk[0]:03d}, {'ascendente' if gk[1] == 'A' else 'descendente'}, quadro {gk[2]:03d}", ""] + r[1][2:] + [""]
-    try:
+    if not a.sem_gunw:
+      try:
         import run_gunw
         g = run_gunw.run(case, out / "gunw", grid, start, end)
         if g:
             index += ["## Interferometria (GUNW): o chão e a coerência", ""] + g + [""]
-    except Exception as e:
+      except Exception as e:
         log(f"GUNW falhou: {type(e).__name__}: {e}"); traceback.print_exc()
     (out / "resultado.md").write_text("\n".join(index), encoding="utf-8")
     api = Path("docs/api/v1/series"); api.mkdir(parents=True, exist_ok=True)
