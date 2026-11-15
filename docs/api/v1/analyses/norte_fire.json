@@ -3,7 +3,7 @@
   "status": "concluida",
   "ficha": {
     "nome": "Incêndio Norte, San Clemente e San Juan Capistrano (Califórnia)",
-    "gerado_em": "2026-11-15T00:56:14+00:00",
+    "gerado_em": "2026-11-15T00:58:59+00:00",
     "versao_pipeline": "0.1.0",
     "area_bbox": [
       -117.72,
@@ -43,277 +43,480 @@
     },
     "funil": [
       {
-        "fonte": "s2",
-        "colecao": "s2",
+        "fonte": "Sentinel-2 L2A",
+        "colecao": "sentinel-2-l2a",
         "etapas": [
           {
             "etapa": "catalogo",
-            "n": 3,
+            "n": 15,
             "aproveitamento_pct": null,
-            "nota": ""
+            "nota": "2026-09-16 a 2026-11-15, nuvem na cena < 80%"
           },
           {
             "etapa": "cobre_area",
-            "n": 2,
-            "aproveitamento_pct": 66.7,
-            "nota": ""
+            "n": 15,
+            "aproveitamento_pct": 100.0,
+            "nota": "cobre >= 90% da área"
+          },
+          {
+            "etapa": "qualidade",
+            "n": 12,
+            "aproveitamento_pct": 80.0,
+            "nota": "nuvem dentro da área <= 20% (camada SCL)"
           },
           {
             "etapa": "pareados",
             "n": 2,
-            "aproveitamento_pct": 100.0,
-            "nota": ""
+            "aproveitamento_pct": 16.7,
+            "nota": "antes mais recente e depois mais cedo, com pouca nuvem"
           }
         ],
-        "aproveitamento_total_pct": 66.7
+        "aproveitamento_total_pct": 13.3
       },
       {
-        "fonte": "ls",
-        "colecao": "ls",
+        "fonte": "Landsat 8/9 Coleção 2 Nível 2 (óptico + térmico)",
+        "colecao": "landsat-c2-l2",
         "etapas": [
           {
             "etapa": "catalogo",
-            "n": 3,
+            "n": 15,
             "aproveitamento_pct": null,
-            "nota": ""
+            "nota": "2026-09-06 a 2026-11-25, Landsat 8 e 9, nuvem na cena < 80%"
           },
           {
             "etapa": "cobre_area",
-            "n": 2,
-            "aproveitamento_pct": 66.7,
-            "nota": ""
+            "n": 11,
+            "aproveitamento_pct": 73.3,
+            "nota": "cobre >= 90% da área"
+          },
+          {
+            "etapa": "qualidade",
+            "n": 8,
+            "aproveitamento_pct": 72.7,
+            "nota": "banda térmica presente e nuvem dentro da área <= 20% (QA_PIXEL)"
           },
           {
             "etapa": "pareados",
             "n": 2,
-            "aproveitamento_pct": 100.0,
-            "nota": ""
+            "aproveitamento_pct": 25.0,
+            "nota": "antes mais recente e depois mais cedo, com pouca nuvem"
           }
         ],
-        "aproveitamento_total_pct": 66.7
+        "aproveitamento_total_pct": 13.3
       },
       {
-        "fonte": "s1",
-        "colecao": "s1",
+        "fonte": "Sentinel-1 RTC (banda C)",
+        "colecao": "sentinel-1-rtc",
         "etapas": [
           {
             "etapa": "catalogo",
-            "n": 3,
+            "n": 20,
             "aproveitamento_pct": null,
-            "nota": ""
+            "nota": "2026-09-10 a 2026-11-21"
           },
           {
             "etapa": "cobre_area",
-            "n": 2,
-            "aproveitamento_pct": 66.7,
-            "nota": ""
+            "n": 20,
+            "aproveitamento_pct": 100.0,
+            "nota": "cobre >= 90% da área"
+          },
+          {
+            "etapa": "qualidade",
+            "n": 20,
+            "aproveitamento_pct": 100.0,
+            "nota": "tem VV e VH"
           },
           {
             "etapa": "pareados",
             "n": 2,
-            "aproveitamento_pct": 100.0,
-            "nota": ""
+            "aproveitamento_pct": 10.0,
+            "nota": "mesma órbita relativa e direção, menor intervalo"
           }
         ],
-        "aproveitamento_total_pct": 66.7
+        "aproveitamento_total_pct": 10.0
       },
       {
-        "fonte": "aster",
-        "colecao": "aster",
+        "fonte": "ASTER L1T (térmico 90 m)",
+        "colecao": "aster-l1t",
         "etapas": [
           {
             "etapa": "catalogo",
-            "n": 3,
+            "n": 0,
             "aproveitamento_pct": null,
-            "nota": ""
+            "nota": "2026-08-17 a 2026-12-15"
           },
           {
             "etapa": "cobre_area",
-            "n": 2,
-            "aproveitamento_pct": 66.7,
-            "nota": ""
+            "n": 0,
+            "aproveitamento_pct": null,
+            "nota": "cobre >= 90% da área"
           },
           {
             "etapa": "pareados",
-            "n": 2,
-            "aproveitamento_pct": 100.0,
-            "nota": ""
+            "n": 0,
+            "aproveitamento_pct": null,
+            "nota": "antes e depois"
           }
         ],
-        "aproveitamento_total_pct": 66.7
+        "aproveitamento_total_pct": null
       },
       {
-        "fonte": "dem",
-        "colecao": "dem",
+        "fonte": "Copernicus DEM 30 m",
+        "colecao": "cop-dem-glo-30",
         "etapas": [
           {
             "etapa": "catalogo",
-            "n": 3,
+            "n": 1,
             "aproveitamento_pct": null,
-            "nota": ""
+            "nota": "modelo de relevo"
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 1,
+            "aproveitamento_pct": 100.0,
+            "nota": "cobre a área"
+          }
+        ],
+        "aproveitamento_total_pct": 100.0
+      },
+      {
+        "fonte": "NAIP (foto aérea dos EUA, ~0,6 m)",
+        "colecao": "naip",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 5,
+            "aproveitamento_pct": null,
+            "nota": "6 anos antes do evento"
           },
           {
             "etapa": "cobre_area",
             "n": 2,
-            "aproveitamento_pct": 66.7,
-            "nota": ""
+            "aproveitamento_pct": 40.0,
+            "nota": "mosaico do mesmo ano cobre a área"
+          },
+          {
+            "etapa": "pareados",
+            "n": 1,
+            "aproveitamento_pct": 50.0,
+            "nota": "só existe 'antes': NAIP é refeito a cada 2-3 anos"
+          }
+        ],
+        "aproveitamento_total_pct": 20.0
+      },
+      {
+        "fonte": "NISAR GCOV (banda L)",
+        "colecao": "NISAR_L2_GCOV_V1 + NISAR_L2_GCOV_PROVISIONAL_V1",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 19,
+            "aproveitamento_pct": null,
+            "nota": "2026-09-10 a 2026-11-21, coleções NISAR_L2_GCOV_V1, NISAR_L2_GCOV_PROVISIONAL_V1"
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 16,
+            "aproveitamento_pct": 84.2,
+            "nota": "cobre >= 90% da área"
+          },
+          {
+            "etapa": "qualidade",
+            "n": 12,
+            "aproveitamento_pct": 75.0,
+            "nota": "mesma coleção (NISAR_L2_GCOV_PROVISIONAL_V1)"
           },
           {
             "etapa": "pareados",
             "n": 2,
-            "aproveitamento_pct": 100.0,
-            "nota": ""
+            "aproveitamento_pct": 16.7,
+            "nota": "mesma pista, direção e quadro; menor intervalo"
           }
         ],
-        "aproveitamento_total_pct": 66.7
+        "aproveitamento_total_pct": 10.5
       }
     ],
     "fontes": {
       "sentinel2": {
-        "antes": "2026-10-10",
-        "depois": "2026-10-20",
+        "antes": "2026-10-14",
+        "depois": "2026-10-16",
         "itens_antes": [
-          "2026-10-10"
+          "S2C_MSIL2A_20261014T183331_R027_T11SMS_20261014T215413",
+          "S2C_MSIL2A_20261014T183331_R027_T11SMT_20261014T215413"
         ],
         "itens_depois": [
-          "2026-10-20"
+          "S2A_MSIL2A_20261016T183821_R027_T11SMS_20261016T233302",
+          "S2A_MSIL2A_20261016T183821_R027_T11SMT_20261016T233302"
         ]
       },
       "sentinel1": {
         "antes": [
-          "2026-10-10"
+          "S1D_IW_GRDH_1SDV_20261014T135159_20261014T135224_005012_00978A_rtc"
         ],
         "depois": [
-          "2026-10-20"
+          "S1C_IW_GRDH_1SDV_20261020T135137_20261020T135202_009969_013E10_rtc"
         ]
       },
       "landsat": {
         "antes": [
-          "2026-10-10"
+          "LC09_L2SP_040037_20261009_02_T1"
         ],
         "depois": [
-          "2026-10-20"
+          "LC08_L2SP_041037_20261024_02_T1"
+        ]
+      },
+      "nisar": {
+        "antes": {
+          "nivel": "L2",
+          "colecao": "PR",
+          "produto": "GCOV",
+          "ciclo": 32,
+          "pista": 106,
+          "direcao": "A",
+          "quadro": 19,
+          "inicio": "20261007T130003",
+          "crid": "P05023",
+          "arquivo": "NISAR_L2_PR_GCOV_032_106_A_019_4005_DHDH_A_20261007T130003_20261007T130038_P05023_N_F_J_001",
+          "epsg_produto": 32611,
+          "janela_linhas": [
+            29649,
+            30883
+          ],
+          "janela_colunas": [
+            9751,
+            11065
+          ],
+          "grupo_hdf5": "science/LSAR/GCOV/grids/frequencyA"
+        },
+        "depois": {
+          "nivel": "L2",
+          "colecao": "PR",
+          "produto": "GCOV",
+          "ciclo": 33,
+          "pista": 106,
+          "direcao": "A",
+          "quadro": 19,
+          "inicio": "20261019T130003",
+          "crid": "P05023",
+          "arquivo": "NISAR_L2_PR_GCOV_033_106_A_019_4005_DHDH_A_20261019T130003_20261019T130038_P05023_N_F_J_001",
+          "epsg_produto": 32611,
+          "janela_linhas": [
+            29649,
+            30883
+          ],
+          "janela_colunas": [
+            9751,
+            11065
+          ],
+          "grupo_hdf5": "science/LSAR/GCOV/grids/frequencyA"
+        }
+      },
+      "naip": {
+        "ano": 2024,
+        "itens": [
+          "ca_m_3311727_se_11_060_20240509",
+          "ca_m_3311727_sw_11_060_20240506",
+          "ca_m_3311728_sw_11_060_20240820",
+          "ca_m_3311735_ne_11_060_20240509",
+          "ca_m_3311735_nw_11_060_20240506",
+          "ca_m_3311735_se_11_060_20240509",
+          "ca_m_3311736_nw_11_060_20240820",
+          "ca_m_3311736_sw_11_060_20240820"
         ]
       }
     },
     "resultados": {
       "verdade_sentinel2": {
-        "area_queimada_ha": 480.0,
-        "maior_grupo_ha": 480.0,
+        "area_queimada_ha": 36.08,
+        "maior_grupo_ha": 7.56,
         "area_oficial_ha": 230.7,
-        "razao_maior_grupo_oficial": 2.0806
+        "razao_maior_grupo_oficial": 0.0328
       },
       "relevo": {
-        "declividade_media_graus": 23.4189
+        "declividade_media_graus": 7.005
       },
       "sentinel1": {
         "stats": {
-          "lr_co_mediana_db": -0.0114,
-          "lr_co_mad_db": 0.4331,
-          "lr_cross_mediana_db": -0.0287,
-          "lr_cross_mad_db": 0.4316,
-          "vegetacao_area_ha": 447.28,
+          "lr_co_mediana_db": -0.3547,
+          "lr_co_mad_db": 0.7321,
+          "lr_cross_mediana_db": -0.2003,
+          "lr_cross_mad_db": 0.6998,
+          "vegetacao_area_ha": 116.92,
           "agua_area_ha": 0.0,
           "vegetacao_grupos": [
-            11182
+            2923
           ],
           "agua_grupos": [],
-          "pixels_validos": 402170
+          "pixels_validos": 321621
         },
-        "intervalo_dias": 12,
+        "intervalo_dias": 6.0,
         "orbita": {
           "relativa": 71,
-          "direcao": "ascending"
+          "direcao": "descending"
         },
-        "pixels_mascarados_relevo": 0,
+        "pixels_mascarados_relevo": 3,
         "metricas": {
-          "VP": 11182,
-          "FP": 0,
-          "FN": 818,
-          "VN": 390170,
-          "precisao": 1.0,
-          "sensibilidade": 0.9318,
-          "f1": 0.9647,
-          "iou": 0.9318,
-          "falso_alarme": 0.0,
-          "area_detectada_ha": 447.28,
-          "area_real_ha": 480.0
+          "VP": 42,
+          "FP": 2881,
+          "FN": 860,
+          "VN": 317838,
+          "precisao": 0.0144,
+          "sensibilidade": 0.0466,
+          "f1": 0.022,
+          "iou": 0.0111,
+          "falso_alarme": 0.009,
+          "area_detectada_ha": 116.92,
+          "area_real_ha": 36.08
         }
       },
       "landsat": {
-        "intervalo_dias": 10,
-        "lst_mediana_antes_c": 25.0012,
-        "lst_mediana_depois_c": 25.0351,
-        "area_dnbr_ha": 480.0,
-        "area_aquecida_ha": 480.16,
+        "intervalo_dias": 15.0,
+        "lst_mediana_antes_c": 37.1122,
+        "lst_mediana_depois_c": 28.2766,
+        "area_dnbr_ha": 203.76,
+        "area_aquecida_ha": 1011.04,
         "metricas_dnbr": {
-          "VP": 12000,
-          "FP": 0,
-          "FN": 0,
-          "VN": 390170,
-          "precisao": 1.0,
-          "sensibilidade": 1.0,
-          "f1": 1.0,
-          "iou": 1.0,
-          "falso_alarme": 0.0,
-          "area_detectada_ha": 480.0,
-          "area_real_ha": 480.0
+          "VP": 143,
+          "FP": 4944,
+          "FN": 547,
+          "VN": 251162,
+          "precisao": 0.0281,
+          "sensibilidade": 0.2072,
+          "f1": 0.0495,
+          "iou": 0.0254,
+          "falso_alarme": 0.0193,
+          "area_detectada_ha": 203.48,
+          "area_real_ha": 27.6
         },
         "metricas_termico": {
-          "VP": 11998,
-          "FP": 6,
-          "FN": 2,
-          "VN": 390164,
-          "precisao": 0.9995,
-          "sensibilidade": 0.9998,
-          "f1": 0.9997,
-          "iou": 0.9993,
-          "falso_alarme": 0.0,
-          "area_detectada_ha": 480.16,
-          "area_real_ha": 480.0
+          "VP": 63,
+          "FP": 25037,
+          "FN": 627,
+          "VN": 231069,
+          "precisao": 0.0025,
+          "sensibilidade": 0.0913,
+          "f1": 0.0049,
+          "iou": 0.0024,
+          "falso_alarme": 0.0978,
+          "area_detectada_ha": 1004.0,
+          "area_real_ha": 27.6
         },
-        "aquecimento_na_cicatriz_c": 7.9728
+        "aquecimento_na_cicatriz_c": -1.9261
+      },
+      "nisar": {
+        "stats": {
+          "lr_co_mediana_db": 0.465,
+          "lr_co_mad_db": 0.3603,
+          "lr_cross_mediana_db": 0.1956,
+          "lr_cross_mad_db": 0.296,
+          "vegetacao_area_ha": 21.12,
+          "agua_area_ha": 0.0,
+          "vegetacao_grupos": [
+            19,
+            14,
+            18,
+            42,
+            13,
+            11,
+            138,
+            107,
+            26,
+            54,
+            86
+          ],
+          "agua_grupos": [],
+          "pixels_validos": 321620
+        },
+        "intervalo_dias": 12.0,
+        "colecoes": [
+          "NISAR_L2_GCOV_PROVISIONAL_V1",
+          "NISAR_L2_GCOV_PROVISIONAL_V1"
+        ],
+        "metricas": {
+          "VP": 0,
+          "FP": 528,
+          "FN": 902,
+          "VN": 320190,
+          "precisao": 0.0,
+          "sensibilidade": 0.0,
+          "f1": null,
+          "iou": 0.0,
+          "falso_alarme": 0.0016,
+          "area_detectada_ha": 21.12,
+          "area_real_ha": 36.08
+        }
       },
       "consenso": {
         "fontes": [
           "sentinel1",
           "landsat_dnbr",
-          "landsat_termico"
+          "landsat_termico",
+          "nisar"
         ],
-        "area_consenso_ha": 480.0,
+        "area_consenso_ha": 97.4,
         "metricas": {
-          "VP": 12000,
-          "FP": 0,
-          "FN": 0,
-          "VN": 390170,
-          "precisao": 1.0,
-          "sensibilidade": 1.0,
-          "f1": 1.0,
-          "iou": 1.0,
-          "falso_alarme": 0.0,
-          "area_detectada_ha": 480.0,
-          "area_real_ha": 480.0
+          "VP": 25,
+          "FP": 2410,
+          "FN": 877,
+          "VN": 318312,
+          "precisao": 0.0103,
+          "sensibilidade": 0.0277,
+          "f1": 0.015,
+          "iou": 0.0075,
+          "falso_alarme": 0.0075,
+          "area_detectada_ha": 97.4,
+          "area_real_ha": 36.08
         },
-        "fontes_disponiveis_media": 3.0
+        "fontes_disponiveis_media": 3.5968
       }
     },
     "contexto": {
       "chuva": {
-        "total_mm": 0.0
+        "total_mm": 34.6,
+        "diario_mm": {
+          "20261004": 0.0,
+          "20261005": 0.0,
+          "20261006": 0.0,
+          "20261007": 0.0,
+          "20261008": 0.0,
+          "20261009": 0.0,
+          "20261010": 1.9,
+          "20261011": 6.75,
+          "20261012": 5.24,
+          "20261013": 0.08,
+          "20261014": 0.0,
+          "20261015": 0.0,
+          "20261016": 0.0,
+          "20261017": 0.0,
+          "20261018": 0.0,
+          "20261019": 0.0,
+          "20261020": 0.13,
+          "20261021": 12.59,
+          "20261022": 5.35,
+          "20261023": 2.51,
+          "20261024": 0.08,
+          "20261025": 0.0,
+          "20261026": 0.0,
+          "20261027": 0.0,
+          "20261028": 0.0
+        },
+        "fonte": "NASA POWER, PRECTOTCORR (diário)"
       }
     },
     "erros": {}
   },
   "arquivos": [
-    "/tmp/smoke_out/confianca.png",
-    "/tmp/smoke_out/consenso.png",
-    "/tmp/smoke_out/ficha_tecnica.csv",
-    "/tmp/smoke_out/ficha_tecnica.json",
-    "/tmp/smoke_out/funil.json",
-    "/tmp/smoke_out/landsat_termico_delta.png",
-    "/tmp/smoke_out/resultado.md",
-    "/tmp/smoke_out/s1_mudanca_vh.png",
-    "/tmp/smoke_out/s2_antes_cor_natural.png",
-    "/tmp/smoke_out/s2_depois_cor_natural.png"
+    "docs/results/norte_fire_funil/confianca.png",
+    "docs/results/norte_fire_funil/consenso.png",
+    "docs/results/norte_fire_funil/ficha_tecnica.csv",
+    "docs/results/norte_fire_funil/ficha_tecnica.json",
+    "docs/results/norte_fire_funil/funil.json",
+    "docs/results/norte_fire_funil/landsat_termico_delta.png",
+    "docs/results/norte_fire_funil/naip_antes.jpg",
+    "docs/results/norte_fire_funil/nisar_mudanca_hv.png",
+    "docs/results/norte_fire_funil/resultado.md",
+    "docs/results/norte_fire_funil/s1_mudanca_vh.png",
+    "docs/results/norte_fire_funil/s2_antes_cor_natural.png",
+    "docs/results/norte_fire_funil/s2_depois_cor_natural.png"
   ]
 }

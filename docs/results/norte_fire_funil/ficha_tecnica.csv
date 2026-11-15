@@ -1,0 +1,296 @@
+campo,valor
+nome,"Incêndio Norte, San Clemente e San Juan Capistrano (Califórnia)"
+gerado_em,2026-11-15T00:58:59+00:00
+versao_pipeline,0.1.0
+area_bbox,"[-117.72, 33.42, -117.58, 33.53]"
+evento.data,2026-10-16
+evento.descricao,"Incêndio Norte (CAL FIRE): ~570 acres, Portico Del Norte e Eminencia Del Norte, San Clemente"
+evento.area_oficial_ha,230.7
+evento.fonte,https://www.fire.ca.gov/incidents/2026/10/16/norte-fire/updates/620cae70-c20f-4b85-b7e3-553145c2f022
+grade.crs,EPSG:32611
+grade.resolucao_m,20
+grade.largura,655
+grade.altura,614
+parametros.verdade.dnbr_min,0.1
+parametros.verdade.min_area_m2,10000.0
+parametros.banda_C.veg_drop_db,-6.0
+parametros.banda_C.min_area_m2,40000.0
+parametros.landsat.dnbr_min,0.1
+parametros.landsat.dlst_min_c,3.0
+parametros.consenso.min_votes,2
+parametros.consenso.min_area_m2,40000.0
+funil[0].fonte,Sentinel-2 L2A
+funil[0].colecao,sentinel-2-l2a
+funil[0].etapas[0].etapa,catalogo
+funil[0].etapas[0].n,15
+funil[0].etapas[0].aproveitamento_pct,
+funil[0].etapas[0].nota,"2026-09-16 a 2026-11-15, nuvem na cena < 80%"
+funil[0].etapas[1].etapa,cobre_area
+funil[0].etapas[1].n,15
+funil[0].etapas[1].aproveitamento_pct,100.0
+funil[0].etapas[1].nota,cobre >= 90% da área
+funil[0].etapas[2].etapa,qualidade
+funil[0].etapas[2].n,12
+funil[0].etapas[2].aproveitamento_pct,80.0
+funil[0].etapas[2].nota,nuvem dentro da área <= 20% (camada SCL)
+funil[0].etapas[3].etapa,pareados
+funil[0].etapas[3].n,2
+funil[0].etapas[3].aproveitamento_pct,16.7
+funil[0].etapas[3].nota,"antes mais recente e depois mais cedo, com pouca nuvem"
+funil[0].aproveitamento_total_pct,13.3
+funil[1].fonte,Landsat 8/9 Coleção 2 Nível 2 (óptico + térmico)
+funil[1].colecao,landsat-c2-l2
+funil[1].etapas[0].etapa,catalogo
+funil[1].etapas[0].n,15
+funil[1].etapas[0].aproveitamento_pct,
+funil[1].etapas[0].nota,"2026-09-06 a 2026-11-25, Landsat 8 e 9, nuvem na cena < 80%"
+funil[1].etapas[1].etapa,cobre_area
+funil[1].etapas[1].n,11
+funil[1].etapas[1].aproveitamento_pct,73.3
+funil[1].etapas[1].nota,cobre >= 90% da área
+funil[1].etapas[2].etapa,qualidade
+funil[1].etapas[2].n,8
+funil[1].etapas[2].aproveitamento_pct,72.7
+funil[1].etapas[2].nota,banda térmica presente e nuvem dentro da área <= 20% (QA_PIXEL)
+funil[1].etapas[3].etapa,pareados
+funil[1].etapas[3].n,2
+funil[1].etapas[3].aproveitamento_pct,25.0
+funil[1].etapas[3].nota,"antes mais recente e depois mais cedo, com pouca nuvem"
+funil[1].aproveitamento_total_pct,13.3
+funil[2].fonte,Sentinel-1 RTC (banda C)
+funil[2].colecao,sentinel-1-rtc
+funil[2].etapas[0].etapa,catalogo
+funil[2].etapas[0].n,20
+funil[2].etapas[0].aproveitamento_pct,
+funil[2].etapas[0].nota,2026-09-10 a 2026-11-21
+funil[2].etapas[1].etapa,cobre_area
+funil[2].etapas[1].n,20
+funil[2].etapas[1].aproveitamento_pct,100.0
+funil[2].etapas[1].nota,cobre >= 90% da área
+funil[2].etapas[2].etapa,qualidade
+funil[2].etapas[2].n,20
+funil[2].etapas[2].aproveitamento_pct,100.0
+funil[2].etapas[2].nota,tem VV e VH
+funil[2].etapas[3].etapa,pareados
+funil[2].etapas[3].n,2
+funil[2].etapas[3].aproveitamento_pct,10.0
+funil[2].etapas[3].nota,"mesma órbita relativa e direção, menor intervalo"
+funil[2].aproveitamento_total_pct,10.0
+funil[3].fonte,ASTER L1T (térmico 90 m)
+funil[3].colecao,aster-l1t
+funil[3].etapas[0].etapa,catalogo
+funil[3].etapas[0].n,0
+funil[3].etapas[0].aproveitamento_pct,
+funil[3].etapas[0].nota,2026-08-17 a 2026-12-15
+funil[3].etapas[1].etapa,cobre_area
+funil[3].etapas[1].n,0
+funil[3].etapas[1].aproveitamento_pct,
+funil[3].etapas[1].nota,cobre >= 90% da área
+funil[3].etapas[2].etapa,pareados
+funil[3].etapas[2].n,0
+funil[3].etapas[2].aproveitamento_pct,
+funil[3].etapas[2].nota,antes e depois
+funil[3].aproveitamento_total_pct,
+funil[4].fonte,Copernicus DEM 30 m
+funil[4].colecao,cop-dem-glo-30
+funil[4].etapas[0].etapa,catalogo
+funil[4].etapas[0].n,1
+funil[4].etapas[0].aproveitamento_pct,
+funil[4].etapas[0].nota,modelo de relevo
+funil[4].etapas[1].etapa,cobre_area
+funil[4].etapas[1].n,1
+funil[4].etapas[1].aproveitamento_pct,100.0
+funil[4].etapas[1].nota,cobre a área
+funil[4].aproveitamento_total_pct,100.0
+funil[5].fonte,"NAIP (foto aérea dos EUA, ~0,6 m)"
+funil[5].colecao,naip
+funil[5].etapas[0].etapa,catalogo
+funil[5].etapas[0].n,5
+funil[5].etapas[0].aproveitamento_pct,
+funil[5].etapas[0].nota,6 anos antes do evento
+funil[5].etapas[1].etapa,cobre_area
+funil[5].etapas[1].n,2
+funil[5].etapas[1].aproveitamento_pct,40.0
+funil[5].etapas[1].nota,mosaico do mesmo ano cobre a área
+funil[5].etapas[2].etapa,pareados
+funil[5].etapas[2].n,1
+funil[5].etapas[2].aproveitamento_pct,50.0
+funil[5].etapas[2].nota,só existe 'antes': NAIP é refeito a cada 2-3 anos
+funil[5].aproveitamento_total_pct,20.0
+funil[6].fonte,NISAR GCOV (banda L)
+funil[6].colecao,NISAR_L2_GCOV_V1 + NISAR_L2_GCOV_PROVISIONAL_V1
+funil[6].etapas[0].etapa,catalogo
+funil[6].etapas[0].n,19
+funil[6].etapas[0].aproveitamento_pct,
+funil[6].etapas[0].nota,"2026-09-10 a 2026-11-21, coleções NISAR_L2_GCOV_V1, NISAR_L2_GCOV_PROVISIONAL_V1"
+funil[6].etapas[1].etapa,cobre_area
+funil[6].etapas[1].n,16
+funil[6].etapas[1].aproveitamento_pct,84.2
+funil[6].etapas[1].nota,cobre >= 90% da área
+funil[6].etapas[2].etapa,qualidade
+funil[6].etapas[2].n,12
+funil[6].etapas[2].aproveitamento_pct,75.0
+funil[6].etapas[2].nota,mesma coleção (NISAR_L2_GCOV_PROVISIONAL_V1)
+funil[6].etapas[3].etapa,pareados
+funil[6].etapas[3].n,2
+funil[6].etapas[3].aproveitamento_pct,16.7
+funil[6].etapas[3].nota,"mesma pista, direção e quadro; menor intervalo"
+funil[6].aproveitamento_total_pct,10.5
+fontes.sentinel2.antes,2026-10-14
+fontes.sentinel2.depois,2026-10-16
+fontes.sentinel2.itens_antes,"[""S2C_MSIL2A_20261014T183331_R027_T11SMS_20261014T215413"", ""S2C_MSIL2A_20261014T183331_R027_T11SMT_20261014T215413""]"
+fontes.sentinel2.itens_depois,"[""S2A_MSIL2A_20261016T183821_R027_T11SMS_20261016T233302"", ""S2A_MSIL2A_20261016T183821_R027_T11SMT_20261016T233302""]"
+fontes.sentinel1.antes,"[""S1D_IW_GRDH_1SDV_20261014T135159_20261014T135224_005012_00978A_rtc""]"
+fontes.sentinel1.depois,"[""S1C_IW_GRDH_1SDV_20261020T135137_20261020T135202_009969_013E10_rtc""]"
+fontes.landsat.antes,"[""LC09_L2SP_040037_20261009_02_T1""]"
+fontes.landsat.depois,"[""LC08_L2SP_041037_20261024_02_T1""]"
+fontes.nisar.antes.nivel,L2
+fontes.nisar.antes.colecao,PR
+fontes.nisar.antes.produto,GCOV
+fontes.nisar.antes.ciclo,32
+fontes.nisar.antes.pista,106
+fontes.nisar.antes.direcao,A
+fontes.nisar.antes.quadro,19
+fontes.nisar.antes.inicio,20261007T130003
+fontes.nisar.antes.crid,P05023
+fontes.nisar.antes.arquivo,NISAR_L2_PR_GCOV_032_106_A_019_4005_DHDH_A_20261007T130003_20261007T130038_P05023_N_F_J_001
+fontes.nisar.antes.epsg_produto,32611
+fontes.nisar.antes.janela_linhas,"[29649, 30883]"
+fontes.nisar.antes.janela_colunas,"[9751, 11065]"
+fontes.nisar.antes.grupo_hdf5,science/LSAR/GCOV/grids/frequencyA
+fontes.nisar.depois.nivel,L2
+fontes.nisar.depois.colecao,PR
+fontes.nisar.depois.produto,GCOV
+fontes.nisar.depois.ciclo,33
+fontes.nisar.depois.pista,106
+fontes.nisar.depois.direcao,A
+fontes.nisar.depois.quadro,19
+fontes.nisar.depois.inicio,20261019T130003
+fontes.nisar.depois.crid,P05023
+fontes.nisar.depois.arquivo,NISAR_L2_PR_GCOV_033_106_A_019_4005_DHDH_A_20261019T130003_20261019T130038_P05023_N_F_J_001
+fontes.nisar.depois.epsg_produto,32611
+fontes.nisar.depois.janela_linhas,"[29649, 30883]"
+fontes.nisar.depois.janela_colunas,"[9751, 11065]"
+fontes.nisar.depois.grupo_hdf5,science/LSAR/GCOV/grids/frequencyA
+fontes.naip.ano,2024
+fontes.naip.itens,"[""ca_m_3311727_se_11_060_20240509"", ""ca_m_3311727_sw_11_060_20240506"", ""ca_m_3311728_sw_11_060_20240820"", ""ca_m_3311735_ne_11_060_20240509"", ""ca_m_3311735_nw_11_060_20240506"", ""ca_m_3311735_se_11_060_20240509"", ""ca_m_3311736_nw_11_060_20240820"", ""ca_m_3311736_sw_11_060_20240820""]"
+resultados.verdade_sentinel2.area_queimada_ha,36.08
+resultados.verdade_sentinel2.maior_grupo_ha,7.56
+resultados.verdade_sentinel2.area_oficial_ha,230.7
+resultados.verdade_sentinel2.razao_maior_grupo_oficial,0.0328
+resultados.relevo.declividade_media_graus,7.005
+resultados.sentinel1.stats.lr_co_mediana_db,-0.3547
+resultados.sentinel1.stats.lr_co_mad_db,0.7321
+resultados.sentinel1.stats.lr_cross_mediana_db,-0.2003
+resultados.sentinel1.stats.lr_cross_mad_db,0.6998
+resultados.sentinel1.stats.vegetacao_area_ha,116.92
+resultados.sentinel1.stats.agua_area_ha,0.0
+resultados.sentinel1.stats.vegetacao_grupos,[2923]
+resultados.sentinel1.stats.agua_grupos,[]
+resultados.sentinel1.stats.pixels_validos,321621
+resultados.sentinel1.intervalo_dias,6.0
+resultados.sentinel1.orbita.relativa,71
+resultados.sentinel1.orbita.direcao,descending
+resultados.sentinel1.pixels_mascarados_relevo,3
+resultados.sentinel1.metricas.VP,42
+resultados.sentinel1.metricas.FP,2881
+resultados.sentinel1.metricas.FN,860
+resultados.sentinel1.metricas.VN,317838
+resultados.sentinel1.metricas.precisao,0.0144
+resultados.sentinel1.metricas.sensibilidade,0.0466
+resultados.sentinel1.metricas.f1,0.022
+resultados.sentinel1.metricas.iou,0.0111
+resultados.sentinel1.metricas.falso_alarme,0.009
+resultados.sentinel1.metricas.area_detectada_ha,116.92
+resultados.sentinel1.metricas.area_real_ha,36.08
+resultados.landsat.intervalo_dias,15.0
+resultados.landsat.lst_mediana_antes_c,37.1122
+resultados.landsat.lst_mediana_depois_c,28.2766
+resultados.landsat.area_dnbr_ha,203.76
+resultados.landsat.area_aquecida_ha,1011.04
+resultados.landsat.metricas_dnbr.VP,143
+resultados.landsat.metricas_dnbr.FP,4944
+resultados.landsat.metricas_dnbr.FN,547
+resultados.landsat.metricas_dnbr.VN,251162
+resultados.landsat.metricas_dnbr.precisao,0.0281
+resultados.landsat.metricas_dnbr.sensibilidade,0.2072
+resultados.landsat.metricas_dnbr.f1,0.0495
+resultados.landsat.metricas_dnbr.iou,0.0254
+resultados.landsat.metricas_dnbr.falso_alarme,0.0193
+resultados.landsat.metricas_dnbr.area_detectada_ha,203.48
+resultados.landsat.metricas_dnbr.area_real_ha,27.6
+resultados.landsat.metricas_termico.VP,63
+resultados.landsat.metricas_termico.FP,25037
+resultados.landsat.metricas_termico.FN,627
+resultados.landsat.metricas_termico.VN,231069
+resultados.landsat.metricas_termico.precisao,0.0025
+resultados.landsat.metricas_termico.sensibilidade,0.0913
+resultados.landsat.metricas_termico.f1,0.0049
+resultados.landsat.metricas_termico.iou,0.0024
+resultados.landsat.metricas_termico.falso_alarme,0.0978
+resultados.landsat.metricas_termico.area_detectada_ha,1004.0
+resultados.landsat.metricas_termico.area_real_ha,27.6
+resultados.landsat.aquecimento_na_cicatriz_c,-1.9261
+resultados.nisar.stats.lr_co_mediana_db,0.465
+resultados.nisar.stats.lr_co_mad_db,0.3603
+resultados.nisar.stats.lr_cross_mediana_db,0.1956
+resultados.nisar.stats.lr_cross_mad_db,0.296
+resultados.nisar.stats.vegetacao_area_ha,21.12
+resultados.nisar.stats.agua_area_ha,0.0
+resultados.nisar.stats.vegetacao_grupos,"[19, 14, 18, 42, 13, 11, 138, 107, 26, 54, 86]"
+resultados.nisar.stats.agua_grupos,[]
+resultados.nisar.stats.pixels_validos,321620
+resultados.nisar.intervalo_dias,12.0
+resultados.nisar.colecoes,"[""NISAR_L2_GCOV_PROVISIONAL_V1"", ""NISAR_L2_GCOV_PROVISIONAL_V1""]"
+resultados.nisar.metricas.VP,0
+resultados.nisar.metricas.FP,528
+resultados.nisar.metricas.FN,902
+resultados.nisar.metricas.VN,320190
+resultados.nisar.metricas.precisao,0.0
+resultados.nisar.metricas.sensibilidade,0.0
+resultados.nisar.metricas.f1,
+resultados.nisar.metricas.iou,0.0
+resultados.nisar.metricas.falso_alarme,0.0016
+resultados.nisar.metricas.area_detectada_ha,21.12
+resultados.nisar.metricas.area_real_ha,36.08
+resultados.consenso.fontes,"[""sentinel1"", ""landsat_dnbr"", ""landsat_termico"", ""nisar""]"
+resultados.consenso.area_consenso_ha,97.4
+resultados.consenso.metricas.VP,25
+resultados.consenso.metricas.FP,2410
+resultados.consenso.metricas.FN,877
+resultados.consenso.metricas.VN,318312
+resultados.consenso.metricas.precisao,0.0103
+resultados.consenso.metricas.sensibilidade,0.0277
+resultados.consenso.metricas.f1,0.015
+resultados.consenso.metricas.iou,0.0075
+resultados.consenso.metricas.falso_alarme,0.0075
+resultados.consenso.metricas.area_detectada_ha,97.4
+resultados.consenso.metricas.area_real_ha,36.08
+resultados.consenso.fontes_disponiveis_media,3.5968
+contexto.chuva.total_mm,34.6
+contexto.chuva.diario_mm.20261004,0.0
+contexto.chuva.diario_mm.20261005,0.0
+contexto.chuva.diario_mm.20261006,0.0
+contexto.chuva.diario_mm.20261007,0.0
+contexto.chuva.diario_mm.20261008,0.0
+contexto.chuva.diario_mm.20261009,0.0
+contexto.chuva.diario_mm.20261010,1.9
+contexto.chuva.diario_mm.20261011,6.75
+contexto.chuva.diario_mm.20261012,5.24
+contexto.chuva.diario_mm.20261013,0.08
+contexto.chuva.diario_mm.20261014,0.0
+contexto.chuva.diario_mm.20261015,0.0
+contexto.chuva.diario_mm.20261016,0.0
+contexto.chuva.diario_mm.20261017,0.0
+contexto.chuva.diario_mm.20261018,0.0
+contexto.chuva.diario_mm.20261019,0.0
+contexto.chuva.diario_mm.20261020,0.13
+contexto.chuva.diario_mm.20261021,12.59
+contexto.chuva.diario_mm.20261022,5.35
+contexto.chuva.diario_mm.20261023,2.51
+contexto.chuva.diario_mm.20261024,0.08
+contexto.chuva.diario_mm.20261025,0.0
+contexto.chuva.diario_mm.20261026,0.0
+contexto.chuva.diario_mm.20261027,0.0
+contexto.chuva.diario_mm.20261028,0.0
+contexto.chuva.fonte,"NASA POWER, PRECTOTCORR (diário)"

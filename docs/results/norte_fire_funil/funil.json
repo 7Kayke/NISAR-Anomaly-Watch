@@ -1,0 +1,195 @@
+[
+  {
+    "fonte": "Sentinel-2 L2A",
+    "colecao": "sentinel-2-l2a",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 15,
+        "aproveitamento_pct": null,
+        "nota": "2026-09-16 a 2026-11-15, nuvem na cena < 80%"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 15,
+        "aproveitamento_pct": 100.0,
+        "nota": "cobre >= 90% da área"
+      },
+      {
+        "etapa": "qualidade",
+        "n": 12,
+        "aproveitamento_pct": 80.0,
+        "nota": "nuvem dentro da área <= 20% (camada SCL)"
+      },
+      {
+        "etapa": "pareados",
+        "n": 2,
+        "aproveitamento_pct": 16.7,
+        "nota": "antes mais recente e depois mais cedo, com pouca nuvem"
+      }
+    ],
+    "aproveitamento_total_pct": 13.3
+  },
+  {
+    "fonte": "Landsat 8/9 Coleção 2 Nível 2 (óptico + térmico)",
+    "colecao": "landsat-c2-l2",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 15,
+        "aproveitamento_pct": null,
+        "nota": "2026-09-06 a 2026-11-25, Landsat 8 e 9, nuvem na cena < 80%"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 11,
+        "aproveitamento_pct": 73.3,
+        "nota": "cobre >= 90% da área"
+      },
+      {
+        "etapa": "qualidade",
+        "n": 8,
+        "aproveitamento_pct": 72.7,
+        "nota": "banda térmica presente e nuvem dentro da área <= 20% (QA_PIXEL)"
+      },
+      {
+        "etapa": "pareados",
+        "n": 2,
+        "aproveitamento_pct": 25.0,
+        "nota": "antes mais recente e depois mais cedo, com pouca nuvem"
+      }
+    ],
+    "aproveitamento_total_pct": 13.3
+  },
+  {
+    "fonte": "Sentinel-1 RTC (banda C)",
+    "colecao": "sentinel-1-rtc",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 20,
+        "aproveitamento_pct": null,
+        "nota": "2026-09-10 a 2026-11-21"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 20,
+        "aproveitamento_pct": 100.0,
+        "nota": "cobre >= 90% da área"
+      },
+      {
+        "etapa": "qualidade",
+        "n": 20,
+        "aproveitamento_pct": 100.0,
+        "nota": "tem VV e VH"
+      },
+      {
+        "etapa": "pareados",
+        "n": 2,
+        "aproveitamento_pct": 10.0,
+        "nota": "mesma órbita relativa e direção, menor intervalo"
+      }
+    ],
+    "aproveitamento_total_pct": 10.0
+  },
+  {
+    "fonte": "ASTER L1T (térmico 90 m)",
+    "colecao": "aster-l1t",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 0,
+        "aproveitamento_pct": null,
+        "nota": "2026-08-17 a 2026-12-15"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 0,
+        "aproveitamento_pct": null,
+        "nota": "cobre >= 90% da área"
+      },
+      {
+        "etapa": "pareados",
+        "n": 0,
+        "aproveitamento_pct": null,
+        "nota": "antes e depois"
+      }
+    ],
+    "aproveitamento_total_pct": null
+  },
+  {
+    "fonte": "Copernicus DEM 30 m",
+    "colecao": "cop-dem-glo-30",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 1,
+        "aproveitamento_pct": null,
+        "nota": "modelo de relevo"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 1,
+        "aproveitamento_pct": 100.0,
+        "nota": "cobre a área"
+      }
+    ],
+    "aproveitamento_total_pct": 100.0
+  },
+  {
+    "fonte": "NAIP (foto aérea dos EUA, ~0,6 m)",
+    "colecao": "naip",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 5,
+        "aproveitamento_pct": null,
+        "nota": "6 anos antes do evento"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 2,
+        "aproveitamento_pct": 40.0,
+        "nota": "mosaico do mesmo ano cobre a área"
+      },
+      {
+        "etapa": "pareados",
+        "n": 1,
+        "aproveitamento_pct": 50.0,
+        "nota": "só existe 'antes': NAIP é refeito a cada 2-3 anos"
+      }
+    ],
+    "aproveitamento_total_pct": 20.0
+  },
+  {
+    "fonte": "NISAR GCOV (banda L)",
+    "colecao": "NISAR_L2_GCOV_V1 + NISAR_L2_GCOV_PROVISIONAL_V1",
+    "etapas": [
+      {
+        "etapa": "catalogo",
+        "n": 19,
+        "aproveitamento_pct": null,
+        "nota": "2026-09-10 a 2026-11-21, coleções NISAR_L2_GCOV_V1, NISAR_L2_GCOV_PROVISIONAL_V1"
+      },
+      {
+        "etapa": "cobre_area",
+        "n": 16,
+        "aproveitamento_pct": 84.2,
+        "nota": "cobre >= 90% da área"
+      },
+      {
+        "etapa": "qualidade",
+        "n": 12,
+        "aproveitamento_pct": 75.0,
+        "nota": "mesma coleção (NISAR_L2_GCOV_PROVISIONAL_V1)"
+      },
+      {
+        "etapa": "pareados",
+        "n": 2,
+        "aproveitamento_pct": 16.7,
+        "nota": "mesma pista, direção e quadro; menor intervalo"
+      }
+    ],
+    "aproveitamento_total_pct": 10.5
+  }
+]

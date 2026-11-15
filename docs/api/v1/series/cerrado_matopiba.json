@@ -1,0 +1,240 @@
+{
+ "id": "cerrado_matopiba",
+ "ficha": {
+  "nome": "Cerrado do MATOPIBA: sul do Maranhão e oeste do Piauí (Balsas e rio Parnaíba)",
+  "gerado_em": "2026-11-15T00:35:52",
+  "versao_pipeline": "0.1.0",
+  "area_bbox": [
+   -44.5445,
+   -7.9131,
+   -43.9707,
+   -6.7686
+  ],
+  "area_pedida": [
+   -47.2,
+   -9.8,
+   -43.8,
+   -6.4
+  ],
+  "quadro_nisar": [
+   16,
+   "A",
+   174
+  ],
+  "periodo": [
+   "2026-01-20",
+   "2026-11-15"
+  ],
+  "evento": null,
+  "grade": {
+   "crs": "EPSG:32723",
+   "resolucao_m": 200,
+   "largura": 318,
+   "altura": 635
+  },
+  "metodo": "Série temporal do radar (\"a valsa\"): ritmo de cada pixel, quando ele quebrou e de que tipo foi a mudança.\n\nEntrada: pilhas (T, H, W) de HH e HV em dB, uma camada por passagem do NISAR na MESMA geometria.\n\n1. normalização por data: tira a mediana espacial da terra em cada data. O que sobra são os\n   desvios LOCAIS; o ritmo da paisagem inteira (estação, chuva, calibração) vai para a curva da cena.\n2. quebra: para cada pixel e cada corte t, diferença das médias depois-antes e o t de Welch\n   simplificado (desvio combinado). Fica o corte com maior |t|.\n3. ritmo: desvio-padrão dos resíduos depois de tirar a quebra (o que oscila sem ser um degrau).\n4. classes (prioridade de cima para baixo):\n     6 água permanente      HH mediana < água\n     3 queda abrupta        HV caiu >= queda_db com |t| >= t_min   (fogo, corte, colheita definitiva)\n     4 subida abrupta       HV subiu >= queda_db com |t| >= t_min  (rebrota forte, obra, água sob vegetação)\n     5 alagamento passageiro HH < água em alguma data, mas a mediana não é água\n     2 ritmo forte          resíduo >= ritmo_db                     (agricultura, áreas úmidas, sazonal)\n     1 estável\n     0 sem dado",
+  "parametros": {
+   "queda_db": 2.5,
+   "t_min": 4.0,
+   "ritmo_db": 1.5,
+   "agua_db": -18.0,
+   "min_lados": 2,
+   "min_validas": 5,
+   "gradual_db": 2.0,
+   "t_tendencia": 4.0
+  },
+  "erros": {},
+  "funil": {
+   "fonte": "NISAR GCOV (banda L), série temporal",
+   "colecao": "NISAR_L2_GCOV_V1 + NISAR_L2_GCOV_PROVISIONAL_V1",
+   "etapas": [
+    {
+     "etapa": "catalogo",
+     "n": 59,
+     "aproveitamento_pct": null,
+     "nota": "2026-01-20 a 2026-11-15, coleções NISAR_L2_GCOV_V1, NISAR_L2_GCOV_PROVISIONAL_V1"
+    },
+    {
+     "etapa": "cobre_area",
+     "n": 20,
+     "aproveitamento_pct": 33.9,
+     "nota": "cobre >= 90% da área"
+    },
+    {
+     "etapa": "uma_por_passagem",
+     "n": 20,
+     "aproveitamento_pct": 100.0,
+     "nota": "duplicatas da mesma passagem: fica a validada"
+    },
+    {
+     "etapa": "mesma_geometria",
+     "n": 10,
+     "aproveitamento_pct": 50.0,
+     "nota": "geometria com mais passagens: pista/direção/quadro (16, 'A', 174)"
+    }
+   ],
+   "aproveitamento_total_pct": 16.9
+  },
+  "geometrias_que_cobrem": {
+   "016_A_174": 10,
+   "024_D_092": 10
+  },
+  "passagens_usadas": [
+   {
+    "data": "2026-06-27",
+    "arquivo": "NISAR_L2_PR_GCOV_024_016_A_174_2005_DHDH_A_20260627T083839_20260627T083914_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 24
+   },
+   {
+    "data": "2026-07-09",
+    "arquivo": "NISAR_L2_PR_GCOV_025_016_A_174_2005_DHDH_A_20260709T083839_20260709T083913_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 25
+   },
+   {
+    "data": "2026-07-21",
+    "arquivo": "NISAR_L2_PR_GCOV_026_016_A_174_2005_DHDH_A_20260721T083838_20260721T083913_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 26
+   },
+   {
+    "data": "2026-08-14",
+    "arquivo": "NISAR_L2_PR_GCOV_028_016_A_174_2005_DHDH_A_20260814T083837_20260814T083911_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 28
+   },
+   {
+    "data": "2026-08-26",
+    "arquivo": "NISAR_L2_PR_GCOV_029_016_A_174_2005_DHDH_A_20260826T083837_20260826T083911_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 29
+   },
+   {
+    "data": "2026-09-07",
+    "arquivo": "NISAR_L2_PR_GCOV_030_016_A_174_2005_DHDH_A_20260907T083837_20260907T083911_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 30
+   },
+   {
+    "data": "2026-09-19",
+    "arquivo": "NISAR_L2_PR_GCOV_031_016_A_174_2005_DHDH_A_20260919T083837_20260919T083911_P05023_F_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 31
+   },
+   {
+    "data": "2026-10-01",
+    "arquivo": "NISAR_L2_PR_GCOV_032_016_A_174_2005_DHDH_A_20261001T083837_20261001T083911_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 32
+   },
+   {
+    "data": "2026-10-13",
+    "arquivo": "NISAR_L2_PR_GCOV_033_016_A_174_2005_DHDH_A_20261013T083837_20261013T083911_P05023_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+    "crid": "P05023",
+    "ciclo": 33
+   },
+   {
+    "data": "2026-10-25",
+    "arquivo": "NISAR_L2_PR_GCOV_034_016_A_174_2005_DHDH_A_20261025T083837_20261025T083912_P05036_N_F_J_001",
+    "colecao": "NISAR_L2_GCOV_V1",
+    "crid": "P05036",
+    "ciclo": 34
+   }
+  ],
+  "relevo_mascarado_ha": 0.0,
+  "clima": {
+   "chuva_total_mm": 43.0,
+   "chuva_antecedente_por_passagem_mm": {
+    "2026-06-27": 0.0,
+    "2026-07-09": 4.1,
+    "2026-07-21": 3.4,
+    "2026-08-14": 0.0,
+    "2026-08-26": 0.0,
+    "2026-09-07": 6.3,
+    "2026-09-19": 0.0,
+    "2026-10-01": 0.6,
+    "2026-10-13": 0.0,
+    "2026-10-25": 5.7
+   },
+   "umidade_solo_superficie_por_passagem": {
+    "2026-06-27": 0.23,
+    "2026-07-09": 0.32,
+    "2026-07-21": 0.28,
+    "2026-08-14": 0.18,
+    "2026-08-26": 0.16,
+    "2026-09-07": 0.28,
+    "2026-09-19": 0.15,
+    "2026-10-01": 0.15,
+    "2026-10-13": 0.14,
+    "2026-10-25": 0.17
+   },
+   "fonte": "NASA POWER diário (PRECTOTCORR, T2M, T2M_MAX, RH2M, GWETTOP, GWETROOT)"
+  },
+  "valsa_invisivel": {
+   "correlacao_area_HH_vs_chuva_antecedente": 0.365,
+   "correlacao_area_HH_vs_umidade_solo": 0.221,
+   "pixels_que_respondem_a_chuva_pct": 12.1,
+   "tendencia_mediana_db_mes": 0.005
+  },
+  "resumo": {
+   "classes_ha": {
+    "estável": 658272.0,
+    "ritmo forte (sazonal)": 0.0,
+    "queda abrupta": 18180.0,
+    "subida abrupta": 0.0,
+    "alagamento passageiro": 24396.0,
+    "água permanente": 58724.0,
+    "queda gradual": 34380.0,
+    "subida gradual": 204.0
+   },
+   "datas": [
+    "2026-06-27",
+    "2026-07-09",
+    "2026-07-21",
+    "2026-08-14",
+    "2026-08-26",
+    "2026-09-07",
+    "2026-09-19",
+    "2026-10-01",
+    "2026-10-13",
+    "2026-10-25"
+   ],
+   "quedas_por_intervalo_ha": {
+    "2026-07-09→2026-07-21": 2036.0,
+    "2026-07-21→2026-08-14": 7060.0,
+    "2026-08-14→2026-08-26": 2940.0,
+    "2026-08-26→2026-09-07": 3400.0,
+    "2026-09-07→2026-09-19": 2032.0,
+    "2026-09-19→2026-10-01": 384.0,
+    "2026-10-01→2026-10-13": 328.0
+   }
+  }
+ },
+ "arquivos": [
+  "docs/results/cerrado_mat/animacao_hv.gif",
+  "docs/results/cerrado_mat/classes.png",
+  "docs/results/cerrado_mat/curvas.png",
+  "docs/results/cerrado_mat/ficha_tecnica.csv",
+  "docs/results/cerrado_mat/ficha_tecnica.json",
+  "docs/results/cerrado_mat/metadados.csv",
+  "docs/results/cerrado_mat/metadados.json",
+  "docs/results/cerrado_mat/quando_mudou.png",
+  "docs/results/cerrado_mat/resposta_umidade_hh.png",
+  "docs/results/cerrado_mat/resposta_umidade_hv.png",
+  "docs/results/cerrado_mat/resultado.md",
+  "docs/results/cerrado_mat/rgb_temporal.png",
+  "docs/results/cerrado_mat/serie.json",
+  "docs/results/cerrado_mat/serie_hv_u8.bin",
+  "docs/results/cerrado_mat/tendencia.png"
+ ]
+}

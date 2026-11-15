@@ -1,0 +1,152 @@
+campo,valor
+nome,Cerrado do MATOPIBA: sul do Maranhão e oeste do Piauí (Balsas e rio Parnaíba)
+gerado_em,2026-11-15T00:35:52
+versao_pipeline,0.1.0
+area_bbox,"[-44.5445, -7.9131, -43.9707, -6.7686]"
+area_pedida,"[-47.2, -9.8, -43.8, -6.4]"
+quadro_nisar,"[16, ""A"", 174]"
+periodo,"[""2026-01-20"", ""2026-11-15""]"
+evento,
+grade.crs,EPSG:32723
+grade.resolucao_m,200
+grade.largura,318
+grade.altura,635
+metodo,"Série temporal do radar (""a valsa""): ritmo de cada pixel, quando ele quebrou e de que tipo foi a mudança.
+
+Entrada: pilhas (T, H, W) de HH e HV em dB, uma camada por passagem do NISAR na MESMA geometria.
+
+1. normalização por data: tira a mediana espacial da terra em cada data. O que sobra são os
+   desvios LOCAIS; o ritmo da paisagem inteira (estação, chuva, calibração) vai para a curva da cena.
+2. quebra: para cada pixel e cada corte t, diferença das médias depois-antes e o t de Welch
+   simplificado (desvio combinado). Fica o corte com maior |t|.
+3. ritmo: desvio-padrão dos resíduos depois de tirar a quebra (o que oscila sem ser um degrau).
+4. classes (prioridade de cima para baixo):
+     6 água permanente      HH mediana < água
+     3 queda abrupta        HV caiu >= queda_db com |t| >= t_min   (fogo, corte, colheita definitiva)
+     4 subida abrupta       HV subiu >= queda_db com |t| >= t_min  (rebrota forte, obra, água sob vegetação)
+     5 alagamento passageiro HH < água em alguma data, mas a mediana não é água
+     2 ritmo forte          resíduo >= ritmo_db                     (agricultura, áreas úmidas, sazonal)
+     1 estável
+     0 sem dado"
+parametros.queda_db,2.5
+parametros.t_min,4.0
+parametros.ritmo_db,1.5
+parametros.agua_db,-18.0
+parametros.min_lados,2
+parametros.min_validas,5
+parametros.gradual_db,2.0
+parametros.t_tendencia,4.0
+funil.fonte,"NISAR GCOV (banda L), série temporal"
+funil.colecao,NISAR_L2_GCOV_V1 + NISAR_L2_GCOV_PROVISIONAL_V1
+funil.etapas[0].etapa,catalogo
+funil.etapas[0].n,59
+funil.etapas[0].aproveitamento_pct,
+funil.etapas[0].nota,"2026-01-20 a 2026-11-15, coleções NISAR_L2_GCOV_V1, NISAR_L2_GCOV_PROVISIONAL_V1"
+funil.etapas[1].etapa,cobre_area
+funil.etapas[1].n,20
+funil.etapas[1].aproveitamento_pct,33.9
+funil.etapas[1].nota,cobre >= 90% da área
+funil.etapas[2].etapa,uma_por_passagem
+funil.etapas[2].n,20
+funil.etapas[2].aproveitamento_pct,100.0
+funil.etapas[2].nota,duplicatas da mesma passagem: fica a validada
+funil.etapas[3].etapa,mesma_geometria
+funil.etapas[3].n,10
+funil.etapas[3].aproveitamento_pct,50.0
+funil.etapas[3].nota,"geometria com mais passagens: pista/direção/quadro (16, 'A', 174)"
+funil.aproveitamento_total_pct,16.9
+geometrias_que_cobrem.016_A_174,10
+geometrias_que_cobrem.024_D_092,10
+passagens_usadas[0].data,2026-06-27
+passagens_usadas[0].arquivo,NISAR_L2_PR_GCOV_024_016_A_174_2005_DHDH_A_20260627T083839_20260627T083914_P05023_N_F_J_001
+passagens_usadas[0].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[0].crid,P05023
+passagens_usadas[0].ciclo,24
+passagens_usadas[1].data,2026-07-09
+passagens_usadas[1].arquivo,NISAR_L2_PR_GCOV_025_016_A_174_2005_DHDH_A_20260709T083839_20260709T083913_P05023_N_F_J_001
+passagens_usadas[1].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[1].crid,P05023
+passagens_usadas[1].ciclo,25
+passagens_usadas[2].data,2026-07-21
+passagens_usadas[2].arquivo,NISAR_L2_PR_GCOV_026_016_A_174_2005_DHDH_A_20260721T083838_20260721T083913_P05023_N_F_J_001
+passagens_usadas[2].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[2].crid,P05023
+passagens_usadas[2].ciclo,26
+passagens_usadas[3].data,2026-08-14
+passagens_usadas[3].arquivo,NISAR_L2_PR_GCOV_028_016_A_174_2005_DHDH_A_20260814T083837_20260814T083911_P05023_N_F_J_001
+passagens_usadas[3].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[3].crid,P05023
+passagens_usadas[3].ciclo,28
+passagens_usadas[4].data,2026-08-26
+passagens_usadas[4].arquivo,NISAR_L2_PR_GCOV_029_016_A_174_2005_DHDH_A_20260826T083837_20260826T083911_P05023_N_F_J_001
+passagens_usadas[4].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[4].crid,P05023
+passagens_usadas[4].ciclo,29
+passagens_usadas[5].data,2026-09-07
+passagens_usadas[5].arquivo,NISAR_L2_PR_GCOV_030_016_A_174_2005_DHDH_A_20260907T083837_20260907T083911_P05023_N_F_J_001
+passagens_usadas[5].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[5].crid,P05023
+passagens_usadas[5].ciclo,30
+passagens_usadas[6].data,2026-09-19
+passagens_usadas[6].arquivo,NISAR_L2_PR_GCOV_031_016_A_174_2005_DHDH_A_20260919T083837_20260919T083911_P05023_F_F_J_001
+passagens_usadas[6].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[6].crid,P05023
+passagens_usadas[6].ciclo,31
+passagens_usadas[7].data,2026-10-01
+passagens_usadas[7].arquivo,NISAR_L2_PR_GCOV_032_016_A_174_2005_DHDH_A_20261001T083837_20261001T083911_P05023_N_F_J_001
+passagens_usadas[7].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[7].crid,P05023
+passagens_usadas[7].ciclo,32
+passagens_usadas[8].data,2026-10-13
+passagens_usadas[8].arquivo,NISAR_L2_PR_GCOV_033_016_A_174_2005_DHDH_A_20261013T083837_20261013T083911_P05023_N_F_J_001
+passagens_usadas[8].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[8].crid,P05023
+passagens_usadas[8].ciclo,33
+passagens_usadas[9].data,2026-10-25
+passagens_usadas[9].arquivo,NISAR_L2_PR_GCOV_034_016_A_174_2005_DHDH_A_20261025T083837_20261025T083912_P05036_N_F_J_001
+passagens_usadas[9].colecao,NISAR_L2_GCOV_V1
+passagens_usadas[9].crid,P05036
+passagens_usadas[9].ciclo,34
+relevo_mascarado_ha,0.0
+clima.chuva_total_mm,43.0
+clima.chuva_antecedente_por_passagem_mm.2026-06-27,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-07-09,4.1
+clima.chuva_antecedente_por_passagem_mm.2026-07-21,3.4
+clima.chuva_antecedente_por_passagem_mm.2026-08-14,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-08-26,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-09-07,6.3
+clima.chuva_antecedente_por_passagem_mm.2026-09-19,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-10-01,0.6
+clima.chuva_antecedente_por_passagem_mm.2026-10-13,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-10-25,5.7
+clima.umidade_solo_superficie_por_passagem.2026-06-27,0.23
+clima.umidade_solo_superficie_por_passagem.2026-07-09,0.32
+clima.umidade_solo_superficie_por_passagem.2026-07-21,0.28
+clima.umidade_solo_superficie_por_passagem.2026-08-14,0.18
+clima.umidade_solo_superficie_por_passagem.2026-08-26,0.16
+clima.umidade_solo_superficie_por_passagem.2026-09-07,0.28
+clima.umidade_solo_superficie_por_passagem.2026-09-19,0.15
+clima.umidade_solo_superficie_por_passagem.2026-10-01,0.15
+clima.umidade_solo_superficie_por_passagem.2026-10-13,0.14
+clima.umidade_solo_superficie_por_passagem.2026-10-25,0.17
+clima.fonte,"NASA POWER diário (PRECTOTCORR, T2M, T2M_MAX, RH2M, GWETTOP, GWETROOT)"
+valsa_invisivel.correlacao_area_HH_vs_chuva_antecedente,0.365
+valsa_invisivel.correlacao_area_HH_vs_umidade_solo,0.221
+valsa_invisivel.pixels_que_respondem_a_chuva_pct,12.1
+valsa_invisivel.tendencia_mediana_db_mes,0.005
+resumo.classes_ha.estável,658272.0
+resumo.classes_ha.ritmo forte (sazonal),0.0
+resumo.classes_ha.queda abrupta,18180.0
+resumo.classes_ha.subida abrupta,0.0
+resumo.classes_ha.alagamento passageiro,24396.0
+resumo.classes_ha.água permanente,58724.0
+resumo.classes_ha.queda gradual,34380.0
+resumo.classes_ha.subida gradual,204.0
+resumo.datas,"[""2026-06-27"", ""2026-07-09"", ""2026-07-21"", ""2026-08-14"", ""2026-08-26"", ""2026-09-07"", ""2026-09-19"", ""2026-10-01"", ""2026-10-13"", ""2026-10-25""]"
+resumo.quedas_por_intervalo_ha.2026-07-09→2026-07-21,2036.0
+resumo.quedas_por_intervalo_ha.2026-07-21→2026-08-14,7060.0
+resumo.quedas_por_intervalo_ha.2026-08-14→2026-08-26,2940.0
+resumo.quedas_por_intervalo_ha.2026-08-26→2026-09-07,3400.0
+resumo.quedas_por_intervalo_ha.2026-09-07→2026-09-19,2032.0
+resumo.quedas_por_intervalo_ha.2026-09-19→2026-10-01,384.0
+resumo.quedas_por_intervalo_ha.2026-10-01→2026-10-13,328.0
