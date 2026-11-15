@@ -24,10 +24,16 @@ def parse_name(name):
         return {}
     times = re.findall(r"\d{8}T\d{6}", name)
     crid = re.search(r"_([PX]\d{5})_", name)
-    return {"nivel": m.group(1), "colecao": m.group(2), "produto": m.group(3),
-            "ciclo": int(m.group(4)), "pista": int(m.group(5)), "direcao": m.group(6),
-            "quadro": int(m.group(7)), "inicio": times[0] if times else None,
-            "crid": crid.group(1) if crid else None}
+    mode = re.search(r"_(\d{4})_([A-Z]{4})_", name)
+    out = {"nivel": m.group(1), "colecao": m.group(2), "produto": m.group(3),
+           "ciclo": int(m.group(4)), "pista": int(m.group(5)), "direcao": m.group(6),
+           "quadro": int(m.group(7)), "inicio": times[0] if times else None,
+           "crid": crid.group(1) if crid else None}
+    if mode:
+        out["modo_banda"], out["polarizacao"] = mode.group(1), mode.group(2)
+    if len(times) >= 3 and out["produto"] in ("GUNW", "RIFG", "RUNW", "GOFF", "ROFF"):
+        out["inicio_par2"] = times[2]          # produtos de par: referência e segunda data
+    return out
 
 
 def login():

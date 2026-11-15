@@ -194,7 +194,12 @@ def main():
              "metodo": S.__doc__.strip(), "parametros": S.PARAMS, "erros": {}}
 
     # 1) funil + metadados
-    log("funil da série NISAR ...")
+    try:
+        import run_inventory
+        ficha["inventario"] = run_inventory.run(case, out, start, end, grid.bbox, geometry)["por_produto"]
+    except Exception as e:
+        ficha["erros"]["inventario"] = f"{type(e).__name__}: {e}"; traceback.print_exc()
+    log("funil da série NISAR (GCOV, analisado) ...")
     fun, chosen, meta, geoms = sn.funnel_series(grid, start, end, geometry=geometry)
     ficha["funil"] = fun.summary(); ficha["geometrias_que_cobrem"] = geoms
     keys = sorted({k for m in meta for k in m})
