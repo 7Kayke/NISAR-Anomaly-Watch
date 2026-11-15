@@ -15,6 +15,8 @@ import argparse
 import json
 import re
 import shutil
+
+import numpy as np
 from datetime import datetime
 from pathlib import Path
 
@@ -22,6 +24,8 @@ APP = Path("docs/app/data")
 
 
 def slug(s):
+    import unicodedata
+    s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "_", s.lower()).strip("_")[:40]
 
 
@@ -32,6 +36,18 @@ def _num(v):
         return None
 
 
+def clean(o):
+    """JSON válido para o navegador: NaN e infinito viram null."""
+    import math
+    if isinstance(o, dict):
+        return {k: clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [clean(v) for v in o]
+    if isinstance(o, float) and not math.isfinite(o):
+        return None
+    return o
+
+
 def fmt(v, n=1):
     return f"{v:.{n}f}".replace(".", ",") if v is not None else "?"
 
@@ -40,12 +56,50 @@ def findings(f, serie, gunw):
     """Achados em linguagem simples, em pt e en, só a partir dos números."""
     out, lim = [], []
     ana = f.get("analise_por_geometria", {})
-    main = max(ana, key=lambda g: ana[g].get("passagens", 0)) if ana else None
+    # uma direção por trilho (quadros vizinhos do mesmo trilho são a mesma passagem)
+    seen, uniq = set(), {}
+    for gk in sorted(ana, key=lambda g: -(ana[g].get("passagens_com_hv") or 0)):
+        tk = tuple(gk.split("_")[:2])
+        if tk not in seen:
+            seen.add(tk); uniq[gk] = ana[gk]
+    ana = uniq
+    # mesma queda vista por direções diferentes (quebra com t <= -2,5 e >= 0,5 dB, meio do intervalo a até 15 dias)
+    drops = []
+    for gk, e_ in ana.items():
+        if e_.get("degrau_entre") and (e_.get("t_do_degrau") or 0) <= -2.5 and (e_.get("maior_degrau_db") or 0) <= -0.5:
+            a_, b_ = [datetime.fromisoformat(x) for x in e_["degrau_entre"]]
+            drops.append((a_ + (b_ - a_) / 2, gk, e_))
+    drops.sort()
+    best_cluster = []
+    for i, (mid, gk, e_) in enumerate(drops):
+        cl = [x for x in drops if abs((x[0] - mid).days) <= 15]
+        if len(cl) > len(best_cluster):
+            best_cluster = cl
+    multi = best_cluster if len(best_cluster) >= 2 else []
+    if multi:
+        d0 = min(datetime.fromisoformat(x[2]["degrau_entre"][0]) for x in multi)
+        d1 = max(datetime.fromisoformat(x[2]["degrau_entre"][1]) for x in multi)
+        mags = [x[2]["maior_degrau_db"] for x in multi]
+        lo_, hi_ = min(mags), max(mags)
+        out.append({"tipo": "visivel", "valor": f"{fmt(hi_)} a {fmt(lo_)} dB",
+                    "pt": f"A vegetação perdeu estrutura entre {d0:%d/%m} e {d1:%d/%m}: o HV caiu de {fmt(abs(hi_))} a {fmt(abs(lo_))} dB, "
+                          f"e {len(multi)} direções de passagem independentes viram a mesma queda ({', '.join(x[1] for x in multi)}).",
+                    "en": f"Vegetation lost structure between {d0:%b %d} and {d1:%b %d}: HV dropped by {fmt(abs(hi_))} to {fmt(abs(lo_))} dB, "
+                          f"and {len(multi)} independent pass directions saw the same drop ({', '.join(x[1] for x in multi)})."})
+    rs = [(gk, e_["r_hh_umidade_nisar_sme2"]) for gk, e_ in ana.items() if e_.get("r_hh_umidade_nisar_sme2") is not None]
+    good_r = [r for _, r in rs if r >= 0.5]
+    if good_r:
+        out.append({"tipo": "invisivel", "valor": f"r {fmt(min(good_r), 2)}–{fmt(max(good_r), 2)}",
+                    "pt": f"Água no solo (invisível ao olho): em {len(good_r)} de {len(rs)} direções de passagem, o brilho HH acompanha a umidade do solo medida pelo próprio NISAR (SME2), r de {fmt(min(good_r), 2)} a {fmt(max(good_r), 2)}.",
+                    "en": f"Water in the soil (invisible to the eye): in {len(good_r)} of {len(rs)} pass directions, HH brightness follows the soil moisture measured by NISAR itself (SME2), r from {fmt(min(good_r), 2)} to {fmt(max(good_r), 2)}."})
+    main = max(ana, key=lambda g: ana[g].get("passagens_com_hv", 0)) if ana else None
     e = ana.get(main, {}) if main else {}
     if e.get("passagens", 0) >= 4:
         hv = [s["hv"] for s in serie if s["g"] == main and s["hv"] is not None and not s["anom"]]
         strong = abs(e.get("t_do_degrau") or 0) >= 4 and abs(e.get("maior_degrau_db") or 0) >= 1
-        if strong and e.get("degrau_entre"):
+        if multi or good_r:
+            pass
+        elif strong and e.get("degrau_entre"):
             d0, d1 = e["degrau_entre"]
             up = (e["maior_degrau_db"] or 0) > 0
             out.append({"tipo": "visivel", "valor": f"{'+' if up else ''}{fmt(e['maior_degrau_db'])} dB",
@@ -58,7 +112,7 @@ def findings(f, serie, gunw):
                         "pt": f"A vegetação oscilou {fmt(max(hv) - min(hv))} dB no HV ao longo do período, sem um degrau forte.",
                         "en": f"Vegetation (HV) varied by {fmt(max(hv) - min(hv))} dB over the period, with no strong single step."})
         r = e.get("r_hh_chuva")
-        if r is not None:
+        if r is not None and not good_r:
             strength = "forte" if abs(r) >= 0.6 else ("moderada" if abs(r) >= 0.4 else "fraca")
             en_s = {"forte": "strong", "moderada": "moderate", "fraca": "weak"}[strength]
             txt_s = e.get("r_hh_umidade_nisar_sme2")
@@ -73,6 +127,16 @@ def findings(f, serie, gunw):
             out.append({"tipo": "lento", "valor": f"{fmt(sl, 2)} dB/mês",
                         "pt": f"Mudança lenta: o ponto {'escurece' if sl < 0 else 'clareia'} em relação ao entorno, {fmt(abs(sl), 2)} dB por mês. É um indício, não uma conclusão.",
                         "en": f"Slow change: the point is getting {'darker' if sl < 0 else 'brighter'} than its surroundings, {fmt(abs(sl), 2)} dB per month. A hint, not a conclusion."})
+    import statistics
+    med = {}
+    for g in gunw:
+        if g["coh"] is not None:
+            med.setdefault(g["g"], []).append(g["coh"])
+    bad_geo = {k for k, v in med.items() if statistics.median(v) < 0.2}
+    gunw = [g for g in gunw if g["g"] not in bad_geo]
+    if bad_geo:
+        lim.append({"pt": f"Direção(ões) {', '.join(sorted(bad_geo))} sem coerência útil neste ponto (mediana < 0,2): fora da análise do chão.",
+                    "en": f"Pass direction(s) {', '.join(sorted(bad_geo))} have no useful coherence at this point (median < 0.2): left out of the ground analysis."})
     good = [g for g in gunw if g["coh"] is not None and g["coh"] >= 0.3 and g["desl"] is not None]
     if good:
         lo, hi = min(g["desl"] for g in good), max(g["desl"] for g in good)
@@ -80,6 +144,20 @@ def findings(f, serie, gunw):
         out.append({"tipo": "chao", "valor": f"{fmt(lo)} a {fmt(hi)} cm",
                     "pt": f"O chão: em {len(good)} pares de interferometria confiáveis, o ponto se moveu entre {fmt(lo)} e {fmt(hi)} cm em relação ao entorno; coerência mediana {fmt(cohs[len(cohs) // 2], 2)}.",
                     "en": f"The ground: across {len(good)} reliable interferometric pairs, the point moved between {fmt(lo)} and {fmt(hi)} cm relative to its surroundings; median coherence {fmt(cohs[len(cohs) // 2], 2)}."})
+    low_all = [g for g in gunw if g["coh"] is not None and g["coh"] < 0.5]
+    mid_low = []                              # janela de 45 dias com mais trilhos diferentes em baixa coerência
+    for g0 in low_all:
+        a0 = datetime.fromisoformat(g0["d1"])
+        win = [g for g in low_all if 0 <= (datetime.fromisoformat(g["d1"]) - a0).days <= 45]
+        if len({g["g"].split("_")[0] for g in win}) > len({g["g"].split("_")[0] for g in mid_low}):
+            mid_low = win
+    tracks = {g["g"].split("_")[0] for g in mid_low}
+    if len(tracks) >= 2:
+        a_ = min(g["d1"] for g in mid_low); b_ = max(g["d2"] for g in mid_low)
+        fa, fb = datetime.fromisoformat(a_), datetime.fromisoformat(b_)
+        out.append({"tipo": "chao", "valor": f"{fa:%d/%m}–{fb:%d/%m}",
+                    "pt": f"A superfície mexeu: a coerência caiu abaixo de 0,5 em {len(mid_low)} pares, vistos por {len(tracks)} trilhos diferentes, entre {fa:%d/%m} e {fb:%d/%m}. Algo alterou o chão (água baixando, queima, pisoteio).",
+                    "en": f"The surface was disturbed: coherence fell below 0.5 in {len(mid_low)} pairs, seen from {len(tracks)} different tracks, between {fa:%b %d} and {fb:%b %d}. Something changed the ground (water receding, burning, trampling)."})
     low = [g for g in gunw if g["coh"] is not None and g["coh"] < 0.3]
     if low:
         out.append({"tipo": "chao", "valor": f"{len(low)} pares",
@@ -142,16 +220,22 @@ def build_point(folder, region_id):
            "fonte": "NISAR L2 GCOV, L2 GUNW, L3 SME2 (NASA/JPL, ASF DAAC); clima: NASA POWER"}
     dest = APP / region_id
     dest.mkdir(parents=True, exist_ok=True)
-    (dest / f"ponto_{pid}.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    (dest / f"ponto_{pid}.json").write_text(json.dumps(clean(out), ensure_ascii=False, allow_nan=False), encoding="utf-8")
     for extra in ("animacao_ponto.gif", "historia_do_ponto.png"):
         if (folder / extra).exists():
             shutil.copy(folder / extra, dest / f"{pid}_{extra}")
     return {"id": pid, "nome": f["nome"], "lat": f["ponto"]["lat"], "lon": f["ponto"]["lon"], "arquivo": f"{region_id}/ponto_{pid}.json"}
 
 
+def png_u8(a, path):
+    """Matriz uint8 como PNG em tons de cinza sem perda: o navegador lê os valores de volta no canvas.
+    (Formato servido em qualquer lugar, ao contrário de .bin.) Pilhas (T, H, W) vão empilhadas na vertical."""
+    from PIL import Image
+    Image.fromarray(np.ascontiguousarray(a), mode="L").save(path, optimize=True)
+
+
 def build_area(folder, region_id):
     """Mapas de mudança da área: uma entrada por geometria (pista/direção/quadro), mais concordância e coerência."""
-    import numpy as np
     folder = Path(folder)
     dest = APP / region_id / "area"
     dest.mkdir(parents=True, exist_ok=True)
@@ -160,8 +244,11 @@ def build_area(folder, region_id):
         m = json.loads((sub / "app" / "app.json").read_text(encoding="utf-8"))
         gd = dest / sub.name
         gd.mkdir(exist_ok=True)
-        for fn in ("app.json", "hv_u8.bin", "hh_u8.bin", "mapas_u8.bin"):
-            shutil.copy(sub / "app" / fn, gd / fn)
+        shutil.copy(sub / "app" / "app.json", gd / "app.json")
+        T_, H_, W_ = m["forma"]
+        for fn, n in (("hv_u8", T_), ("hh_u8", T_), ("mapas_u8", 6)):
+            a = np.fromfile(sub / "app" / f"{fn}.bin", dtype="uint8").reshape(n * H_, W_)
+            png_u8(a, gd / f"{fn}.png")
         f = json.loads((sub / "ficha_tecnica.json").read_text(encoding="utf-8")) if (sub / "ficha_tecnica.json").exists() else {}
         res = f.get("resumo", {})
         geos.append({"id": sub.name, "pasta": f"{region_id}/area/{sub.name}", "passagens": len(m["datas"]),
@@ -179,7 +266,30 @@ def build_area(folder, region_id):
         out["clima"] = {"chuva_mm": {iso(k): v for k, v in c.get("PRECTOTCORR", {}).items()},
                         "umidade_solo": {iso(k): v for k, v in c.get("GWETTOP", {}).items()}}
     gw = folder / "gunw"
+    out["achados"] = []
     if (gw / "pares.json").exists():
+        import statistics
+        pares = [p for p in json.loads((gw / "pares.json").read_text(encoding="utf-8")) if "erro" not in p and p.get("coerencia_mediana") is not None]
+        med = {}
+        for p_ in pares:
+            med.setdefault(p_["geometria"].split("_")[0], []).append(p_["coerencia_mediana"])
+        ok_tracks = {k for k, v in med.items() if statistics.median(v) >= 0.4}
+        hit = [p_ for p_ in pares if p_["geometria"].split("_")[0] in ok_tracks and p_["area_coerencia_baixa_pct"] >= 20]
+        if len({p_["geometria"].split("_")[0] for p_ in hit}) >= 2:
+            d0 = min(p_["data1"] for p_ in hit); d1 = max(p_["data2"] for p_ in hit)
+            lo_, hi_ = min(p_["area_coerencia_baixa_pct"] for p_ in hit), max(p_["area_coerencia_baixa_pct"] for p_ in hit)
+            base = [p_["area_coerencia_baixa_pct"] for p_ in pares if p_["geometria"].split("_")[0] in ok_tracks and p_ not in hit]
+            b = statistics.median(base) if base else None
+            ntr = len({p_["geometria"].split("_")[0] for p_ in hit})
+            fa, fb = datetime.fromisoformat(d0), datetime.fromisoformat(d1)
+            out["achados"].append({"tipo": "chao", "valor": {"pt": f"{fmt(lo_, 0)}–{fmt(hi_, 0)}% da área", "en": f"{lo_:.0f}–{hi_:.0f}% of the area"},
+                "pt": f"Entre {fa:%d/%m} e {fb:%d/%m}, {fmt(lo_, 0)} a {fmt(hi_, 0)}% da área perdeu a coerência (abaixo de 0,3), contra {fmt(b, 0)}% nos outros pares. {ntr} trilhos independentes viram o mesmo: a superfície mudou de verdade (fogo, secagem ou manejo), mesmo onde a imagem parece igual.",
+                "en": f"Between {fa:%b %d} and {fb:%b %d}, {lo_:.0f} to {hi_:.0f}% of the area lost coherence (below 0.3), against {b:.0f}% in the other pairs. {ntr} independent tracks saw the same: the surface really changed (fire, drying or land management), even where the image looks the same."})
+        if med:
+            bad = sorted(k for k in med if k not in ok_tracks)
+            if bad:
+                out.setdefault("limitacoes", []).append({"pt": f"Trilho(s) {', '.join(bad)} com coerência baixa em quase todos os pares: fora das conclusões sobre o chão.",
+                                                         "en": f"Track(s) {', '.join(bad)} have low coherence in almost every pair: left out of ground conclusions."})
         out["gunw"] = [p for p in json.loads((gw / "pares.json").read_text(encoding="utf-8")) if "erro" not in p]
         tif = gw / "coerencia_media.tif"
         if tif.exists() and geos:
@@ -191,8 +301,8 @@ def build_area(folder, region_id):
             c = c[:H * st, :W * st].reshape(H, st, W, st)
             with np.errstate(invalid="ignore"):
                 c = np.nanmean(c, axis=(1, 3))
-            np.where(np.isfinite(c), np.clip(c * 254 + 1, 1, 255), 0).astype("uint8").tofile(dest / "coerencia_u8.bin")
-            out["coerencia"] = f"{region_id}/area/coerencia_u8.bin"
+            png_u8(np.where(np.isfinite(c), np.clip(c * 254 + 1, 1, 255), 0).astype("uint8"), dest / "coerencia_u8.png")
+            out["coerencia"] = f"{region_id}/area/coerencia_u8.png"
     return out
 
 
@@ -220,7 +330,7 @@ def main():
                                                   "area_ponto": caso.get("ponto"), "bbox": g.get("bbox"),
                                                   "periodo": g.get("periodo"), "malha": f"{a.id}/malha.geojson" if g else None, "pontos": pts,
                                                   "area": area}]
-    idx_f.write_text(json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
+    idx_f.write_text(json.dumps(clean(idx), ensure_ascii=False, indent=1, allow_nan=False), encoding="utf-8")
     print(f"ok: {a.id}, {len(pts)} ponto(s) -> {APP}")
 
 

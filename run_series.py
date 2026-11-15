@@ -45,14 +45,14 @@ def read_cached(granule, grid, cache):
     f = cache / f"{name}_{h}.npz"
     if f.exists():
         z = np.load(f, allow_pickle=False)
-        d = {"HHHH": z["HHHH"], "HVHV": z["HVHV"]}
+        d = {k: z[k] for k in ("HHHH", "HVHV") if k in z.files}
         if "mascara_relevo" in z:
             d["mascara_relevo"] = z["mascara_relevo"]
         return d, json.loads(str(z["meta"]))
     arrs, meta = sn.read_gcov_subset(granule, grid)
     extra = {"mascara_relevo": arrs["mascara_relevo"].astype("uint8")} if "mascara_relevo" in arrs else {}
-    np.savez_compressed(f, HHHH=arrs["HHHH"].astype("float32"), HVHV=arrs["HVHV"].astype("float32"),
-                        meta=json.dumps(meta, default=str), **extra)
+    pols = {k: arrs[k].astype("float32") for k in ("HHHH", "HVHV") if k in arrs}   # passagens SHSH só têm HH
+    np.savez_compressed(f, meta=json.dumps(meta, default=str), **pols, **extra)
     return arrs, meta
 
 
@@ -203,7 +203,7 @@ def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
         except Exception as e:
             ficha["erros"][name] = f"{type(e).__name__}: {e}"; traceback.print_exc(); continue
         log(f"    ok em {time.time() - t_read:.0f} s")
-        hh.append(to_db(boxcar_linear(arrs["HHHH"], 3))); hv.append(to_db(boxcar_linear(arrs["HVHV"], 3)))
+        hh.append(to_db(boxcar_linear(arrs["HHHH"], 3))); hv.append(to_db(boxcar_linear(arrs["HVHV"], 3)) if "HVHV" in arrs else np.full(arrs["HHHH"].shape, np.nan))
         dates.append(datetime.strptime(m["inicio"], "%Y%m%dT%H%M%S").strftime("%Y-%m-%d"))
         used.append({"data": dates[-1], "arquivo": name, "colecao": snm, "crid": m.get("crid"), "ciclo": m.get("ciclo"),
                      "identificacao": m.get("identificacao")})
