@@ -151,6 +151,72 @@ body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display
   .slide .media img, .slide .media canvas { max-height: 38vh; }
   .gl { font-size: 11px; } .nexts { grid-template-columns: 1fr !important; }
 }
+
+/* ---- UI pass 2: NASA Web Design Standards spacing (15/20/30/60), 16 px body, left aligned, contrast >= 4.5:1 ---- */
+:root { --s1: 8px; --s2: 15px; --s3: 20px; --s4: 30px; }
+.hero p { margin: 10px auto 0 !important; max-width: 560px; color: #DCE6FA !important; font-size: 15px; }
+.hero { text-align: center; } .stories { justify-content: center; } .introbar { justify-content: center; }
+#q { font-size: 16px !important; color: #fff !important; border-color: #4E6FAE !important; background: #0E1D45 !important; min-height: 40px; } #q::placeholder { color: #C3D0EA; opacity: 1; }
+.legend { font-size: 14px !important; color: #FFFFFF !important; padding: var(--s2) !important; gap: var(--s1) !important; width: 240px; }
+.legend b { font-size: 14px; } .legend div[style] span { color: #C3D0EA; font-size: 13px; }
+#panel { padding: 0 !important; gap: 0 !important; }
+#panel > .x { top: 12px; right: 12px; z-index: 5; }
+#pbody { display: flex; flex-direction: column; }
+.ph { padding: var(--s3) var(--s3) var(--s2); border-bottom: 1px solid var(--edge); }
+.ph .k { font: 600 12px var(--mono) !important; letter-spacing: 1.5px; } .ph h2 { margin: 4px 0 4px !important; font-size: 20px !important; color: #fff; padding-right: 36px; }
+.ph .sub { font-size: 14px; color: #C3D0EA; line-height: 1.5; }
+.pnav { position: sticky; top: 0 !important; margin: 0 !important; padding: var(--s2) var(--s3) !important; background: #0E1D45 !important; gap: var(--s2) !important; }
+.pnav .arr { border-radius: 8px !important; }
+.pcount { flex-direction: column; align-items: flex-start !important; justify-content: center !important; gap: 0 !important; }
+.ptitle { font-size: 15px !important; }
+.pnav select { min-height: 40px; max-width: 46%; border-radius: 8px; border: 1px solid var(--edge); background: var(--panel); color: #fff; font: 14px var(--display); padding: 0 var(--s1); }
+.nums { display: none !important; }
+.pbody { padding: var(--s3); display: flex; flex-direction: column; gap: var(--s3); }
+.car { gap: 0; }
+.slide { gap: var(--s3) !important; padding: 0 !important; }
+.slide h3 { text-align: left !important; font-size: 18px !important; margin: 0 !important; }
+.slide .what { font-size: 16px !important; line-height: 1.6 !important; color: #F2F6FF; max-width: 65ch; }
+.slide .how { font-size: 15px !important; line-height: 1.6 !important; color: #C3D0EA; padding-left: var(--s2) !important; max-width: 65ch; }
+.slide .media { border-radius: 10px; }
+.slide .media:has(img.zoomable)::after, .slide .media:has(svg)::after { display: none; }
+.zbtn { position: absolute; right: var(--s1); bottom: var(--s1); width: 36px; height: 36px; border-radius: 8px; border: 0; background: rgba(2,6,15,.85); color: #fff; font-size: 16px; cursor: pointer; z-index: 2; }
+.zbtn:hover { outline: 1px solid var(--cyan); }
+.player { background: #050E26; border-radius: 10px; overflow: hidden; text-align: left; }
+.player .duo { position: relative; }
+.vctrl { padding: var(--s2); display: flex; flex-direction: column; gap: var(--s2); text-align: left; } .vctrl .scrub { width: 100%; }
+.trans { display: flex; align-items: center; gap: var(--s1); }
+.trans button { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--edge); background: transparent; color: #fff; font-size: 13px; cursor: pointer; }
+.trans button.play { width: 48px; height: 48px; background: var(--neon); color: #02122E; border: 0; font-size: 16px; }
+.trans .when { margin-left: var(--s1); font: 600 15px var(--mono); color: #fff; }
+.trans .cnt { font: 13px var(--mono); color: #C3D0EA; }
+.scrub input { width: 100%; margin: 0; accent-color: var(--neon); }
+.marks { position: relative; height: 10px; margin: 0 8px; } .marks i { position: absolute; top: 0; width: 2px; height: 10px; background: #5FB4F0; } .marks i.ev { background: #FF6B6B; width: 3px; }
+.ticks { position: relative; height: 16px; margin: 2px 8px 0; font: 12px var(--mono); color: #C3D0EA; } .ticks span { position: absolute; transform: translateX(-50%); }
+.pcl { padding: 0 !important; background: none !important; gap: var(--s1) !important; }
+.pcl button { min-height: 36px !important; font-size: 14px !important; }
+.card { background: #0E1D45; border-radius: 10px; padding: var(--s2); display: flex; flex-direction: column; gap: var(--s2); }
+.card h4 { margin: 0; font: 600 12px var(--mono); letter-spacing: 1.5px; color: #C3D0EA; }
+.facts { display: grid; grid-template-columns: 110px 1fr; gap: var(--s1) var(--s2); margin: 0; font-size: 15px; line-height: 1.5; }
+.facts dt { color: #C3D0EA; } .facts dd { margin: 0; color: #fff; } .facts dd b { color: var(--neon); font-weight: 600; }
+.none { margin: 0; font-size: 15px; color: #C3D0EA; line-height: 1.5; }
+.note { font-size: 13px !important; color: #C3D0EA !important; line-height: 1.5 !important; }
+.list button { min-height: 40px; font-size: 14px !important; }
+/* viewer: fixed 16:9 window over a dimmed, blurred globe */
+#vw { position: fixed; inset: 0; z-index: 60; background: rgba(2,6,15,.62); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: grid; place-items: center; padding: var(--s3); }
+#vw[hidden] { display: none; }
+.vwm { width: min(1100px, 100%); background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.55); display: flex; flex-direction: column; max-height: calc(100vh - 40px); }
+.vwh { display: flex; align-items: center; gap: var(--s1); padding: var(--s2) var(--s3); border-bottom: 1px solid var(--edge); }
+.vwh h3 { margin: 0; font-size: 16px; color: #fff; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vwh button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--edge); background: transparent; color: #fff; font-size: 16px; cursor: pointer; }
+.vwh button:disabled { opacity: .35; cursor: default; }
+.vwb { position: relative; background: #050E26; height: min(calc((min(1100px, 100vw - 40px)) * 0.5625), calc(100vh - 220px)); padding: var(--s2); }
+.vwb > img, .vwb > svg { position: absolute; inset: var(--s2); width: calc(100% - 30px); height: calc(100% - 30px); object-fit: contain; }
+.vwb:has(> .player) { height: auto; } .vwb > .player { display: flex; flex-direction: column; }
+.vwb > .player .duo { display: flex; justify-content: center; gap: 4px; }
+.vwb > .player .duo figure { aspect-ratio: 318 / 332; height: min(54vh, 44vw); flex: none; }
+.vwb > .player .zbtn { display: none; }
+.vwf { padding: var(--s2) var(--s3); font-size: 15px; color: #DCE6FA; border-top: 1px solid var(--edge); line-height: 1.5; max-height: 22vh; overflow: auto; }
+@media (max-width: 760px) { .vwb { height: min(70vw, 55vh); } .facts { grid-template-columns: 92px 1fr; font-size: 14px; } .pnav select { display: none; } #vw { padding: 8px; } }
 </style>
 </head>
 <body>
@@ -175,7 +241,7 @@ body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display
 <div class="demo" id="demo"></div>
 
 <div class="zoomctl" role="group" aria-label="Zoom"><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zhome" aria-label="Reset view">⌂</button></div>
-<div id="lb" hidden role="dialog" aria-modal="true"><button type="button" id="lbx" aria-label="Close">×</button><div id="lbc"></div></div>
+<div id="vw" hidden role="dialog" aria-modal="true" aria-labelledby="vwt"><div class="vwm"><div class="vwh"><h3 id="vwt"></h3><button type="button" id="vwp" aria-label="Previous">←</button><button type="button" id="vwn" aria-label="Next">→</button><button type="button" id="vwx" aria-label="Close">×</button></div><div class="vwb" id="vwb"></div><div class="vwf" id="vwf"></div></div></div>
 <aside id="panel" aria-live="polite"><button class="x" id="close" aria-label="Close">×</button><div id="pbody"></div></aside>
 
 <script src="d3.min.js"></script>
@@ -216,7 +282,9 @@ const T = {
     glossT: "GLOSSARY: WHAT EACH DATA LAYER MEANS", gTerm: "Term", gWhat: "What it is", gUse: "What we use it for",
     sumT: "SUMMARY", optCalc: "Measuring NDVI pixel by pixel…", chgCap: "NDVI change · orange = lost vegetation · green = gained · grey = cloud", optT: "SAME PLACE, SAME DATES, IN OPTICAL", optWait: "Searching Planetary Computer…", optNone: "No clear optical scene near this date", optFail: "Planetary Computer not reachable from here",
     optRule: (s, g) => `Chosen by calculation, not by hand: the ${s} scene closest to each NISAR file with the least cloud, and the same sensor and ${g} on both dates, so only time changes between the two images.`,
-    pathrow: "path/row", tile: "tile", cloud: "cloud", of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next", hlKick: "HIGHLIGHT", hlNote: "Highlight areas use real NISAR results with a lighter analysis than Paiaguás.", hasHL: (n) => `This frame has a highlight: ${n}`, lgHL: "Highlight areas",
+    pathrow: "path/row", tile: "tile", cloud: "cloud", expand: "Open in the viewer", prevPass: "Previous pass", nextPass: "Next pass", pickDate: "Pick a date", catT: "NASA CATALOG",
+    cropOnly: "Paiaguás · 13 × 13 km · every number in this guide comes from this square", optNoneLine: "No clear Landsat or Sentinel-2 scene near these dates (clouds). Here, radar is the way.",
+    optNoneFirst: "No clear scene near the first file", of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next", hlKick: "HIGHLIGHT", hlNote: "Highlight areas use real NISAR results with a lighter analysis than Paiaguás.", hasHL: (n) => `This frame has a highlight: ${n}`, lgHL: "Highlight areas",
     cohKeep: ["track 31 · ascending", "track 132 · ascending", "track 10 · descending", "track 111 · unreliable"],
     cohAxis: "height = % of the area that lost coherence (changed) between the two passes", cohNorm: "normal band: under 10% (ground did not move)",
     cohTip: "without coherence", months: ["Jul", "Aug", "Sep", "Oct"], jun: "Jun", nov: "Nov", mon: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -251,7 +319,9 @@ const T = {
     glossT: "GLOSSÁRIO: O QUE SIGNIFICA CADA DADO", gTerm: "Termo", gWhat: "O que é", gUse: "Para que usamos",
     sumT: "RESUMO", optCalc: "Medindo o NDVI pixel a pixel…", chgCap: "Mudança no NDVI · laranja = perdeu vegetação · verde = ganhou · cinza = nuvem", optT: "MESMO LUGAR, MESMAS DATAS, NO ÓPTICO", optWait: "Buscando no Planetary Computer…", optNone: "Sem cena óptica limpa perto desta data", optFail: "Sem acesso ao Planetary Computer daqui",
     optRule: (s, g) => `Escolhidas por cálculo, não a dedo: a cena do ${s} mais próxima de cada arquivo do NISAR e com menos nuvem, com o mesmo sensor e a mesma ${g} nas duas datas, para que só o tempo mude entre as duas imagens.`,
-    pathrow: "órbita/linha", tile: "quadrícula", cloud: "nuvem", of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo", hlKick: "DESTAQUE", hlNote: "As áreas em destaque usam resultados reais do NISAR, com uma análise mais leve que a do Paiaguás.", hasHL: (n) => `Este quadro tem um destaque: ${n}`, lgHL: "Áreas em destaque",
+    pathrow: "órbita/linha", tile: "quadrícula", cloud: "nuvem", expand: "Abrir no visualizador", prevPass: "Passagem anterior", nextPass: "Próxima passagem", pickDate: "Escolher a data", catT: "CATÁLOGO DA NASA",
+    cropOnly: "Paiaguás · 13 × 13 km · todos os números deste guia vêm deste quadrado", optNoneLine: "Nenhuma cena limpa de Landsat ou Sentinel-2 perto dessas datas (nuvens). Aqui, o radar é o caminho.",
+    optNoneFirst: "Sem cena limpa perto do primeiro arquivo", of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo", hlKick: "DESTAQUE", hlNote: "As áreas em destaque usam resultados reais do NISAR, com uma análise mais leve que a do Paiaguás.", hasHL: (n) => `Este quadro tem um destaque: ${n}`, lgHL: "Áreas em destaque",
     cohKeep: ["pista 31 · ascendente", "pista 132 · ascendente", "pista 10 · descendente", "pista 111 · não confiável"],
     cohAxis: "altura = % da área que perdeu a coerência (mudou) entre as duas passagens", cohNorm: "faixa normal: menos de 10% (chão parado)",
     cohTip: "sem coerência", months: ["jul", "ago", "set", "out"], jun: "jun", nov: "nov", mon: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
@@ -335,21 +405,14 @@ function drawLabels(k, fast) { const [cx, cy] = proj.translate(), ctr = proj.inv
   if (k < 3) OCEANS.forEach(([n, lo, la]) => put(L2(n), lo, la, STY.ocean, 12.5)); }
 function studyFrames() { return REAL ? frames.filter((f) => PG.includes(f.properties.id)) : frames.filter((f) => d3.geoContains(f, [P.lon, P.lat])); }
 const TRK = { "031": "#EAFE07", "132": "#7FE8FF", "010": "#FF8A3D", "111": "#A0A8BA" };
-function drawStudy() { const S = studyFrames(); if (!S.length) return; const pt = lang === "pt";
-  S.forEach((f) => { ctx.beginPath(); path(f); ctx.fillStyle = "rgba(234,254,7,0.06)"; ctx.fill(); });
-  S.forEach((f) => { const id = f.properties.id || ""; const c = TRK[id.slice(0, 3)] || "#EAFE07"; ctx.beginPath(); path(f); ctx.setLineDash([10, 6]); ctx.lineWidth = 3.2; ctx.strokeStyle = "rgba(0,0,0,0.65)"; ctx.stroke(); ctx.lineDashOffset = 8; ctx.lineWidth = 2.2; ctx.strokeStyle = c; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; });
-  const c0 = proj([P.lon, P.lat]); if (!c0) return;
-  S.forEach((f) => { const id = f.properties.id || ""; if (!id) return; const c = TRK[id.slice(0, 3)] || "#EAFE07";   // label at the frame corner farthest from the crop
-    let far = null, dm = -1; f.geometry.coordinates[0].forEach((q) => { const z = proj(q); if (!z) return; const dd = Math.hypot(z[0] - c0[0], z[1] - c0[1]); if (dd > dm) { dm = dd; far = z; } });
-    if (!far || W < 760) return; const tr = +id.slice(0, 3), up = id[4] === "A"; const txt = `${pt ? "Pista" : "Track"} ${tr} ${up ? "↑" : "↓"} ${up ? (pt ? "madrugada" : "dawn") : (pt ? "fim de tarde" : "dusk")}${id.startsWith("111") ? (pt ? " · fora" : " · excluded") : ""}`;
-    const mx = c0[0] + (far[0] - c0[0]) * 0.82, my = c0[1] + (far[1] - c0[1]) * 0.82; pill(txt, mx, my, c, 12, mx < c0[0] ? "right" : "left"); });
-  let top = null; S.forEach((f) => f.geometry.coordinates[0].forEach((q) => { const z = proj(q); if (z && (!top || z[1] < top[1])) top = z; }));
-  if (top) pill(W < 760 ? (pt ? `Região estudada · ${S.length} quadros NISAR` : `Study region · ${S.length} NISAR frames`) : t("study")(S.length), top[0], top[1] - 22, "#EAFE07", 14, "center");
-  const r = Math.max(14, 0.06 * proj.scale() * RAD);
-  ctx.beginPath(); ctx.arc(c0[0], c0[1], r, 0, 7); ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke(); ctx.setLineDash([]);
-  ctx.beginPath(); path(PCELL); ctx.fillStyle = "rgba(255,107,0,0.6)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FF6B00"; ctx.stroke();
-  const ex = c0[0], ey = c0[1] + r + 34; ctx.beginPath(); ctx.moveTo(c0[0], c0[1] + r); ctx.lineTo(ex, ey - 10); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FFFFFF"; ctx.stroke();
-  if (W >= 760) pill(`${t("crop")} · ${t("cropB")}`, ex, ey, "#FFFFFF", 12, "center"); }
+function drawStudy() { const c0 = proj([P.lon, P.lat]); if (!c0) return;
+  const corners = PCELL.coordinates[0].slice(0, 4).map((q) => proj(q)); const xs = corners.map((q) => q[0]), ys = corners.map((q) => q[1]);
+  const w = Math.max(...xs) - Math.min(...xs), small = w < 26;
+  if (small) { ctx.beginPath(); ctx.arc(c0[0], c0[1], 18, 0, 7); ctx.fillStyle = "rgba(255,107,0,.25)"; ctx.fill(); ctx.setLineDash([5, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke(); ctx.setLineDash([]); }
+  ctx.beginPath(); path(PCELL); ctx.fillStyle = "rgba(255,107,0,0.35)"; ctx.fill();
+  ctx.setLineDash([8, 5]); ctx.lineWidth = 3.4; ctx.strokeStyle = "rgba(0,0,0,.7)"; ctx.stroke(); ctx.lineDashOffset = 6; ctx.lineWidth = 2.4; ctx.strokeStyle = "#FF8A3D"; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  const top = Math.min(...ys) - (small ? 22 : 10);
+  pill(W < 760 ? "Paiaguás · 13 × 13 km" : t("cropOnly"), c0[0], top - 14, "#FFB27A", 13, "center"); }
 function draw(fast) {
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
   stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
@@ -377,12 +440,12 @@ cv.addEventListener("pointerdown", (e) => { touches.set(e.pointerId, [e.clientX,
   drag = { x: e.clientX, y: e.clientY, r: proj.rotate() }; moved = false; cv.classList.add("drag"); });
 cv.addEventListener("pointercancel", (e) => { touches.delete(e.pointerId); pinch = null; drag = null; });
 cv.addEventListener("pointermove", (e) => { if (touches.has(e.pointerId)) touches.set(e.pointerId, [e.clientX, e.clientY]);
-  if (pinch && touches.size === 2) { const [a, b] = [...touches.values()]; proj._k = Math.max(0.8, Math.min(60, pinch.k * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d)); proj.scale(base * proj._k); draw(true); return; }
+  if (pinch && touches.size === 2) { const [a, b] = [...touches.values()]; proj._k = Math.max(0.8, Math.min(150, pinch.k * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d)); proj.scale(base * proj._k); draw(true); return; }
   if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
   const s = 75 / proj.scale(); proj.rotate([drag.r[0] + dx * s, Math.max(-90, Math.min(90, drag.r[1] - dy * s))]); draw(true); });
 cv.addEventListener("pointerup", (e) => { touches.delete(e.pointerId); if (pinch) { if (touches.size < 2) { pinch = null; draw(); } return; } cv.classList.remove("drag"); const was = drag; drag = null; if (!moved && was) pick(e.clientX, e.clientY); else draw(); });
-cv.addEventListener("wheel", (e) => { e.preventDefault(); proj._k = Math.max(0.8, Math.min(60, proj._k * Math.exp(-e.deltaY * 0.0015))); proj.scale(base * proj._k); draw(true); clearTimeout(cv._t); cv._t = setTimeout(() => draw(), 120); }, { passive: false });
-function zoomBy(f) { const k0 = proj._k, k1 = Math.max(0.8, Math.min(60, k0 * f)); const t0 = performance.now();
+cv.addEventListener("wheel", (e) => { e.preventDefault(); proj._k = Math.max(0.8, Math.min(150, proj._k * Math.exp(-e.deltaY * 0.0015))); proj.scale(base * proj._k); draw(true); clearTimeout(cv._t); cv._t = setTimeout(() => draw(), 120); }, { passive: false });
+function zoomBy(f) { const k0 = proj._k, k1 = Math.max(0.8, Math.min(150, k0 * f)); const t0 = performance.now();
   const tick = (now) => { const tt = Math.min(1, (now - t0) / 350); proj._k = k0 + (k1 - k0) * d3.easeCubicOut(tt); proj.scale(base * proj._k); draw(tt < 1); if (tt < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
 function home() { if (typeof spin !== "undefined" && spin) stopSpin(); fly(-58, -8, 1.05); }
 function fly(lon, lat, k) { const r0 = proj.rotate(), k0 = proj._k; const ri = d3.interpolate(r0, [-lon, -lat]), ki = d3.interpolateNumber(k0, k);
@@ -399,23 +462,23 @@ function pick(x, y) {
 }
 const panel = document.getElementById("panel"), pb = document.getElementById("pbody");
 function closeP() { stopV(); if (optAbort) optAbort.abort(); view = null; panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
-function openP() { if (introOn) endIntro(); const k = REAL ? 9 : 11; fly(P.lon + (W > 900 ? 300 / (base * k) / RAD : 0), P.lat + (W > 900 ? 0 : -H * 0.26 / (base * k) / RAD), k); setTimeout(showP, 1150); }
+function openP() { if (introOn) endIntro(); const k = 80; fly(P.lon + (W > 900 ? 300 / (base * k) / RAD : 0), P.lat + (W > 900 ? 0 : -H * 0.34 / (base * k) / RAD), k); setTimeout(showP, 1150); }
 document.getElementById("close").onclick = closeP;
 const thumb = (u, d, label, i) => `<div class="thumb" id="b${i}">${u ? `<img src="${u}" alt="NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('${t("noPrev")}'))">` : `${label}<br>(${fd(d)})`}</div>`;
 function showF(f, others, noLive) { stopV(); view = ["F", f, others]; panel.classList.remove("wide"); sel = f; const p = f.properties; draw();
   const days = (Date.parse(p.p1) - Date.parse(p.p0)) / 864e5;
-  pb.innerHTML = `<div class="k">${t("shallow")}</div><h2>${t("frame")} ${gid(p)}</h2><div class="note">${gname(p)}</div>
+  pb.innerHTML = `<div class="ph"><div class="k">${t("shallow")}</div><h2>${t("frame")} ${gid(p)}</h2><div class="sub">${gname(p)}</div></div>
+  <div class="pbody">
+  <div class="card"><h4>${t("catT")}</h4>
   <div class="grid2"><div class="cell"><div class="l">${t("first")}</div><div class="v">${fd(p.p0)}</div></div><div class="cell"><div class="l">${t("last")}</div><div class="v">${fd(p.p1)}</div></div>
   <div class="cell"><div class="l">${t("passes")}</div><div class="v">${p.n}</div></div><div class="cell"><div class="l">${t("span")}</div><div class="v">${Math.round(days)} ${t("days")}</div></div></div>
   <div class="grid2">${thumb(p.b0, p.p0, t("prev0"), 0)}${thumb(p.b1, p.p1, t("prev1"), 1)}</div>
-  ${p.real ? `<div class="note" style="color:#8FD9A8">${t("realNote")} ${p.g0 ? p.g0.slice(0, 26) + "…" : ""}</div>` : `<div class="note" id="live" style="color:#FFD27A">${t("asking")}</div>`}
-  <div class="k" style="margin-top:4px">${t("optT")}</div>
-  <div class="grid2" id="opt"><div class="thumb">${t("optWait")}</div><div class="thumb">${t("optWait")}</div></div>
-  <div class="note" id="optNote"></div>
-  <div class="k" style="margin-top:4px">${t("sumT")}</div><div class="sum" id="sum">${summary(f)}</div>
-  <p class="note">${t("shallowNote")}</p>
-  ${others.length ? `<div class="k">${t("others")}</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} ${lang === "pt" ? "passagens" : "passes"}</button>`).join("")}</div>` : ""}
-  ${(REAL ? PG.includes(p.id) : d3.geoContains(f, [P.lon, P.lat])) ? `<button type="button" class="btn solid" id="toP">${t("hasFull")}</button>` : hlOf(p) ? `<button type="button" class="btn" id="toA" style="border-color:var(--cyan);color:var(--cyan)">${t("hasHL")(L2(hlOf(p).name))}</button>` : `<a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Full analysis: frame " + gid(p))}" target="_blank" rel="noopener">${t("ask")}</a>`}`;
+  ${p.real ? `<p class="note">${t("realNote")} ${p.g0 ? p.g0.slice(0, 26) + "…" : ""}</p>` : `<p class="note" id="live">${t("asking")}</p>`}</div>
+  <div class="card"><h4>${t("optT")}</h4><div class="grid2" id="opt"><div class="thumb">${t("optWait")}</div><div class="thumb">${t("optWait")}</div></div><p class="note" id="optNote"></p></div>
+  <div class="card"><h4>${t("sumT")}</h4><div id="sum">${summary(f)}</div><p class="note">${t("shallowNote")}</p></div>
+  ${others.length ? `<div class="card"><h4>${t("others")}</h4><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} ${lang === "pt" ? "passagens" : "passes"}</button>`).join("")}</div></div>` : ""}
+  ${(REAL ? PG.includes(p.id) : d3.geoContains(f, [P.lon, P.lat])) ? `<button type="button" class="btn solid" id="toP" style="align-self:flex-start">${t("hasFull")}</button>` : hlOf(p) ? `<button type="button" class="btn" id="toA" style="align-self:flex-start;border-color:var(--cyan);color:var(--cyan)">${t("hasHL")(L2(hlOf(p).name))}</button>` : `<a class="btn" style="align-self:flex-start" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Full analysis: frame " + gid(p))}" target="_blank" rel="noopener">${t("ask")}</a>`}
+  </div>`;
   const tp = document.getElementById("toP"); if (tp) tp.onclick = openP; const ta = document.getElementById("toA"); if (ta) ta.onclick = () => openA(hlOf(p));
   pb.querySelectorAll("[data-o]").forEach((b) => b.onclick = () => showF(others[+b.dataset.o], [f, ...others.filter((_, j) => j !== +b.dataset.o)]));
   panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL && !p.real && !noLive) live(lastLL); optical(p, lastLL || d3.geoCentroid(f)); }
@@ -451,7 +514,7 @@ function summary(f, o0, o1, R) { const p = f.properties, pt = lang === "pt"; con
   else if (o1 && !o0) out.push(pt ? "<b>Como conferir no óptico:</b> só há cena limpa perto do último arquivo." : "<b>Optical check:</b> a clear scene exists only near the last file.");
   out.push(pt ? `<b>Próximo passo:</b> ${p.n >= 8 && !beta ? "série suficiente para a análise completa (como no Paiaguás)." : "poucas passagens calibradas ainda; vale esperar mais dados antes da análise completa."}`
               : `<b>Next step:</b> ${p.n >= 8 && !beta ? "enough passes for a full analysis (as in Paiaguás)." : "few calibrated passes so far; worth waiting for more data before a full analysis."}`);
-  return out.map((x) => `<p>${x}</p>`).join(""); }
+  return `<dl class="facts">${out.map((x) => { const m = x.match(/^<b>(.*?):?<\/b>\s*([\s\S]*)$/); return m ? `<dt>${m[1].replace(/:$/, "").replace(/ \(.*\)$/, "")}</dt><dd>${m[2]}</dd>` : `<dt></dt><dd>${x}</dd>`; }).join("")}</dl>`; }
 // Optical twin of any frame, chosen by calculation (Microsoft Planetary Computer STAC, public):
 // for NISAR's last file, the closest Landsat 9 scene (else Landsat 8, else Sentinel-2) with the least cloud;
 // for the first file, the SAME sensor and the SAME path/row (or tile), so only time changes between the two images.
@@ -510,18 +573,18 @@ async function optical(p, ll) { const box = document.getElementById("opt"), note
       const choice = L && L.first ? ["landsat-c2-l2", L] : S2 && S2.first ? ["sentinel-2-l2a", S2] : L ? ["landsat-c2-l2", L] : S2 ? ["sentinel-2-l2a", S2] : null;
       if (choice) { coll = choice[0]; last = choice[1].last; first = choice[1].first; }
       optCache.set(key, { last, coll, first }); }
-    if (view !== myView) return; if (!last) { box.innerHTML = `<div class="thumb">${t("optNone")}</div><div class="thumb">${t("optNone")}</div>`; return; }
+    if (view !== myView) return; if (!last) { box.outerHTML = `<p class="none" id="opt">${t("optNoneLine")}</p>`; return; }
     const lab = (it, d) => { const dd = it.properties.datetime.slice(0, 10); const gap = Math.round(Math.abs(Date.parse(dd) - Date.parse(d)) / 864e5); return `${sensorName(it)} · ${fd(dd)}<br>±${gap} ${t("days")} · ${t("cloud")} ${Math.round(it.properties["eo:cloud_cover"] ?? 0)}%`; };
     const tile = (inner, cap) => `<div class="thumb" style="padding:0;position:relative;overflow:hidden">${inner}<span class="cap">${cap}</span></div>`;
     note.innerHTML = t("optRule")(sensorName(last), coll === "landsat-c2-l2" ? `${t("pathrow")} ${last.properties["landsat:wrs_path"]}/${last.properties["landsat:wrs_row"]}` : `${t("tile")} ${last.properties["s2:mgrs_tile"]}`);
-    if (!first) { box.innerHTML = `<div class="thumb">${t("optNone")}</div>` + tile(`<img src="${cropURL(last, B, "tc")}" alt="" style="width:100%;height:100%;object-fit:cover">`, lab(last, p.p1)); const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], null, last); return; }
+    if (!first) { box.innerHTML = `<div class="thumb">${t("optNoneFirst")}</div>` + tile(`<img src="${cropURL(last, B, "tc")}" alt="" style="width:100%;height:100%;object-fit:cover">`, lab(last, p.p1)); const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], null, last); return; }
     box.innerHTML = `<div class="thumb">${t("optCalc")}</div><div class="thumb">${t("optCalc")}</div>`;
     const [tc0, nd0, tc1, nd1] = await Promise.all([cropURL(first, B, "tc"), cropURL(first, B, "ndvi"), cropURL(last, B, "tc"), cropURL(last, B, "ndvi")].map((u) => pixels(u, sig))); if (view !== myView) return;
     const R = compare(tc0, nd0, tc1, nd1); R.km2 = R.px * (0.28 * 111.32 * Math.cos(ll[1] * RAD) / tc0.w) * (0.24 * 110.57 / tc0.h); R.days = Math.round((Date.parse(last.properties.datetime) - Date.parse(first.properties.datetime)) / 864e5); R.m0 = +first.properties.datetime.slice(5, 7); R.m1 = +last.properties.datetime.slice(5, 7); R.lat = ll[1];
     box.outerHTML = `<div class="trio3" id="opt">${tile("", lab(first, p.p0))}${tile("", lab(last, p.p1))}${tile("", t("chgCap"))}</div>`;
     const cells = document.querySelectorAll("#opt .thumb"); [tc0.c, tc1.c, R.map].forEach((cv2, i) => { cv2.style.cssText = "width:100%;height:100%;object-fit:cover;display:block"; cells[i].prepend(cv2); });
     const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], first, last, R);
-  } catch (e) { if (e.name === "AbortError") return; if (view === myView) { const b2 = document.getElementById("opt"); if (b2) b2.innerHTML = `<div class="thumb">${t("optFail")}</div><div class="thumb">${t("optFail")}</div>`; console.log("optical", e); } } }
+  } catch (e) { if (e.name === "AbortError") return; if (view === myView) { const b2 = document.getElementById("opt"); if (b2) b2.outerHTML = `<p class="none" id="opt">${t("optFail")}.</p>`; console.log("optical", e); } } }
 
 // live lookup in NASA's public catalog: any place, without the team uploading anything first
 const CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json?provider=ASF&short_name=NISAR_L2_GCOV_PROVISIONAL_V1&short_name=NISAR_L2_GCOV_V1&short_name=NISAR_L2_GCOV_BETA_V1&page_size=1";
@@ -625,7 +688,7 @@ function frame(i) { const vc = document.getElementById("vcv"); if (!vc || !V.fra
   let c = 0; for (let j = 0; j < n; j += 97) if (G.hv[f.k * n + j]) c++; const hh = c <= 5; const arr = hh ? G.hh : G.hv; const [lo, hi] = hh ? [-22, 0] : [-26, -8];
   for (let j = 0; j < n; j++) { const u = arr[f.k * n + j]; const o = j * 4; d[o + 3] = 255; if (!u) continue; const db = -30 + (u - 1) / 254 * 30; const v = Math.max(0, Math.min(255, (db - lo) / (hi - lo) * 255)); d[o] = d[o + 1] = d[o + 2] = v; }
   c2.putImageData(im, 0, 0);
-  const [tr, dr] = f.id.split("_"); document.getElementById("vwhen").textContent = fd(f.d); document.getElementById("vprog").style.width = ((i + 1) / V.frames.length * 100) + "%";
+  const [tr, dr] = f.id.split("_"); document.getElementById("vwhen").textContent = fd(f.d); document.getElementById("vcnt").textContent = `${i + 1} / ${V.frames.length}`; const rg = document.getElementById("vrange"); if (rg) rg.value = Math.round((Date.parse(f.d) - Date.parse(V.frames[0].d)) / 864e5);
   document.getElementById("vl").textContent = t("nisarLbl")(hh, +tr, dr === "A");
   const Ly = PCL.find((x) => x[0] === V.layer); const s = f.pc && f.pc[Ly[1]]; const img = document.getElementById("vpc"), ph = document.getElementById("vph");
   if (s && s.imagens && s.imagens[Ly[2]]) { img.src = "pg/carrossel/" + s.imagens[Ly[2]]; img.style.filter = Ly[0] === "nat" ? "brightness(1.8) contrast(1.1)" : ""; img.hidden = false; ph.hidden = true;
@@ -693,52 +756,82 @@ function drawChart() { const el = document.getElementById("mchart"); if (!el || 
       return `<text x="8" y="${i * h + 8}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans, system-ui, sans-serif">${n}</text><path d="${dpath}" fill="none" stroke="${c}" stroke-width="2"/>` +
         `<text x="${Wc - 96}" y="${Y(last[1]) + 4}" fill="${c}" font-size="11" font-family="Fira Code, ui-monospace, monospace">${nf(first[1], dg)} → ${nf(last[1], dg)}</text>`; }).join("") +
     `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code, ui-monospace, monospace">${t("jun")}</text><text x="${Wc - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code, ui-monospace, monospace">${t("nov")}</text></svg>`; }
-function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) b.textContent = t("start"); }
-function startV() { const b = document.getElementById("vbtn"); b.textContent = t("stop"); V.timer = setInterval(() => { V.k = (V.k + 1) % V.frames.length; frame(V.k); }, 1100); }
+function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) { b.textContent = "▶"; b.setAttribute("aria-label", t("start")); } }
+function goV(i) { V.k = (i + V.frames.length) % V.frames.length; frame(V.k); }
+function setupScrub() { const rg = document.getElementById("vrange"); if (!rg || !V.frames.length) return; const n = V.frames.length;
+  const t0 = Date.parse(V.frames[0].d), t1 = Date.parse(V.frames[n - 1].d), span = (t1 - t0) / 864e5; const X = (d) => ((Date.parse(d) - t0) / 864e5) / span * 100;
+  rg.max = Math.round(span); rg.value = Math.round((Date.parse(V.frames[V.k].d) - t0) / 864e5);
+  document.getElementById("vmarks").innerHTML = V.frames.map((f) => `<i style="left:${X(f.d)}%" title="${fd(f.d)}"></i>`).join("") + `<i class="ev" style="left:${X("2026-09-13")}%" title="${lang === "pt" ? "13/09: 21 mm de chuva" : "Sep 13: 21 mm of rain"}"></i>`;
+  const ticks = []; for (let m = 7; m <= 11; m++) { const d = `2026-${String(m).padStart(2, "0")}-01`; const x = X(d); if (x > 2 && x < 98) ticks.push(`<span style="left:${x}%">${t("mon")[m - 1]}</span>`); }
+  document.getElementById("vticks").innerHTML = ticks.join("");
+  rg.oninput = () => { stopV(); const day = t0 + +rg.value * 864e5; let best = 0; V.frames.forEach((f, i) => { if (Math.abs(Date.parse(f.d) - day) < Math.abs(Date.parse(V.frames[best].d) - day)) best = i; }); V.k = best; frame(best); };
+  document.getElementById("vprev").onclick = () => { stopV(); goV(V.k - 1); }; document.getElementById("vnext").onclick = () => { stopV(); goV(V.k + 1); }; }
+function startV() { const b = document.getElementById("vbtn"); b.textContent = "❚❚"; b.setAttribute("aria-label", t("stop")); V.timer = setInterval(() => goV(V.k + 1), 1100); }
 const imgSrc = (x) => x.img.startsWith("fig:") ? `pg/fig/${x.img.slice(4)}_${lang}.png` : `pg/${x.img}`;
 // ---------------------------------------------------------------- slide decks: numbered bar fixed on top, image zoom
 const deckNav = (slides) => `<div class="pnav" id="pnav"><button type="button" class="arr" id="cprev" aria-label="${t("prevS")}">◀</button>
   <div class="pcount"><span class="pnum"><b id="pnum">01</b> / ${String(slides.length).padStart(2, "0")}</span><span class="ptitle" id="ptitle"></span></div>
+  <select id="cjump" aria-label="${t("goTo")}">${slides.map((x, i) => `<option value="${i}">${String(i + 1).padStart(2, "0")} · ${L2(x.t)}</option>`).join("")}</select>
   <button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
   <div class="nums" id="cdots">${slides.map((x, i) => `<button type="button" data-s="${i}" title="${L2(x.t)}" aria-label="${t("goTo")} ${i + 1}: ${L2(x.t)}">${i + 1}</button>`).join("")}</div>`;
 function wireDeck(slides, at, onSlide) { const car = document.getElementById("car"), n = slides.length;
-  const go = (i, inst) => { i = Math.max(0, Math.min(n - 1, i)); car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" }); panel.scrollTo({ top: 0, behavior: inst ? "instant" : "smooth" }); };
+  const go = (i, inst) => { i = Math.max(0, Math.min(n - 1, i)); car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" }); const top = document.getElementById("pnav").offsetTop; if (panel.scrollTop > top) panel.scrollTo({ top, behavior: inst ? "instant" : "smooth" }); };
   const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); car._i = i;
     document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
     document.getElementById("pnum").textContent = String(i + 1).padStart(2, "0"); document.getElementById("ptitle").textContent = L2(slides[i].t);
-    document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === n - 1;
+    document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === n - 1; document.getElementById("cjump").value = i;
     const act = document.querySelector("#cdots [aria-current=true]"); if (act) act.scrollIntoView({ block: "nearest", inline: "center" });
     car.style.height = car.children[i].scrollHeight + "px"; if (onSlide) onSlide(i); };
   car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(sync, 80); });
   document.getElementById("cprev").onclick = () => go((car._i || 0) - 1); document.getElementById("cnext").onclick = () => go((car._i || 0) + 1);
-  document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
+  document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s)); document.getElementById("cjump").onchange = (e) => go(+e.target.value); car._go = go;
   new ResizeObserver(() => { const i = car._i || 0; if (car.children[i]) car.style.height = car.children[i].scrollHeight + "px"; }).observe(car.children[0]);
   car.querySelectorAll("img").forEach((im) => im.addEventListener("load", () => sync(), { once: true }));
   if (at) go(at, true); sync(); }
-const lb = document.getElementById("lb"), lbc = document.getElementById("lbc");
-function openLB(node) { lbc.innerHTML = ""; lbc.appendChild(node); lb.hidden = false; document.getElementById("lbx").focus(); }
-function closeLB() { lb.hidden = true; lbc.innerHTML = ""; }
-document.getElementById("lbx").onclick = closeLB; lb.addEventListener("click", (e) => { if (e.target === lb) closeLB(); });
-addEventListener("keydown", (e) => { if (e.key === "Escape" && !lb.hidden) closeLB(); });
-pb.addEventListener("click", (e) => { const im = e.target.closest(".slide .media img.zoomable, #opt canvas, #opt img"); const ch = e.target.closest("#cchart svg, #rchart svg, #mchart svg");
-  if (im) { const big = im.tagName === "CANVAS" ? Object.assign(document.createElement("img"), { src: im.toDataURL() }) : Object.assign(document.createElement("img"), { src: im.src, alt: im.alt }); openLB(big); }
-  else if (ch) { const c = ch.cloneNode(true); c.removeAttribute("width"); c.style.width = "100%"; c.style.height = "auto"; c.style.background = "#050E26"; openLB(c); } });
+// ---------------------------------------------------------------- viewer: one window for images, charts and the live video
+const vw = document.getElementById("vw"), vwb = document.getElementById("vwb"); const VW = { items: [], i: 0, moved: null };
+function deckItems() { const car = document.getElementById("car"); if (!car) return [];
+  return [...car.children].map((sec, i) => ({ i, title: sec.querySelector("h3")?.textContent || "", cap: sec.querySelector(".what")?.textContent || "", media: sec.querySelector(".media") }))
+    .filter((x) => x.media && x.media.querySelector("img.zoomable, svg, .player")); }
+function restoreMoved() { if (VW.moved) { const { node, parent, next } = VW.moved; parent.insertBefore(node, next); VW.moved = null; } }
+function renderViewer() { restoreMoved(); vwb.innerHTML = ""; const it = VW.items[VW.i]; if (!it) return;
+  document.getElementById("vwt").textContent = (it.i != null ? String(it.i + 1).padStart(2, "0") + " · " : "") + it.title; document.getElementById("vwf").textContent = it.cap || "";
+  document.getElementById("vwf").hidden = !it.cap;
+  const pl = it.media && it.media.querySelector(".player");
+  if (pl) { VW.moved = { node: pl, parent: pl.parentNode, next: pl.nextSibling }; vwb.appendChild(pl); }
+  else if (it.src) vwb.appendChild(Object.assign(document.createElement("img"), { src: it.src, alt: it.title }));
+  else { const im = it.media.querySelector("img.zoomable"); const sv = it.media.querySelector("svg");
+    if (im) vwb.appendChild(Object.assign(document.createElement("img"), { src: im.src, alt: im.alt }));
+    else if (sv) { const c = sv.cloneNode(true); c.removeAttribute("width"); vwb.appendChild(c); } }
+  document.getElementById("vwp").disabled = VW.i === 0; document.getElementById("vwn").disabled = VW.i === VW.items.length - 1; }
+function openViewer(items, i) { VW.items = items; VW.i = Math.max(0, i); renderViewer(); vw.hidden = false; document.getElementById("vwx").focus(); }
+function closeViewer() { if (vw.hidden) return; const it = VW.items[VW.i]; restoreMoved(); vw.hidden = true; vwb.innerHTML = "";
+  const car = document.getElementById("car"); if (it && it.i != null && car && car._go) car._go(it.i, true); }
+document.getElementById("vwx").onclick = closeViewer; document.getElementById("vwp").onclick = () => { if (VW.i > 0) { VW.i--; renderViewer(); } };
+document.getElementById("vwn").onclick = () => { if (VW.i < VW.items.length - 1) { VW.i++; renderViewer(); } };
+vw.addEventListener("click", (e) => { if (e.target === vw) closeViewer(); });
+addEventListener("keydown", (e) => { if (vw.hidden) return; if (e.key === "Escape") closeViewer(); else if (e.key === "ArrowLeft") document.getElementById("vwp").click(); else if (e.key === "ArrowRight") document.getElementById("vwn").click(); });
+pb.addEventListener("click", (e) => {
+  const oc = e.target.closest("#opt canvas, #opt img"); if (oc) { const src = oc.tagName === "CANVAS" ? oc.toDataURL() : oc.src;
+    openViewer([{ title: t("optT"), cap: document.getElementById("optNote")?.textContent || "", src }], 0); return; }
+  const hit = e.target.closest(".slide .media img.zoomable, .slide .media svg, .slide .zbtn"); if (!hit) return;
+  const sec = hit.closest(".slide"); const items = deckItems(); const idx = [...document.getElementById("car").children].indexOf(sec); openViewer(items, items.findIndex((x) => x.i === idx)); });
 const glossary = () => `<table class="gl"><thead><tr><th>${t("gTerm")}</th><th>${t("gWhat")}</th><th>${t("gUse")}</th></tr></thead><tbody>${GL.map(([a, b, c]) => `<tr><td><b>${L2(a)}</b></td><td>${L2(b)}</td><td>${L2(c)}</td></tr>`).join("")}</tbody></table>`;
 async function showP(at) { sel = PCELL; view = ["P"]; draw(); stopV(); panel.classList.add("wide");
-  pb.innerHTML = `<div class="k" style="color:var(--neon)">${t("pKick")}</div><h2>Paiaguás · Pantanal (MS)</h2>
-  <div class="note">${t("pSub")}</div>
+  pb.innerHTML = `<div class="ph"><div class="k" style="color:var(--neon)">${t("pKick")}</div><h2>Paiaguás · Pantanal (MS)</h2><div class="sub">${t("pSub")}</div></div>
   ${deckNav(SL)}
-  <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${SL.length}">
-    ${x.noMedia ? "" : `<div class="media">${x.rain ? `<div id="rchart" style="background:#050E26;padding:10px"></div>` : x.next ? nextCards() : x.coh ? `<div id="cchart" style="background:#050E26;padding:10px"></div>` : x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure></div>
-      <div class="vbar"><button type="button" id="vbtn">${t("start")}</button><span class="when" id="vwhen"></span><span class="prog"><i id="vprog"></i></span></div>
-      <div class="pcl" id="pcl">${PCL.map(([k]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${layerName(k)}</button>`).join("")}</div>` : `<img src="${imgSrc(x)}" alt="${L2(x.t)}" loading="lazy" class="zoomable">`}</div>`}
+  <div class="pbody"><div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${SL.length}">
+    ${x.noMedia ? "" : `<div class="media">${x.rain ? `<div id="rchart" style="background:#050E26;padding:10px"></div>` : x.next ? nextCards() : x.coh ? `<div id="cchart" style="background:#050E26;padding:10px"></div>` : x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="player" id="player"><div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure><button type="button" class="zbtn" aria-label="${t("expand")}" title="${t("expand")}">⤢</button></div>
+      <div class="vctrl"><div class="trans"><button type="button" id="vprev" aria-label="${t("prevPass")}">⏮</button><button type="button" class="play" id="vbtn" aria-label="${t("start")}">▶</button><button type="button" id="vnext" aria-label="${t("nextPass")}">⏭</button><span class="when" id="vwhen"></span><span class="cnt" id="vcnt"></span></div>
+      <div class="scrub"><div class="marks" id="vmarks"></div><input type="range" id="vrange" min="0" max="0" value="0" aria-label="${t("pickDate")}"><div class="ticks" id="vticks"></div></div>
+      <div class="pcl" id="pcl">${PCL.map(([k]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${layerName(k)}</button>`).join("")}</div></div></div>` : `<img src="${imgSrc(x)}" alt="${L2(x.t)}" loading="lazy" class="zoomable">`}${x.next ? "" : `<button type="button" class="zbtn" aria-label="${t("expand")}" title="${t("expand")}">⤢</button>`}</div>`}
     <h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p>${x.how ? `<p class="how">${L2(x.how)}</p>` : ""}${x.gloss ? glossary() : ""}</section>`).join("")}</div>
-  <a class="btn" href="${location.hostname.endsWith("claude.ai") || location.hostname.includes("claudeusercontent") ? "https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" : "../app/"}" target="_blank" rel="noopener" style="align-self:flex-start">${t("open")}</a>`;
+  <a class="btn" href="${location.hostname.endsWith("claude.ai") || location.hostname.includes("claudeusercontent") ? "https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" : "../app/"}" target="_blank" rel="noopener" style="align-self:flex-start">${t("open")}</a></div>`;
   panel.classList.add("on"); document.body.classList.add("paneled"); draw();
-  wireDeck(SL, at, (i) => { if (i !== 0) stopV(); });
+  wireDeck(SL, at, (i) => { if (i !== 0 && vw.hidden) stopV(); });
   document.getElementById("vbtn").onclick = () => V.timer ? stopV() : startV();
   document.querySelectorAll("#pcl [data-l]").forEach((b) => b.onclick = () => { V.layer = b.dataset.l; document.querySelectorAll("#pcl [data-l]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); frame(V.k); });
-  drawCoh(); drawRain(); const first = !V.frames.length; await loadVideo(); if (first) V.k = Math.max(0, V.frames.findIndex((f) => f.pc && f.pc.s2)); frame(V.k); drawChart(); }
+  drawCoh(); drawRain(); const first = !V.frames.length; await loadVideo(); if (first) V.k = Math.max(0, V.frames.findIndex((f) => f.pc && f.pc.s2)); frame(V.k); setupScrub(); drawChart(); }
 
 // ---------------------------------------------------------------- highlight areas: real results, lighter than Paiaguás
 const HL = [
@@ -792,11 +885,11 @@ function drawHL(A, strong) { const S = hlFrames(A); S.forEach((f) => { ctx.begin
     if (top) { const txt = L2(A.name); const tw = textW(txt, 14, 700, 0.3); pill(txt, top[0], Math.max(W < 760 ? 120 : 70, top[1] - 22), "#7FE8FF", 14, "center"); } } }
 function openA(A) { if (introOn) endIntro(); const k = A.k; fly(A.lon + (W > 900 ? 300 / (base * k) / RAD : 0), A.lat + (W > 900 ? 0 : -H * 0.26 / (base * k) / RAD), k); setTimeout(() => showA(A), 1150); }
 function showA(A, at) { stopV(); sel = A; view = ["A", A]; draw(); panel.classList.add("wide");
-  pb.innerHTML = `<div class="k" style="color:var(--cyan)">${t("hlKick")} · ${L2(A.tag)}</div><h2>${L2(A.name)}</h2><div class="note">${L2(A.sub)}</div>
+  pb.innerHTML = `<div class="ph"><div class="k" style="color:var(--cyan)">${t("hlKick")} · ${L2(A.tag)}</div><h2>${L2(A.name)}</h2><div class="sub">${L2(A.sub)}</div></div>
   ${deckNav(A.slides)}
-  <div class="car" id="car">${A.slides.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${A.slides.length}">${x.noMedia ? "" : `<div class="media"><img src="${imgSrc(x)}" alt="${L2(x.t)}" loading="lazy" class="zoomable"></div>`}
+  <div class="pbody"><div class="car" id="car">${A.slides.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${A.slides.length}">${x.noMedia ? "" : `<div class="media"><img src="${imgSrc(x)}" alt="${L2(x.t)}" loading="lazy" class="zoomable"><button type="button" class="zbtn" aria-label="${t("expand")}" title="${t("expand")}">⤢</button></div>`}
     <h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p><p class="how">${L2(x.how)}</p></section>`).join("")}</div>
-  <p class="note">${t("hlNote")}</p>`;
+  <p class="note">${t("hlNote")}</p></div>`;
   panel.classList.add("on"); document.body.classList.add("paneled"); draw();
   wireDeck(A.slides, at); }
 
@@ -853,7 +946,7 @@ function endIntro() { introOn = false; clearTimeout(beatTimer); REVEAL = 1; stop
 document.getElementById("skip").onclick = endIntro; document.getElementById("replay").onclick = () => { closeP(); startIntro(); };
 cv.addEventListener("pointerdown", () => { if (spin) stopSpin(); if (introOn && beatI < t("beats").length - 1) gotoBeat(t("beats").length - 1); });
 cv.addEventListener("wheel", () => { if (spin) stopSpin(); }, { passive: true });
-let seen = false; try { seen = sessionStorage.getItem("dl-intro") === "1"; } catch (e) {}
+let seen = false;
 if (seen) { hero.hidden = true; REVEAL = 1; const rp = document.getElementById("replay"); rp.textContent = t("replay"); rp.hidden = false; } else startIntro();
 fetch("quadros.json").then((r) => r.ok ? r.json() : null).then((Q) => { if (!Q || !Q.q || !Q.q.length) return;
   const bu = (c, g) => (typeof c === "number" ? Q.browse.replace("{col}", Q.colecoes[c]).replaceAll("{g}", g) : c || null);
