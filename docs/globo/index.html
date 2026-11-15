@@ -414,7 +414,7 @@ function drawStudy() { const c0 = proj([P.lon, P.lat]); if (!c0) return;
   ctx.beginPath(); path(PCELL); ctx.fillStyle = "rgba(255,107,0,0.35)"; ctx.fill();
   ctx.setLineDash([8, 5]); ctx.lineWidth = 3.4; ctx.strokeStyle = "rgba(0,0,0,.7)"; ctx.stroke(); ctx.lineDashOffset = 6; ctx.lineWidth = 2.4; ctx.strokeStyle = "#FF8A3D"; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
   const top = Math.min(...ys) - (small ? 22 : 10);
-  pill(W < 760 ? "Paiaguás · 13 × 13 km" : t("cropOnly"), c0[0], top - 14, "#FFB27A", 13, "center"); }
+  const avail = (document.body.classList.contains("paneled") && W > 760 ? W - panel.offsetWidth - 28 : W) - 80; const full = t("cropOnly"); pill(W < 760 || textW(full, 13, 700) + 16 > avail ? "Paiaguás · 13 × 13 km" : full, c0[0], top - 14, "#FFB27A", 13, "center"); }
 function draw(fast) {
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
   stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
