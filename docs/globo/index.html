@@ -141,6 +141,30 @@ function drawEarth(fast) { const r = proj.scale(), [cx, cy] = proj.translate(); 
     const u = (((lon / RAD + 180) % 360) + 360) % 360 / 360, v = (90 - lat / RAD) / 180; const ti = ((Math.min(th - 1, (v * th) | 0)) * tw + Math.min(tw - 1, (u * tw) | 0)) * 4, o = (j * w + i) * 4;
     const sh = 0.5 + 0.4 * cc; d[o] = T[ti] * sh; d[o + 1] = T[ti + 1] * sh; d[o + 2] = T[ti + 2] * sh; d[o + 3] = 255; } }
   octx.putImageData(im, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(off, x0, y0, x1 - x0, y1 - y0); }
+const PT = { Brazil: "Brasil", Bolivia: "Bolívia", Paraguay: "Paraguai", Argentina: "Argentina", Uruguay: "Uruguai", Chile: "Chile", Peru: "Peru", Colombia: "Colômbia", Venezuela: "Venezuela", Ecuador: "Equador",
+  Guyana: "Guiana", Suriname: "Suriname", Mexico: "México", "United States of America": "Estados Unidos", Canada: "Canadá", Greenland: "Groenlândia", Spain: "Espanha", France: "França", Germany: "Alemanha", Italy: "Itália",
+  "United Kingdom": "Reino Unido", Portugal: "Portugal", Russia: "Rússia", China: "China", India: "Índia", Japan: "Japão", Australia: "Austrália", Antarctica: "Antártida", "South Africa": "África do Sul", Egypt: "Egito",
+  Algeria: "Argélia", Libya: "Líbia", Morocco: "Marrocos", Nigeria: "Nigéria", Angola: "Angola", Mozambique: "Moçambique", Kazakhstan: "Cazaquistão", Mongolia: "Mongólia", Indonesia: "Indonésia", Iran: "Irã", "Saudi Arabia": "Arábia Saudita",
+  "Dem. Rep. Congo": "R. D. do Congo", Ethiopia: "Etiópia", Sudan: "Sudão", Chad: "Chade", Niger: "Níger", Mali: "Mali", Namibia: "Namíbia", Turkey: "Turquia", Pakistan: "Paquistão", Afghanistan: "Afeganistão", "New Zealand": "Nova Zelândia", Cuba: "Cuba", "Fr. Guiana": "Guiana Francesa" };
+const countries = topojson.feature(WORLD, WORLD.objects.countries).features.map((f) => ({ n: PT[f.properties.name] || f.properties.name, c: d3.geoCentroid(f), a: d3.geoArea(f) }));
+const OCEANS = [["Oceano Atlântico", -30, -5], ["Oceano Atlântico", -40, 30], ["Oceano Pacífico", -120, -10], ["Oceano Pacífico", 170, 20], ["Oceano Índico", 80, -20], ["Oceano Austral", 0, -62], ["Oceano Ártico", 0, 84]];
+const PLACES = [["Pantanal", -57.2, -18.0, 3.5, "bio"], ["Amazônia", -62, -4.5, 2.2, "bio"], ["Cerrado", -48.5, -13.5, 3, "bio"], ["Caatinga", -40, -8, 3.5, "bio"], ["Mata Atlântica", -44.5, -21.5, 4, "bio"], ["Chaco", -61, -23, 3.5, "bio"],
+  ["Rio Paraguai", -57.75, -20.2, 6, "rio"], ["Rio Taquari", -56.3, -18.6, 8, "rio"], ["Rio Amazonas", -55, -2.2, 4, "rio"],
+  ["Corumbá", -57.65, -19.01, 7], ["Campo Grande", -54.62, -20.47, 5], ["Cuiabá", -56.1, -15.6, 5], ["Coxim", -54.76, -18.5, 8], ["Aquidauana", -55.79, -20.47, 8], ["Poconé", -56.62, -16.26, 9], ["Miranda", -56.38, -20.24, 9],
+  ["Manaus", -60.02, -3.1, 4], ["Brasília", -47.88, -15.79, 4], ["São Paulo", -46.63, -23.55, 4], ["Rio de Janeiro", -43.2, -22.9, 4], ["Belém", -48.5, -1.45, 4], ["Palmas", -48.33, -10.18, 5], ["Porto Alegre", -51.23, -30.03, 4],
+  ["Salvador", -38.5, -12.97, 4], ["Fortaleza", -38.54, -3.72, 4], ["Santa Cruz de la Sierra", -63.18, -17.78, 5], ["Assunção", -57.58, -25.26, 5], ["Buenos Aires", -58.38, -34.6, 4], ["Lima", -77.04, -12.05, 4], ["Bogotá", -74.07, 4.71, 4]];
+function label(t, x, y, c, size, align, weight) { ctx.font = `${weight || 600} ${size}px "Fira Sans", system-ui, sans-serif`; ctx.textAlign = align || "center"; ctx.lineJoin = "round";
+  ctx.lineWidth = 3.5; ctx.strokeStyle = "rgba(2,6,15,0.85)"; ctx.strokeText(t, x, y); ctx.fillStyle = c; ctx.fillText(t, x, y); }
+function drawLabels(k, fast) { const [cx, cy] = proj.translate(), ctr = proj.invert([cx, cy]); const boxes = []; const free = (x, y, w, h) => { if (x < 0 || y < 40 || x + w > W || y + h > H) return false; if (boxes.some((b) => x < b[0] + b[2] && x + w > b[0] && y < b[1] + b[3] && y + h > b[1])) return false; boxes.push([x, y, w, h]); return true; };
+  const put = (t, lon, lat, c, size, weight, dot) => { if (d3.geoDistance([lon, lat], ctr) > Math.PI / 2 - 0.08) return; const p = proj([lon, lat]); if (!p) return; ctx.font = `${weight || 600} ${size}px "Fira Sans", system-ui, sans-serif`;
+    const w = ctx.measureText(t).width; const x = dot ? p[0] + 6 : p[0] - w / 2, y = p[1] - size / 2 - (dot ? 0 : 0); if (!free(x - 2, y - 2, w + 4, size + 4)) return;
+    if (dot) { ctx.beginPath(); ctx.arc(p[0], p[1], 2.6, 0, 7); ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = "#02060F"; ctx.stroke(); }
+    label(t, dot ? p[0] + 6 : p[0], p[1] + size / 2 - 2, c, size, dot ? "left" : "center", weight); };
+  PLACES.filter((p) => !p[4] && k >= p[3]).forEach(([n, lo, la]) => put(n, lo, la, "#FFFFFF", 12, 600, true));
+  PLACES.filter((p) => p[4] && k >= p[3]).forEach(([n, lo, la, , t]) => put(t === "rio" ? n : n.toUpperCase(), lo, la, t === "rio" ? "#9FD8FF" : "#B9F5C8", t === "rio" ? 11 : 12, t === "rio" ? 500 : 700));
+  const px = (proj.scale()) ** 2; countries.filter((c) => c.a * px > (fast ? 9000 : 4000)).sort((a, b) => b.a - a.a).slice(0, fast ? 25 : 120)
+    .forEach((c) => put(k > 6 ? c.n.toUpperCase() : c.n, c.c[0], c.c[1], "#FFE9A8", Math.max(11, Math.min(16, 9 + k)), 700));
+  if (k < 3) OCEANS.forEach(([n, lo, la]) => put(n, lo, la, "rgba(159,216,255,0.85)", 12, 500)); }
 function draw(fast) {
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
   stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
@@ -153,11 +177,10 @@ function draw(fast) {
   ctx.lineWidth = k > 4 ? 1.1 : 0.5;
   for (let i = 0; i < frames.length; i += step) { const f = frames[i]; if (!vis(f)) continue;
     ctx.beginPath(); path(f); const c = d3.color(col(f.properties.n)); c.opacity = k > 3 ? 0.16 : 0.10; ctx.fillStyle = c + ""; ctx.fill(); c.opacity = k > 3 ? 0.9 : 0.55; ctx.strokeStyle = c + ""; ctx.stroke(); }
-  if (sel) { ctx.beginPath(); path(sel); ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 2.4; ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.fill(); }
-  ctx.beginPath(); path(PCELL); ctx.strokeStyle = "#EAFE07"; ctx.lineWidth = 2; ctx.stroke();
-  const p = proj([P.lon, P.lat]); const vis2 = d3.geoDistance([P.lon, P.lat], proj.invert([cx, cy])) < Math.PI / 2;
-  if (p && vis2) { ctx.beginPath(); ctx.arc(p[0], p[1], 7 + Math.min(10, k), 0, 7); ctx.strokeStyle = "#EAFE07"; ctx.lineWidth = 2.5; ctx.stroke();
-    ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 7); ctx.fillStyle = "#EAFE07"; ctx.fill(); }
+  if (sel) { ctx.beginPath(); path(sel); ctx.fillStyle = sel === PCELL ? "rgba(234,254,7,0.18)" : "rgba(255,255,255,0.10)"; ctx.fill();
+    ctx.setLineDash([7, 5]); ctx.lineWidth = 2.6; ctx.strokeStyle = "rgba(0,0,0,0.7)"; ctx.stroke(); ctx.lineDashOffset = 6; ctx.strokeStyle = sel === PCELL ? "#EAFE07" : "#FFFFFF"; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    if (sel === PCELL) { const q = proj([-56.813, -18.218]); if (q) label("Paiaguás · área analisada", q[0] + 8, q[1] - 6, "#EAFE07", 13, "left"); } }
+  drawLabels(k, fast);
   ctx.beginPath(); path({ type: "Sphere" }); ctx.strokeStyle = "rgba(127,232,255,0.35)"; ctx.lineWidth = 1.2; ctx.stroke();
 }
 // rotate by drag, zoom by wheel / pinch
@@ -181,6 +204,7 @@ function pick(x, y) {
 }
 const panel = document.getElementById("panel"), pb = document.getElementById("pbody");
 function closeP() { stopV(); panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
+function openP() { const k = 34; fly(P.lon + (W > 900 ? 300 / (base * k) / RAD : 0), P.lat + (W > 900 ? 0 : -140 / (base * k) / RAD), k); setTimeout(showP, 1150); }
 document.getElementById("close").onclick = closeP;
 function showF(f, others) { stopV(); panel.classList.remove("wide"); sel = f; const p = f.properties; draw();
   const days = (Date.parse(p.p1) - Date.parse(p.p0)) / 864e5;
@@ -191,7 +215,8 @@ function showF(f, others) { stopV(); panel.classList.remove("wide"); sel = f; co
   <div class="note" id="live" style="color:#FFD27A">Consultando o catálogo da NASA (CMR) neste ponto…</div>
   <p class="note">Aqui só olhamos o primeiro e o último arquivo do quadro: as duas prévias (browse) que a NASA publica junto de cada produto e o resumo do catálogo. Serve para comparar lugares e escolher onde aprofundar.</p>
   ${others.length ? `<div class="k">OUTROS QUADROS NESTE PONTO</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} passagens</button>`).join("")}</div>` : ""}
-  <a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Análise completa: quadro " + gid(p))}" target="_blank" rel="noopener">Pedir análise completa deste quadro</a>`;
+  ${d3.geoContains(f, [P.lon, P.lat]) ? `<button type="button" class="btn solid" id="toP">Este quadro tem análise completa: Paiaguás</button>` : `<a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Análise completa: quadro " + gid(p))}" target="_blank" rel="noopener">Pedir análise completa deste quadro</a>`}`;
+  const tp = document.getElementById("toP"); if (tp) tp.onclick = openP;
   pb.querySelectorAll("[data-o]").forEach((b) => b.onclick = () => showF(others[+b.dataset.o], [f, ...others.filter((_, j) => j !== +b.dataset.o)]));
   panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL) live(lastLL); }
 // Consulta ao vivo do catálogo da NASA: qualquer lugar, sem a equipe subir dados antes.
@@ -297,7 +322,7 @@ function drawChart() { const el = document.getElementById("mchart"); if (!el || 
     `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">jun</text><text x="${W - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">nov</text></svg>`; }
 function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) b.textContent = "Iniciar"; }
 function startV() { const b = document.getElementById("vbtn"); b.textContent = "Parar"; V.timer = setInterval(() => { V.k = (V.k + 1) % V.frames.length; frame(V.k); }, 1100); }
-async function showP() { sel = null; draw(); stopV(); panel.classList.add("wide");
+async function showP() { sel = PCELL; draw(); stopV(); panel.classList.add("wide");
   pb.innerHTML = `<div class="k" style="color:var(--neon)">ÁREA DEMARCADA · ANÁLISE COMPLETA</div><h2>Paiaguás · Pantanal (MS)</h2>
   <div class="note">18,28° S · 56,87° O · 13 × 13 km · 4 direções de passagem · 27 passagens de 21/06 a 05/11/2026</div>
   <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} de ${SL.length}">
@@ -316,14 +341,14 @@ async function showP() { sel = null; draw(); stopV(); panel.classList.add("wide"
   document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
   document.getElementById("vbtn").onclick = () => V.timer ? stopV() : startV();
   document.querySelectorAll("#pcl [data-l]").forEach((b) => b.onclick = () => { V.layer = b.dataset.l; document.querySelectorAll("#pcl [data-l]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); frame(V.k); });
-  drawCoh(); await loadVideo(); V.k = 0; frame(0); drawChart(); }
-const LUG = [["Paiaguás, Pantanal (MS)", -56.873, -18.278, 9], ["Pantanal", -57.0, -18.5, 5], ["Manaus (AM)", -60.02, -3.1, 6], ["Palmas (TO)", -48.33, -10.18, 6], ["Corumbá (MS)", -57.65, -19.01, 7], ["São Paulo (SP)", -46.63, -23.55, 6],
+  drawCoh(); await loadVideo(); V.k = Math.max(0, V.frames.findIndex((f) => f.pc && f.pc.s2)); frame(V.k); drawChart(); }
+const LUG = [["Paiaguás, Pantanal (MS)", -56.873, -18.278, 22], ["Pantanal", -57.0, -18.5, 5], ["Manaus (AM)", -60.02, -3.1, 6], ["Palmas (TO)", -48.33, -10.18, 6], ["Corumbá (MS)", -57.65, -19.01, 7], ["São Paulo (SP)", -46.63, -23.55, 6],
   ["Brasília (DF)", -47.88, -15.79, 6], ["Belém (PA)", -48.5, -1.45, 6], ["Cuiabá (MT)", -56.1, -15.6, 6], ["Porto Alegre (RS)", -51.23, -30.03, 6], ["Amazônia", -62, -5, 3], ["Andes", -70, -20, 3], ["Califórnia", -119, 36.5, 4], ["Himalaia", 86.9, 28, 4], ["Groenlândia", -42, 72, 3]];
 document.getElementById("lugares").innerHTML = LUG.map((l) => `<option value="${l[0]}">`).join("");
 document.getElementById("busca").onsubmit = (e) => { e.preventDefault(); const q = document.getElementById("q").value.trim(); const m = q.match(/^(-?\d+(?:[.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[.,]\d+)?)$/);
   if (m) { const lat = +m[1].replace(",", "."), lon = +m[2].replace(",", "."); fly(lon, lat, 7); return; }
   const n = q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const l = LUG.find((x) => x[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(n));
-  if (l) { fly(l[1], l[2], l[3]); if (l[0].startsWith("Paiagu")) setTimeout(showP, 1150); } };
+  if (l) { fly(l[1], l[2], l[3]); if (l[0].startsWith("Paiagu")) { openP(); } } };
 if (0) document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => { const [lon, lat] = b.dataset.go.split(",").map(Number); fly(lon, lat, 7);
   setTimeout(() => { const h = frames.filter((f) => vis(f) && d3.geoContains(f, [lon, lat])); if (h.length) showF(h[0], h.slice(1)); }, 1150); });
 document.querySelectorAll("[data-dir]").forEach((b) => b.onclick = () => { dir = b.dataset.dir; document.querySelectorAll("[data-dir]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(); });
