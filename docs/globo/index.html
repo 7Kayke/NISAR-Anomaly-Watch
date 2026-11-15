@@ -156,7 +156,9 @@ body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display
 :root { --s1: 8px; --s2: 15px; --s3: 20px; --s4: 30px; }
 .hero p { margin: 10px auto 0 !important; max-width: 560px; color: #DCE6FA !important; font-size: 15px; }
 .hero { text-align: center; } .stories { justify-content: center; } .introbar { justify-content: center; }
-#q { font-size: 16px !important; color: #fff !important; border-color: #4E6FAE !important; background: #0E1D45 !important; min-height: 40px; } #q::placeholder { color: #C3D0EA; opacity: 1; }
+#q { font-size: 16px !important; color: #fff !important; border-color: #4E6FAE !important; background: #0E1D45 !important; min-height: 40px; } #q::placeholder { color: #FFFFFF; opacity: .9; }
+.seg button { color: #FFFFFF !important; } .seg button[aria-pressed="true"] { color: #02122E !important; }
+.pnav { order: 3; position: sticky !important; top: auto !important; bottom: 0; border-bottom: 0 !important; border-top: 1px solid var(--edge); box-shadow: 0 -8px 20px rgba(2,6,15,.45); }
 .legend { font-size: 14px !important; color: #FFFFFF !important; padding: var(--s2) !important; gap: var(--s1) !important; width: 240px; }
 .legend b { font-size: 14px; } .legend div[style] span { color: #C3D0EA; font-size: 13px; }
 #panel { padding: 0 !important; gap: 0 !important; }
@@ -775,7 +777,7 @@ const deckNav = (slides) => `<div class="pnav" id="pnav"><button type="button" c
   <button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
   <div class="nums" id="cdots">${slides.map((x, i) => `<button type="button" data-s="${i}" title="${L2(x.t)}" aria-label="${t("goTo")} ${i + 1}: ${L2(x.t)}">${i + 1}</button>`).join("")}</div>`;
 function wireDeck(slides, at, onSlide) { const car = document.getElementById("car"), n = slides.length;
-  const go = (i, inst) => { i = Math.max(0, Math.min(n - 1, i)); car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" }); const top = document.getElementById("pnav").offsetTop; if (panel.scrollTop > top) panel.scrollTo({ top, behavior: inst ? "instant" : "smooth" }); };
+  const go = (i, inst) => { i = Math.max(0, Math.min(n - 1, i)); car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" }); if (panel.scrollTop > 0) panel.scrollTo({ top: 0, behavior: inst ? "instant" : "smooth" }); };
   const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); car._i = i;
     document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
     document.getElementById("pnum").textContent = String(i + 1).padStart(2, "0"); document.getElementById("ptitle").textContent = L2(slides[i].t);
