@@ -1,5 +1,9 @@
 # AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
-"""Reconhecimento: quais pontos de uma região têm os melhores dados NISAR (só metadados, nada é baixado).
+"""Malha do NISAR: as células onde quadros ascendentes e descendentes se cruzam (só metadados).
+
+O mapa não usa grade inventada: usa os quadros fixos do próprio NISAR (pista, direção, quadro).
+Cada quadro ascendente (madrugada, olhando para um lado) cruza com quadros descendentes (noite, olhando
+para o outro). Cada cruzamento A x D é uma CÉLULA vista de dois ângulos: é ali que se triangula.
 
 Uso:
     python run_scout.py --regiao cases/scout_pantanal.json --out docs/results/scout_pantanal
@@ -99,7 +103,7 @@ def score(rows):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--regiao", required=True); ap.add_argument("--out", required=True)
-    ap.add_argument("--passo", type=float, default=0.25, help="espaçamento da grade em graus")
+    ap.add_argument("--min-area-km2", type=float, default=100.0, help="célula mínima (km²)")
     a = ap.parse_args()
     reg = json.loads(Path(a.regiao).read_text(encoding="utf-8"))
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
@@ -113,43 +117,75 @@ def main():
     for c in reg["candidatos"]:
         r = {"nome": c["nome"], "lat": c["lat"], "lon": c["lon"], "por_que": c.get("por_que", "")}
         r.update(stats_at(c["lon"], c["lat"], items)); cands.append(r)
-    grid = []
-    for lat in np.arange(bbox[1] + a.passo / 2, bbox[3], a.passo):
-        for lon in np.arange(bbox[0] + a.passo / 2, bbox[2], a.passo):
-            if reg.get("mascara_poligono") and not shape(reg["mascara_poligono"]).contains(Point(lon, lat)):
+    # quadros do NISAR: um polígono por (pista, direção, quadro) = o maior entre as passagens (quadro cheio)
+    from shapely.geometry import box
+    region = box(*bbox)
+    frames = {}
+    for m in items:
+        if m["produto"] != "GCOV":
+            continue
+        k = (m["pista"], m["direcao"], m["quadro"])
+        if k not in frames or m["shape"].area > frames[k].area:
+            frames[k] = m["shape"]
+    asc = {k: v for k, v in frames.items() if k[1] == "A"}
+    des = {k: v for k, v in frames.items() if k[1] == "D"}
+    log(f"malha: {len(asc)} quadros ascendentes x {len(des)} descendentes")
+    grid, cells = [], []
+    km2 = lambda g, lat: g.area * (111.32 ** 2) * np.cos(np.radians(lat))
+    for ka, pa in asc.items():
+        for kd, pd in des.items():
+            c = pa.intersection(pd).intersection(region)
+            if c.is_empty or c.geom_type not in ("Polygon", "MultiPolygon"):
                 continue
-            r = {"nome": f"grade {lat:.2f},{lon:.2f}", "lat": round(float(lat), 3), "lon": round(float(lon), 3), "por_que": "grade"}
-            r.update(stats_at(lon, lat, items)); grid.append(r)
+            rp = c.representative_point()
+            if km2(c, rp.y) < a.min_area_km2:
+                continue
+            cid = f"A{ka[0]:03d}-{ka[2]:03d} x D{kd[0]:03d}-{kd[2]:03d}"
+            r = {"nome": cid, "lat": round(rp.y, 4), "lon": round(rp.x, 4), "area_km2": round(km2(c, rp.y)),
+                 "por_que": "cruzamento de quadros NISAR"}
+            r.update(stats_at(rp.x, rp.y, items)); grid.append(r); cells.append((r, c))
+    for r in cands:
+        pt = Point(r["lon"], r["lat"])
+        r["celula"] = next((x["nome"] for x, c in cells if c.contains(pt)), "fora dos cruzamentos")
     score(cands + grid)
     cands.sort(key=lambda r: -r["nota"]); grid.sort(key=lambda r: -r["nota"])
-    fields = ["nota", "nome", "lat", "lon", "gcov", "gcov_dupla", "gcov_dupla_pos_beta", "geometrias_boas", "maior_buraco_dias",
+    fields = ["nota", "nome", "lat", "lon", "area_km2", "celula", "gcov", "gcov_dupla", "gcov_dupla_pos_beta", "geometrias_boas", "maior_buraco_dias",
               "gunw", "sme2", "primeira", "ultima", "geometrias", "por_que"]
-    for nm, rows in (("candidatos.csv", cands), ("grade.csv", grid)):
+    for nm, rows in (("candidatos.csv", cands), ("celulas.csv", grid)):
         with open(out / nm, "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore"); w.writeheader()
             for r in rows:
                 w.writerow({**r, "geometrias": json.dumps(r["geometrias"])})
     # mapa
     fig, ax = plt.subplots(figsize=(9, 10), dpi=110)
-    for m in items:
-        if m["produto"] == "GCOV":
-            x, y = m["shape"].exterior.xy; ax.plot(x, y, color="#2E96F5", lw=0.3, alpha=0.25)
-    if grid:
-        sc = ax.scatter([r["lon"] for r in grid], [r["lat"] for r in grid], c=[r["nota"] for r in grid], cmap="viridis",
-                        s=60, marker="s", vmin=0, vmax=100)
-        fig.colorbar(sc, ax=ax, fraction=0.04, label="nota de cobertura (0-100)")
+    from matplotlib import cm, colors as mcolors
+    norm = mcolors.Normalize(0, 100); cmap = plt.get_cmap("viridis")
+    for r, c in cells:
+        for poly in (c.geoms if c.geom_type == "MultiPolygon" else [c]):
+            x, y = poly.exterior.xy; ax.fill(x, y, color=cmap(norm(r["nota"])), alpha=0.75, lw=0)
+    for k, f in frames.items():
+        x, y = f.exterior.xy
+        ax.plot(x, y, color="#0042A6" if k[1] == "A" else "#B5179E", lw=0.8, alpha=0.6)
+        ax.annotate(f"{k[1]}{k[0]:03d}-{k[2]:03d}", (f.centroid.x, f.centroid.y), fontsize=6,
+                    color="#0042A6" if k[1] == "A" else "#B5179E", ha="center")
+    for r, c in sorted(cells, key=lambda t: -t[0]["nota"])[:5]:
+        ax.annotate(f"{r['nota']}", (r["lon"], r["lat"]), fontsize=8, weight="bold", ha="center", color="white")
+    fig.colorbar(cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, fraction=0.04, label="nota da célula (0-100)")
+    ax.plot([], [], color="#0042A6", label="quadros ascendentes (madrugada)")
+    ax.plot([], [], color="#B5179E", label="quadros descendentes (noite)"); ax.legend(loc="lower left", fontsize=7)
     for r in cands:
         ax.plot(r["lon"], r["lat"], "*", ms=14, color="#FF6B00", mec="k")
         ax.annotate(f"{r['nome']} ({r['nota']})", (r["lon"], r["lat"]), xytext=(5, 5), textcoords="offset points", fontsize=7)
     ax.set_xlim(bbox[0], bbox[2]); ax.set_ylim(bbox[1], bbox[3]); ax.set_aspect("equal")
-    ax.set_title(f"{reg['nome']}: onde o NISAR tem mais dados", color=report.DEEP)
+    ax.set_title(f"{reg['nome']}: malha do NISAR e cruzamentos A x D", color=report.DEEP)
     fig.savefig(out / "mapa_cobertura.png", bbox_inches="tight", facecolor="white"); plt.close(fig)
-    lines = [f"# {reg['nome']}: reconhecimento de cobertura NISAR", "", f"{start} a {end}. Coleções: {', '.join(cols)}.", "",
-             "| nota | ponto | GCOV duplas (pós-beta) | geometrias com ≥4 | maior buraco (dias) | GUNW | SME2 |", "|---|---|---|---|---|---|---|"]
-    lines += [f"| {r['nota']} | {r['nome']} ({r['lat']}, {r['lon']}) | {r['gcov_dupla_pos_beta']} | {r['geometrias_boas']} | "
-              f"{r['maior_buraco_dias']} | {r['gunw']} | {r['sme2']} |" for r in cands]
-    lines += ["", "## Melhores células da grade", ""] + [f"- {r['nota']}: ({r['lat']}, {r['lon']}) duplas {r['gcov_dupla_pos_beta']}, "
-                                                        f"geometrias {r['geometrias']}, buraco {r['maior_buraco_dias']} d" for r in grid[:10]]
+    lines = [f"# {reg['nome']}: malha do NISAR", "", f"{start} a {end}. {len(asc)} quadros ascendentes, {len(des)} descendentes, "
+             f"{len(cells)} cruzamentos. Coleções: {', '.join(cols)}.", "",
+             "| nota | célula (A x D) | centro | km² | GCOV duplas | geometrias ≥4 | maior buraco (dias) | GUNW | SME2 |",
+             "|---|---|---|---|---|---|---|---|---|"]
+    lines += [f"| {r['nota']} | {r['nome']} | {r['lat']}, {r['lon']} | {r['area_km2']} | {r['gcov_dupla_pos_beta']} | {r['geometrias_boas']} | "
+              f"{r['maior_buraco_dias']} | {r['gunw']} | {r['sme2']} |" for r in grid[:15]]
+    lines += ["", "## Lugares conhecidos e a célula onde caem", ""] + [f"- {r['nome']}: {r['celula']} (nota do ponto {r['nota']})" for r in cands]
     (out / "resultado.md").write_text("\n".join(lines), encoding="utf-8")
     log("pronto"); print("\n".join(lines))
 
