@@ -38,6 +38,7 @@ LAUNCH = "2025-07-30"
 BETA_END = "2026-01-20"
 GAPS = [("2026-07-27", "2026-08-10", "falha permanente de dados"), ("2026-10-23", "2026-11-09", "pausa da produção provisória")]
 LAMBDA_L = 0.2385
+USEFUL = ("GCOV", "GUNW", "SME2")
 
 
 def log(m):
@@ -54,8 +55,12 @@ def inventory_point(lon, lat, start, end):
     from deltal.sources_nisar import _umm_geometry, _umm_meta
     pt = Point(lon, lat)
     d = 0.001
-    cols = discover_collections()
-    log(f"{len(cols)} coleções NISAR: {', '.join(c['short_name'] for c in cols)}")
+    # só os produtos que mudam o resultado no ponto:
+    #   GCOV = brilho do radar (vegetação, água, umidade); GUNW = coerência e movimento do chão;
+    #   SME2 = umidade do solo do próprio NISAR. Os demais (L0B, RSLC, GSLC, RIFG, RUNW, ROFF, GOFF)
+    #   são versões brutas/intermediárias da mesma informação ou servem a movimentos grandes (geleiras).
+    cols = [c for c in discover_collections() if any(k in c["short_name"].upper() for k in USEFUL)]
+    log(f"{len(cols)} coleções NISAR úteis: {', '.join(c['short_name'] for c in cols)}")
     rows, objs = [], {}
     for c in cols:
         sn = c["short_name"]
