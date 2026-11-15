@@ -68,6 +68,9 @@ nav > * { pointer-events: auto; }
 .dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .dots button { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: 0; background: #3A5A94; cursor: pointer; }
 .dots button[aria-current="true"] { background: var(--neon); width: 22px; border-radius: 5px; }
+.gl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.gl th { text-align: left; color: var(--cyan); font: 600 11px var(--mono); padding: 6px; border-bottom: 1px solid var(--edge); }
+.gl td { padding: 6px; vertical-align: top; border-bottom: 1px solid #1A2C58; color: var(--ink2); line-height: 1.4; } .gl td b { color: var(--ink); }
 .step { font: 600 11px var(--mono); color: var(--neon); letter-spacing: 1.5px; }
 body.paneled .badge[data-go], body.paneled .hero { display: none; }
 #panel h2 { margin: 0; font-size: 18px; } .k { font: 500 11px var(--mono); color: var(--ink2); letter-spacing: 1.5px; }
@@ -94,18 +97,14 @@ body.paneled .badge[data-go], body.paneled .hero { display: none; }
   <div class="brand">Delta L · NISAR Anomaly Watch<small>A VALSA DA SUPERFÍCIE, QUADRO A QUADRO</small></div>
   <div class="ctrl">
     <div class="seg" role="group" aria-label="Direção"><button data-dir="all" aria-pressed="true">Todos</button><button data-dir="A" aria-pressed="false">Ascendente</button><button data-dir="D" aria-pressed="false">Descendente</button></div>
-    <button class="btn" id="goP" style="min-height:36px">Ir para o Paiaguás</button>
+    <form id="busca" role="search" style="display:flex;gap:6px"><input id="q" list="lugares" placeholder="Buscar lugar ou lat, lon" aria-label="Buscar lugar ou coordenadas" style="min-height:36px;border-radius:999px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);padding:0 14px;font:14px var(--display);width:min(240px,50vw)"><datalist id="lugares"></datalist><button class="btn" style="min-height:36px">Ir</button></form>
   </div>
 </nav>
-<div class="hero"><h1>Cada quadro do NISAR, no planeta inteiro.</h1><p>Arraste para girar, role para aproximar, clique num quadro para ver o primeiro e o último arquivo.</p></div>
+<div class="hero"><h1>Cada quadro do NISAR, no planeta inteiro.</h1><p>Arraste para girar, role para aproximar, clique em qualquer quadro para ver o primeiro e o último arquivo.</p></div>
 
-<button class="badge star" id="bP" style="left:6vw;top:24vh"><span class="tag">BR</span><div><b>Paiaguás · Pantanal</b><span>Análise completa · 4 geometrias</span></div></button>
-<button class="badge" data-go="-60.0,-3.1" style="right:6vw;top:24vh"><span class="tag">AM</span><div><b>Várzea de Manaus</b><span>Comparação rasa</span></div></button>
-<button class="badge" data-go="-47.5,-10.2" style="left:6vw;bottom:22vh"><span class="tag">TO</span><div><b>Cerrado do Tocantins</b><span>Comparação rasa</span></div></button>
-<button class="badge" data-go="-57.6,-20.3" style="right:6vw;bottom:22vh"><span class="tag">MS</span><div><b>Nabileque</b><span>Comparação rasa</span></div></button>
 
 <div class="stats"><div><b id="sF">–</b><span>quadros sobre terra</span></div><div><b>12 dias</b><span>para repetir a passagem</span></div><div><b>banda L</b><span>vê através de nuvem e de noite</span></div></div>
-<div class="legend"><b style="color:var(--ink)">Passagens por quadro</b><div class="ramp"></div><div style="display:flex;justify-content:space-between"><span>poucas</span><span>muitas</span></div><span><span style="color:var(--neon)">■</span> Paiaguás: análise completa</span></div>
+<div class="legend"><b style="color:var(--ink)">Passagens por quadro</b><div class="ramp"></div><div style="display:flex;justify-content:space-between"><span>poucas</span><span>muitas</span></div><span><span style="color:var(--neon)">■</span> Área com análise completa</span></div>
 <div class="demo">PROTÓTIPO · quadros e datas ilustrativos. Na versão final vêm do catálogo da NASA (CMR).</div>
 
 <aside id="panel" aria-live="polite"><button class="x" id="close" aria-label="Fechar">×</button><div id="pbody"></div></aside>
@@ -130,14 +129,25 @@ let base;
 function size() { dpr = window.devicePixelRatio || 1; W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   base = Math.min(W, H) * 0.42; if (!proj._k) proj._k = 1; proj.translate([W / 2, H * 0.54]).scale(base * proj._k); draw(); }
 const vis = (f) => dir === "all" || f.properties.d === dir;
+const RAD = Math.PI / 180, tex = { data: null, w: 0, h: 0 }; const off = document.createElement("canvas"), octx = off.getContext("2d");
+{ const im = new Image(); im.onload = () => { const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const x = c.getContext("2d"); x.drawImage(im, 0, 0);
+    tex.data = x.getImageData(0, 0, c.width, c.height).data; tex.w = c.width; tex.h = c.height; draw(); }; im.src = "terra.jpg"; }
+function drawEarth(fast) { const r = proj.scale(), [cx, cy] = proj.translate(); const s = fast ? 0.4 : Math.min(1.5, dpr);
+  const x0 = Math.max(0, Math.floor(cx - r)), y0 = Math.max(0, Math.floor(cy - r)), x1 = Math.min(W, Math.ceil(cx + r)), y1 = Math.min(H, Math.ceil(cy + r));
+  const w = Math.max(1, Math.round((x1 - x0) * s)), h = Math.max(1, Math.round((y1 - y0) * s)); off.width = w; off.height = h; const im = octx.createImageData(w, h), d = im.data, T = tex.data, tw = tex.w, th = tex.h;
+  const [rl, rp] = proj.rotate(); const l0 = -rl * RAD, p0 = -rp * RAD, sp = Math.sin(p0), cp = Math.cos(p0);
+  for (let j = 0; j < h; j++) { const yy = -((y0 + (j + 0.5) / s) - cy) / r; for (let i = 0; i < w; i++) { const xx = ((x0 + (i + 0.5) / s) - cx) / r; const rho2 = xx * xx + yy * yy; if (rho2 > 1) continue;
+    const rho = Math.sqrt(rho2), c = Math.asin(rho), sc = Math.sin(c), cc = Math.cos(c); const lat = rho ? Math.asin(cc * sp + yy * sc * cp / rho) : p0; const lon = l0 + Math.atan2(xx * sc, rho * cc * cp - yy * sc * sp);
+    const u = (((lon / RAD + 180) % 360) + 360) % 360 / 360, v = (90 - lat / RAD) / 180; const ti = ((Math.min(th - 1, (v * th) | 0)) * tw + Math.min(tw - 1, (u * tw) | 0)) * 4, o = (j * w + i) * 4;
+    const sh = 0.5 + 0.4 * cc; d[o] = T[ti] * sh; d[o + 1] = T[ti + 1] * sh; d[o + 2] = T[ti + 2] * sh; d[o + 3] = 255; } }
+  octx.putImageData(im, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(off, x0, y0, x1 - x0, y1 - y0); }
 function draw(fast) {
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
   stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
   const [cx, cy] = proj.translate(), r = proj.scale();
-  const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r); g.addColorStop(0, "#0E2A5A"); g.addColorStop(1, "#030C22");
-  ctx.beginPath(); path({ type: "Sphere" }); ctx.fillStyle = g; ctx.fill();
+  if (tex.data) drawEarth(fast); else { ctx.beginPath(); path({ type: "Sphere" }); ctx.fillStyle = "#0B2250"; ctx.fill(); }
   ctx.beginPath(); path(grat); ctx.strokeStyle = "rgba(127,232,255,0.06)"; ctx.lineWidth = 0.6; ctx.stroke();
-  ctx.beginPath(); path(land); ctx.fillStyle = "#1C3A2E"; ctx.fill();
+  if (!tex.data) { ctx.beginPath(); path(land); ctx.fillStyle = "#1C3A2E"; ctx.fill(); }
   ctx.beginPath(); path(borders); ctx.strokeStyle = "rgba(200,220,255,0.18)"; ctx.lineWidth = 0.5; ctx.stroke();
   const k = proj.scale() / base; const step = fast && k < 2 ? 3 : 1;
   ctx.lineWidth = k > 4 ? 1.1 : 0.5;
@@ -162,10 +172,11 @@ function fly(lon, lat, k) { const r0 = proj.rotate(), k0 = proj._k; const ri = d
 const fd = (s) => s.split("-").reverse().join("/");
 const gid = (p) => `${String(p.t).padStart(3, "0")}_${p.d}_${String(p.f).padStart(3, "0")}`;
 const gname = (p) => `pista ${p.t} · ${p.d === "A" ? "ascendente (≈ 5h30)" : "descendente (≈ 18h30)"} · quadro ${p.f}`;
+let lastLL = null;
 function pick(x, y) {
   const ll = proj.invert([x, y]); if (!ll || d3.geoDistance(ll, proj.invert(proj.translate())) > Math.PI / 2) return;
   if (d3.geoContains(PCELL, ll) || d3.geoDistance(ll, [P.lon, P.lat]) < 0.004 * 60 / proj._k) { showP(); return; }
-  const hits = frames.filter((f) => vis(f) && d3.geoContains(f, ll)); if (!hits.length) { closeP(); return; }
+  lastLL = ll; const hits = frames.filter((f) => vis(f) && d3.geoContains(f, ll)); if (!hits.length) { closeP(); return; }
   showF(hits[0], hits.slice(1));
 }
 const panel = document.getElementById("panel"), pb = document.getElementById("pbody");
@@ -176,12 +187,27 @@ function showF(f, others) { stopV(); panel.classList.remove("wide"); sel = f; co
   pb.innerHTML = `<div class="k">COMPARAÇÃO RASA</div><h2>Quadro ${gid(p)}</h2><div class="note">${gname(p)}</div>
   <div class="grid2"><div class="cell"><div class="l">Primeiro arquivo</div><div class="v">${fd(p.p0)}</div></div><div class="cell"><div class="l">Último arquivo</div><div class="v">${fd(p.p1)}</div></div>
   <div class="cell"><div class="l">Passagens GCOV</div><div class="v">${p.n}</div></div><div class="cell"><div class="l">Intervalo</div><div class="v">${Math.round(days)} dias</div></div></div>
-  <div class="grid2"><div class="thumb">Prévia do primeiro arquivo<br>(${fd(p.p0)})</div><div class="thumb">Prévia do último arquivo<br>(${fd(p.p1)})</div></div>
+  <div class="grid2"><div class="thumb" id="b0">Prévia do primeiro arquivo<br>(${fd(p.p0)})</div><div class="thumb" id="b1">Prévia do último arquivo<br>(${fd(p.p1)})</div></div>
+  <div class="note" id="live" style="color:#FFD27A">Consultando o catálogo da NASA (CMR) neste ponto…</div>
   <p class="note">Aqui só olhamos o primeiro e o último arquivo do quadro: as duas prévias (browse) que a NASA publica junto de cada produto e o resumo do catálogo. Serve para comparar lugares e escolher onde aprofundar.</p>
   ${others.length ? `<div class="k">OUTROS QUADROS NESTE PONTO</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} passagens</button>`).join("")}</div>` : ""}
   <a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Análise completa: quadro " + gid(p))}" target="_blank" rel="noopener">Pedir análise completa deste quadro</a>`;
   pb.querySelectorAll("[data-o]").forEach((b) => b.onclick = () => showF(others[+b.dataset.o], [f, ...others.filter((_, j) => j !== +b.dataset.o)]));
-  panel.classList.add("on"); document.body.classList.add("paneled"); }
+  panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL) live(lastLL); }
+// Consulta ao vivo do catálogo da NASA: qualquer lugar, sem a equipe subir dados antes.
+const CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json?provider=ASF&short_name=NISAR_L2_GCOV_PROVISIONAL_V1&short_name=NISAR_L2_GCOV_V1&short_name=NISAR_L2_GCOV_BETA_V1&page_size=1";
+const att = (u, n) => ((u.AdditionalAttributes || []).find((a) => a.Name === n) || {}).Values?.[0];
+const browse = (u) => ((u.RelatedUrls || []).find((r) => r.Type === "GET RELATED VISUALIZATION" && /\.(png|jpe?g)$/i.test(r.URL)) || {}).URL;
+async function live(ll) { const el = document.getElementById("live"); const q = `&point=${ll[0].toFixed(4)},${ll[1].toFixed(4)}`;
+  try { const [a, b] = await Promise.all([fetch(CMR + q + "&sort_key=start_date"), fetch(CMR + q + "&sort_key=-start_date")].map((p) => p.then((r) => { if (!r.ok) throw 0; return r.json(); })));
+    if (!document.getElementById("live")) return;
+    if (!a.hits) { el.textContent = "Catálogo da NASA consultado agora: o NISAR ainda não publicou nenhum GCOV deste ponto."; return; }
+    const u0 = a.items[0].umm, u1 = b.items[0].umm, d0 = u0.TemporalExtent.RangeDateTime.BeginningDateTime.slice(0, 10), d1 = u1.TemporalExtent.RangeDateTime.BeginningDateTime.slice(0, 10);
+    const cells = pb.querySelectorAll(".grid2 .cell .v"); cells[0].textContent = fd(d0); cells[1].textContent = fd(d1); cells[2].textContent = a.hits; cells[3].textContent = Math.round((Date.parse(d1) - Date.parse(d0)) / 864e5) + " dias";
+    pb.querySelector("h2").textContent = `Pista ${att(u1, "TRACK_NUMBER") ?? "?"} · quadro ${att(u1, "FRAME_NUMBER") ?? "?"}`;
+    [[u0, "b0", d0], [u1, "b1", d1]].forEach(([u, id, d]) => { const url = browse(u), box = document.getElementById(id); if (url) box.innerHTML = `<img src="${url}" alt="Prévia NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('Prévia sem acesso público'))">`; else box.innerHTML = `Arquivo de ${fd(d)}<br>${u.GranuleUR.slice(0, 60)}…`; });
+    el.style.color = "#8FD9A8"; el.textContent = `Dados reais, consultados agora no catálogo da NASA (CMR): ${a.hits} arquivos GCOV cobrem este ponto, somando todas as direções de passagem.`;
+  } catch (e) { if (el) el.textContent = "Sem acesso ao catálogo da NASA daqui: mostrando valores ilustrativos."; } }
 const SL = [
   { t: "O período inteiro, passagem a passagem", video: true,
     what: "Todas as passagens do NISAR sobre o Paiaguás, de 21/06 a 05/11/2026, lado a lado com a imagem do Planetary Computer mais próxima de cada data. Do inverno para a primavera, a planície seca: o verde some na falsa cor e o radar escurece.",
@@ -195,9 +221,9 @@ const SL = [
   { t: "O controle: um período calmo", img: "gunw_par_20260628_20260710_031A.png",
     what: "Mesmo lugar e mesmo trilho, de 28/06 a 10/07: só 2% da área sem coerência. O chão ficou parado.",
     how: "<b>Por que importa:</b> é a prova de que o vale de setembro não é ruído do instrumento. O método é o mesmo; só a superfície mudou." },
-  { t: "A coerência ao longo do ano", img: "gunw_coerencia_no_tempo.png",
-    what: "Cada traço é um par de passagens. O vale de setembro aparece em três trilhos ao mesmo tempo.",
-    how: "<b>Como filtramos:</b> a pista 111 descendente perde coerência até em períodos calmos (83% em junho), então fica fora das conclusões. Só contamos o que outra direção de passagem confirma." },
+  { t: "Como ler a coerência ao longo do ano", coh: true,
+    what: "Cada barra é uma comparação entre duas passagens do mesmo satélite, com 12 dias de intervalo: ela começa na primeira data e termina na segunda. Quanto mais alta a barra, maior a parte da área que mudou nesses 12 dias. Até agosto, as barras ficam rente ao chão (abaixo de 10%). Em setembro, três pistas diferentes sobem juntas para 24 a 41%.",
+    how: "<b>Por que três cores contam como prova:</b> cada cor é uma direção de passagem diferente (lado e horário diferentes). Se fosse defeito de uma passagem, só uma cor subiria. A pista 111 (cinza tracejado) fica de fora: ela marca perda até em junho, quando nada mudou, então não é confiável aqui." },
   { t: "O que mudou, pixel a pixel", img: "031_A_169_classes.png",
     what: "Cerca de 710 ha de alagamento passageiro, 496 ha de água permanente, 127 ha de queda abrupta da vegetação e 684 ha de ganho lento.",
     how: "<b>Como classificamos:</b> normalizamos cada data pela mediana da área (tira o efeito do instrumento) e, em cada pixel, procuramos o degrau no HV entre antes e depois (teste t). O que não tem degrau vira ritmo sazonal ou tendência lenta." },
@@ -212,7 +238,7 @@ const SL = [
     how: "<b>Como conferimos:</b> comparamos a curva do radar com a chuva diária, a umidade do NASA POWER e o SME2. É a valsa invisível: o solo respira com a chuva antes de qualquer mudança aparecer na foto." },
   { t: "A história do ponto", img: "ponto_historia.png",
     what: "No ponto acompanhado (círculo amarelo no mapa), o HV cai cerca de 0,7 dB entre 08/09 e 27/09, visto pelas pistas 31 e 132.",
-    how: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, desde o primeiro arquivo, com a chuva e a coerência de cada par." }
+    how: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, desde o primeiro arquivo, com a chuva e a coerência de cada par.", gloss: true }
 ];
 const GEOS = ["031_A_169", "132_A_168", "010_D_098", "111_D_098"];
 const PCL = [["nat", "Cor natural", "s2", "natural"], ["fogo", "Fogo", "s2", "queimada"], ["radar", "Radar C", "s1", "radar"], ["temp", "Temperatura", "landsat", "temperatura"]];
@@ -240,6 +266,23 @@ function frame(i) { const cv = document.getElementById("vcv"); if (!cv || !V.fra
   if (s && s.imagens && s.imagens[L[3]]) { img.src = "pg/carrossel/" + s.imagens[L[3]]; img.style.filter = L[0] === "nat" ? "brightness(1.8) contrast(1.1)" : ""; img.hidden = false; ph.hidden = true;
     document.getElementById("vr").textContent = `${s.satelite} · ${fd(s.data)} · ${s.dias ? "±" + s.dias + " d" : "mesmo dia"}`; }
   else { img.hidden = true; ph.hidden = false; ph.textContent = V.car ? `Sem cena limpa de ${L[1].toLowerCase()} perto desta data` : "Imagens do Planetary Computer: aguardando o run_carrossel.py"; document.getElementById("vr").textContent = "Planetary Computer"; } }
+async function drawCoh() { const el = document.getElementById("cchart"); if (!el) return; let P; try { P = await (await fetch("pg/gunw.json")).json(); } catch (e) { return; }
+  const keep = { "031_A_169": ["#EAFE07", "pista 31 · ascendente"], "132_A_168": ["#7FE8FF", "pista 132 · ascendente"], "010_D_098": ["#FF8A3D", "pista 10 · descendente"], "111_D_098": ["#8A94A8", "pista 111 · não confiável"] };
+  P = P.filter((p) => keep[p.geometria]); const W = 560, H = 250, L = 40, B = 34, T = 14, R = 10;
+  const t0 = Date.parse("2026-06-18"), t1 = Date.parse("2026-10-06"); const X = (d) => L + (Date.parse(d) - t0) / (t1 - t0) * (W - L - R), Y = (v) => T + (1 - v / 100) * (H - T - B);
+  const months = [["2026-07-01", "jul"], ["2026-08-01", "ago"], ["2026-09-01", "set"], ["2026-10-01", "out"]];
+  let g = `<svg viewBox="0 0 ${W} ${H + 62}" width="100%" role="img" aria-label="Porcentagem da área sem coerência em cada par de passagens">`;
+  g += `<rect x="${L}" y="${Y(10)}" width="${W - L - R}" height="${Y(0) - Y(10)}" fill="#2E7D4F" opacity=".25"/>`;
+  g += `<rect x="${X("2026-09-01")}" y="${T}" width="${X("2026-09-22") - X("2026-09-01")}" height="${H - T - B}" fill="#EAFE07" opacity=".08"/>`;
+  [0, 25, 50, 75, 100].forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ffffff" opacity=".08"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" fill="#A9BCE0" font-size="10" font-family="Fira Code">${v}%</text>`; });
+  months.forEach(([d, n]) => { g += `<text x="${X(d)}" y="${H - B + 16}" fill="#A9BCE0" font-size="11" font-family="Fira Sans">${n}</text>`; });
+  g += `<text x="${L}" y="${H - 4}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">altura = % da área que perdeu a coerência (mudou) entre as duas passagens</text>`;
+  P.forEach((p) => { const [c] = keep[p.geometria], bad = p.geometria.startsWith("111"); const x1 = X(p.data1), x2 = X(p.data2), y = Y(p.area_coerencia_baixa_pct);
+    g += `<line x1="${x1}" x2="${x2}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${bad ? 2 : 4}" stroke-linecap="round" ${bad ? 'stroke-dasharray="4 4" opacity=".7"' : ""}><title>${fd(p.data1)} → ${fd(p.data2)} · ${keep[p.geometria][1]} · ${p.area_coerencia_baixa_pct.toFixed(0)}% sem coerência</title></line>`;
+    const lx = p.geometria.startsWith("132") ? [x1 - 6, "end"] : p.geometria.startsWith("010") ? [x2 + 6, "start"] : [(x1 + x2) / 2, "middle"];
+    if (!bad && p.area_coerencia_baixa_pct > 20) g += `<text x="${lx[0]}" y="${p.geometria.startsWith("031") ? y - 7 : y + 4}" text-anchor="${lx[1]}" fill="${c}" font-size="11" font-weight="700" font-family="Fira Code">${p.area_coerencia_baixa_pct.toFixed(0)}%</text>`; });
+  g += `<g transform="translate(${L},${H + 10})">` + Object.values(keep).map(([c, n], i) => `<g transform="translate(${(i % 2) * 250},${Math.floor(i / 2) * 16})"><line x1="0" x2="18" y1="0" y2="0" stroke="${c}" stroke-width="4" ${i === 3 ? 'stroke-dasharray="4 4"' : ""}/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${n}</text></g>`).join("") + `<g transform="translate(0,32)"><rect x="0" y="-6" width="18" height="10" fill="#2E7D4F" opacity=".6"/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">faixa normal: menos de 10% (chão parado)</text></g>` + "</g></svg>";
+  el.innerHTML = g; }
 function drawChart() { const el = document.getElementById("mchart"); if (!el || !V.car) return;
   const rows = V.car.datas; const S = [["NDVI (Sentinel-2)", (r) => r.s2?.ndvi_mediana, "#7CFC8A", 2], ["Queima/secagem % (Sentinel-2)", (r) => r.s2?.queimada_pct, "#FF8A3D", 1], ["Temperatura °C (Landsat)", (r) => r.landsat?.temperatura_mediana_c, "#FFD27A", 1], ["VH dB (Sentinel-1)", (r) => r.s1?.vh_mediana_db, "#9FC8FF", 1]];
   const W = 540, h = 52, t0 = Date.parse(rows[0].data_nisar), t1 = Date.parse(rows.at(-1).data_nisar), X = (d) => 8 + (Date.parse(d) - t0) / (t1 - t0) * (W - 110);
@@ -258,10 +301,10 @@ async function showP() { sel = null; draw(); stopV(); panel.classList.add("wide"
   pb.innerHTML = `<div class="k" style="color:var(--neon)">ÁREA DEMARCADA · ANÁLISE COMPLETA</div><h2>Paiaguás · Pantanal (MS)</h2>
   <div class="note">18,28° S · 56,87° O · 13 × 13 km · 4 direções de passagem · 27 passagens de 21/06 a 05/11/2026</div>
   <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} de ${SL.length}">
-    <div class="media">${x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure></div>
+    <div class="media">${x.coh ? `<div id="cchart" style="background:#050E26;padding:10px"></div>` : x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure></div>
       <div class="vbar"><button type="button" id="vbtn">Iniciar</button><span class="when" id="vwhen"></span><span class="prog"><i id="vprog"></i></span></div>
       <div class="pcl" id="pcl">${PCL.map(([k, n]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${n}</button>`).join("")}</div>` : `<img src="pg/${x.img}" alt="${x.t}" loading="lazy">`}</div>
-    <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${x.t}</h3><p class="what">${x.what}</p><p class="how">${x.how}</p></section>`).join("")}</div>
+    <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${x.t}</h3><p class="what">${x.what}</p><p class="how">${x.how}</p>${x.gloss ? `<div class="k" style="margin-top:4px">GLOSSÁRIO: O QUE SIGNIFICA CADA DADO</div><table class="gl"><thead><tr><th>Termo</th><th>O que é</th><th>Para que usamos</th></tr></thead><tbody><tr><td><b>HH</b></td><td>Radar que sai e volta na horizontal. Reage ao solo e à água: sobe com solo úmido e cai muito em água parada (espelho).</td><td>Umidade e alagamento</td></tr><tr><td><b>HV</b></td><td>Sai na horizontal e volta na vertical. Só acontece quando a onda se espalha em galhos e folhas: é o termômetro da vegetação em pé.</td><td>Vegetação, queimada, desmate</td></tr><tr><td><b>dB (decibel)</b></td><td>Escala do brilho do radar. Mais perto de 0 = mais brilho; −25 dB = quase nada voltou. Uma queda de 3 dB é metade do sinal.</td><td>Tamanho da mudança</td></tr><tr><td><b>Coerência</b></td><td>De 0 a 1: o quanto duas passagens com 12 dias de intervalo “batem” na fase da onda. Perto de 1 = chão igual; abaixo de 0,3 = algo mexeu.</td><td>Mudanças que a foto não mostra</td></tr><tr><td><b>Banda L</b></td><td>Onda de ~24 cm do NISAR. Atravessa nuvem, fumaça e copas, de dia e de noite.</td><td>Ver sob nuvem e dentro da mata</td></tr><tr><td><b>Pista e direção</b></td><td>O caminho do satélite. Ascendente passa ~5h30, descendente ~18h30, olhando de lados opostos.</td><td>Confirmação independente</td></tr><tr><td><b>GCOV</b></td><td>Produto do NISAR com o brilho HH e HV em grade de mapa.</td><td>Mapas de vegetação e água</td></tr><tr><td><b>GUNW</b></td><td>Produto que compara duas passagens: coerência e deslocamento em centímetros.</td><td>Perda de coerência, movimento</td></tr><tr><td><b>SME2</b></td><td>Umidade do solo estimada pelo NISAR (m³/m³), em 200 m.</td><td>A “valsa invisível” da umidade</td></tr><tr><td><b>NDVI / dNBR</b></td><td>Índices das fotos do Sentinel-2: verde da vegetação e marca de queima.</td><td>Conferência com o óptico</td></tr></tbody></table>` : ""}</section>`).join("")}</div>
   <div class="nav"><button type="button" class="arr" id="cprev" aria-label="Anterior">◀</button><div class="dots" id="cdots">${SL.map((_, i) => `<button type="button" data-s="${i}" aria-label="Ir para ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="Próximo">▶</button></div>
   <a class="btn" href="https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" target="_blank" rel="noopener" style="align-self:flex-start">Abrir os dados e a ficha técnica</a>`;
   panel.classList.add("on"); document.body.classList.add("paneled");
@@ -273,9 +316,15 @@ async function showP() { sel = null; draw(); stopV(); panel.classList.add("wide"
   document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
   document.getElementById("vbtn").onclick = () => V.timer ? stopV() : startV();
   document.querySelectorAll("#pcl [data-l]").forEach((b) => b.onclick = () => { V.layer = b.dataset.l; document.querySelectorAll("#pcl [data-l]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); frame(V.k); });
-  await loadVideo(); V.k = 0; frame(0); drawChart(); }
-document.getElementById("goP").onclick = document.getElementById("bP").onclick = () => { fly(P.lon, P.lat, 9); setTimeout(showP, 1150); };
-document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => { const [lon, lat] = b.dataset.go.split(",").map(Number); fly(lon, lat, 7);
+  drawCoh(); await loadVideo(); V.k = 0; frame(0); drawChart(); }
+const LUG = [["Paiaguás, Pantanal (MS)", -56.873, -18.278, 9], ["Pantanal", -57.0, -18.5, 5], ["Manaus (AM)", -60.02, -3.1, 6], ["Palmas (TO)", -48.33, -10.18, 6], ["Corumbá (MS)", -57.65, -19.01, 7], ["São Paulo (SP)", -46.63, -23.55, 6],
+  ["Brasília (DF)", -47.88, -15.79, 6], ["Belém (PA)", -48.5, -1.45, 6], ["Cuiabá (MT)", -56.1, -15.6, 6], ["Porto Alegre (RS)", -51.23, -30.03, 6], ["Amazônia", -62, -5, 3], ["Andes", -70, -20, 3], ["Califórnia", -119, 36.5, 4], ["Himalaia", 86.9, 28, 4], ["Groenlândia", -42, 72, 3]];
+document.getElementById("lugares").innerHTML = LUG.map((l) => `<option value="${l[0]}">`).join("");
+document.getElementById("busca").onsubmit = (e) => { e.preventDefault(); const q = document.getElementById("q").value.trim(); const m = q.match(/^(-?\d+(?:[.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[.,]\d+)?)$/);
+  if (m) { const lat = +m[1].replace(",", "."), lon = +m[2].replace(",", "."); fly(lon, lat, 7); return; }
+  const n = q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const l = LUG.find((x) => x[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(n));
+  if (l) { fly(l[1], l[2], l[3]); if (l[0].startsWith("Paiagu")) setTimeout(showP, 1150); } };
+if (0) document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => { const [lon, lat] = b.dataset.go.split(",").map(Number); fly(lon, lat, 7);
   setTimeout(() => { const h = frames.filter((f) => vis(f) && d3.geoContains(f, [lon, lat])); if (h.length) showF(h[0], h.slice(1)); }, 1150); });
 document.querySelectorAll("[data-dir]").forEach((b) => b.onclick = () => { dir = b.dataset.dir; document.querySelectorAll("[data-dir]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(); });
 proj.rotate([60, 15]); addEventListener("resize", size); size();
