@@ -57,7 +57,7 @@ A 13 × 13 km crop of the Pantanal floodplain (18.28° S, 56.87° W), seen by **
 - **Pixel by pixel:** about 710 ha of short-lived flooding, 496 ha of permanent water, 127 ha of abrupt vegetation loss and
   684 ha of slow gain. HH follows soil moisture (r 0.59–0.81 against NISAR's SME2).
 
-![Why it happened: rain, soil moisture and NISAR pairs](docs/readme/why_first_rains.jpg)
+![How much of the area changed every 12 days: the September jump](docs/readme/why_first_rains.jpg)
 
 **Hypotheses, tested against the data:** (1) first rains of the wet season abruptly changing soil moisture: the timing
 matches pair by pair, so it is our main explanation; (2) dry-season fire and pasture management in a cattle-ranching
@@ -155,6 +155,10 @@ Team **Delta L** (Kayke).
 
 Every Python file starts with an `# AI-assisted` note and commits made with the assistant carry a `Co-Authored-By: Claude` line.
 No AI-generated images or video are used. No NASA logos are used.
+
+## License
+
+Code under the [MIT License](LICENSE). NISAR, Sentinel, Landsat, NASA POWER and CAL FIRE data keep the terms of their providers.
 
 ## References and credits
 
