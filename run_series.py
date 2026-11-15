@@ -45,10 +45,14 @@ def read_cached(granule, grid, cache):
     f = cache / f"{name}_{h}.npz"
     if f.exists():
         z = np.load(f, allow_pickle=False)
-        return {"HHHH": z["HHHH"], "HVHV": z["HVHV"]}, json.loads(str(z["meta"]))
+        d = {"HHHH": z["HHHH"], "HVHV": z["HVHV"]}
+        if "mascara_relevo" in z:
+            d["mascara_relevo"] = z["mascara_relevo"]
+        return d, json.loads(str(z["meta"]))
     arrs, meta = sn.read_gcov_subset(granule, grid)
+    extra = {"mascara_relevo": arrs["mascara_relevo"].astype("uint8")} if "mascara_relevo" in arrs else {}
     np.savez_compressed(f, HHHH=arrs["HHHH"].astype("float32"), HVHV=arrs["HVHV"].astype("float32"),
-                        meta=json.dumps(meta, default=str))
+                        meta=json.dumps(meta, default=str), **extra)
     return arrs, meta
 
 
@@ -189,7 +193,7 @@ def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
         return None
 
     # 2) pilha
-    hh, hv, dates, used = [], [], [], []
+    hh, hv, dates, used, masks, idents = [], [], [], [], [], []
     for n, (snm, g) in enumerate(chosen, 1):
         name = g["umm"]["GranuleUR"]
         log(f"  lendo {n}/{len(chosen)} {name[:60]}...")
@@ -199,14 +203,23 @@ def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
             ficha["erros"][name] = f"{type(e).__name__}: {e}"; traceback.print_exc(); continue
         hh.append(to_db(boxcar_linear(arrs["HHHH"], 3))); hv.append(to_db(boxcar_linear(arrs["HVHV"], 3)))
         dates.append(datetime.strptime(m["inicio"], "%Y%m%dT%H%M%S").strftime("%Y-%m-%d"))
-        used.append({"data": dates[-1], "arquivo": name, "colecao": snm, "crid": m.get("crid"), "ciclo": m.get("ciclo")})
+        used.append({"data": dates[-1], "arquivo": name, "colecao": snm, "crid": m.get("crid"), "ciclo": m.get("ciclo"),
+                     "identificacao": m.get("identificacao")})
+        if "mascara_relevo" in arrs:
+            masks.append(sn.relief_mask(arrs["mascara_relevo"]))
     hh, hv = np.array(hh), np.array(hv)
     ficha["passagens_usadas"] = used
 
     # 3) máscaras
     valid = np.isfinite(np.nanmedian(hv, 0))
     land = valid & ~(np.nanmedian(hh, 0) < S.PARAMS["agua_db"])
-    if not a.skip_dem:
+    if masks:
+        relief = np.any(np.array(masks), 0)
+        ficha["relevo_mascarado_ha"] = round(float(relief.sum() * px / 1e4), 2)
+        ficha["mascara_relevo_fonte"] = "NISAR GCOV layoverShadowMask (do próprio produto)"
+        land &= ~relief
+        valid &= ~relief
+    elif not a.skip_dem and not case.get("somente_nisar"):
         try:
             from deltal import collect
             from deltal.terrain import radar_masks
@@ -250,7 +263,7 @@ def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
             "pixels_que_respondem_a_chuva_pct": round(100 * float(np.nanmean(inv["HH"][0][valid] > 0.6)), 1),
             "tendencia_mediana_db_mes": round(float(np.nanmedian(res["tendencia_db_mes"][valid])), 3)}
     truth = None
-    if ev and not a.skip_truth:
+    if ev and not a.skip_truth and not case.get("somente_nisar"):
         try:
             log("gabarito Sentinel-2 ...")
             truth, okt, info = s2_truth(grid, ev)
@@ -371,12 +384,13 @@ def main():
             geo_list.append(gk)
     log(f"geometrias para analisar: {geo_list} (passagens por geometria: {geoms})")
     clima_all = None
-    try:
+    if case.get("clima_nasa_power", True):
+      try:
         from deltal.sources_power import climate_daily
         w, s_, e_, n_ = grid.bbox
         d0 = (datetime.fromisoformat(start) - timedelta(days=10)).strftime("%Y%m%d")
         clima_all = climate_daily((w + e_) / 2, (s_ + n_) / 2, d0, end.replace("-", ""))
-    except Exception as e:
+      except Exception as e:
         ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
     index = ["# " + case["nome"], "", f"Área {grid.bbox}, {start} a {end}.", ""]
     results = {}

@@ -272,7 +272,8 @@ def identification(h5):
 def read_layers(granule, grid, layers, linear=True):
     """Lê só a janela da área de cada camada e reprojeta para a grade comum.
 
-    layers: {apelido: (nome_do_dataset, trecho_do_caminho_preferido_ou_None)}.
+    layers: {apelido: (nome_do_dataset, trecho_do_caminho_preferido_ou_None[, {"opcional": bool, "classes": bool}])}.
+    classes=True: camada de códigos (máscara) -> amostragem por vizinho mais próximo, nunca média.
     linear=True descarta valores <= 0 (potência); False aceita negativos (fase, deslocamento)."""
     import earthaccess
     import h5py
@@ -280,7 +281,15 @@ def read_layers(granule, grid, layers, linear=True):
     out = {}
     with h5py.File(f, "r") as h5:
         ident = identification(h5)
-        paths = {k: _locate(h5, base, cont) for k, (base, cont) in layers.items()}
+        paths, opts = {}, {}
+        for k, spec in layers.items():
+            base, cont = spec[0], spec[1]
+            opts[k] = spec[2] if len(spec) > 2 else {}
+            try:
+                paths[k] = _locate(h5, base, cont)
+            except KeyError:
+                if not opts[k].get("opcional"):
+                    raise
         first = next(iter(paths.values()))
         group = first.rsplit("/", 1)[0]
         x = h5[_up(h5, group, "xCoordinates")][()]
@@ -311,6 +320,14 @@ def read_layers(granule, grid, layers, linear=True):
                     bad |= a == 0                      # 0 = sem dado nos produtos de fase
                 a[bad] = np.nan
                 return a
+            if opts[alias].get("classes"):
+                arr = ds[y0:y1:fct, x0:x1:fct].astype("float32")
+                a_tr = Affine(dx * fct, 0, x[x0] - dx / 2, 0, dy * fct, y[y0] - dy / 2)
+                dst = np.full((grid.height, grid.width), 255, dtype="float32")
+                reproject(arr, dst, src_transform=a_tr, src_crs=f"EPSG:{epsg}", dst_transform=grid.transform,
+                          dst_crs=grid.crs, resampling=Resampling.nearest, src_nodata=None, dst_nodata=255)
+                out[alias] = dst
+                continue
             if fct == 1:
                 arr = clean(ds[y0:y1, x0:x1]); a_tr = src_tr
             else:
@@ -336,8 +353,18 @@ def read_layers(granule, grid, layers, linear=True):
     return out, meta
 
 
-def read_gcov_subset(granule, grid, layers=("HHHH", "HVHV")):
-    return read_layers(granule, grid, {l: (l, None) for l in layers}, linear=True)
+def read_gcov_subset(granule, grid, layers=("HHHH", "HVHV"), with_mask=True):
+    """HH e HV + a máscara de layover/sombra do PRÓPRIO produto (quando existir no arquivo)."""
+    spec = {l: (l, None) for l in layers}
+    if with_mask:
+        spec["mascara_relevo"] = ("layoverShadowMask", None, {"opcional": True, "classes": True})
+    return read_layers(granule, grid, spec, linear=True)
+
+
+def relief_mask(code):
+    """layoverShadowMask do NISAR: 0 = ok, 1 = sombra, 2 = layover, 3 = os dois; 255 = sem dado."""
+    c = np.asarray(code)
+    return np.isin(c, (1, 2, 3))
 
 
 GUNW_LAYERS = {"fase": ("unwrappedPhase", "unwrappedInterferogram"),

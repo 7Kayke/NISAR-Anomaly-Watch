@@ -1,0 +1,12 @@
+{
+  "nome": "Rio Tocantins e Cerrado: divisa Maranhão–Tocantins (seca, vegetação e rio)",
+  "bbox": [-49.3, -9.2, -45.9, -5.7],
+  "resolucao_m": 200,
+  "nisar_quadro": {"pista": 45, "direcao": "A", "quadro": 174,
+                   "referencia": "NISAR_L2_PR_GCOV_034_045_A_174_2005_DHDH_A_20261027T085515_20261027T085550_P05036_N_F_J_001"},
+  "serie": {"inicio": "2026-01-20"},
+  "somente_nisar": true,
+  "clima_nasa_power": true,
+  "todas_geometrias": true,
+  "contexto": "Rio Tocantins e seu reservatório, cerrado e transição para a Amazônia, lavouras. Chuvas de outubro a abril; seca, queimadas e rio baixo de maio a setembro. Passagem com observação conjunta (banda L + banda S)."
+}
