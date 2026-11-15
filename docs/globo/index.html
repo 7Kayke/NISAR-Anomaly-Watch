@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NISAR Globo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Fira+Sans:wght@400;500;700;800&display=swap">
+<style>
+:root { --space: #02060F; --panel: rgba(10, 22, 52, 0.88); --edge: #2B4C8C; --ink: #E8F0FF; --ink2: #A9BCE0; --cyan: #7FE8FF; --neon: #EAFE07; --sky: #9CC9FA; --blue: #0042A6;
+  --display: "Fira Sans", system-ui, sans-serif; --mono: "Fira Code", ui-monospace, monospace; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--space); color: var(--ink); font-family: var(--display); overflow: hidden; }
+#cv { position: fixed; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+#cv.drag { cursor: grabbing; }
+nav { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); background: linear-gradient(#02060Fee, #02060F00); pointer-events: none; }
+nav > * { pointer-events: auto; }
+.brand { font-weight: 800; color: var(--cyan); letter-spacing: .5px; }
+.brand small { display: block; font: 500 11px var(--mono); color: var(--ink2); letter-spacing: 2px; }
+.ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; background: var(--panel); }
+.seg button { background: transparent; color: var(--ink2); border: 0; font: 600 13px var(--display); padding: 0 12px; min-height: 36px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--cyan); color: #02122E; }
+.hero { position: fixed; left: 50%; top: 68px; transform: translateX(-50%); text-align: center; pointer-events: none; width: min(92vw, 720px); }
+.hero h1 { margin: 0; font-size: clamp(22px, 3.4vw, 40px); font-weight: 800; color: #9FF0FF; text-shadow: 0 2px 18px #000; }
+.hero p { margin: 4px 0 0; color: var(--ink2); font-size: 14px; text-shadow: 0 1px 8px #000; }
+.stats { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 28px; pointer-events: none; text-align: center; }
+.stats b { display: block; font-size: 26px; color: var(--cyan); font-weight: 800; } .stats span { font-size: 12px; color: var(--ink2); }
+.badge { position: fixed; padding: 10px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--panel); cursor: pointer; color: var(--ink); font: inherit; text-align: left; display: flex; gap: 10px; align-items: center; }
+.badge:hover { border-color: var(--cyan); }
+.badge .tag { font: 600 12px var(--mono); color: var(--ink2); }
+.badge b { display: block; font-size: 14px; } .badge span { font-size: 12px; color: var(--ink2); }
+.badge.star { border-color: var(--neon); box-shadow: 0 0 0 1px var(--neon), 0 0 24px #EAFE0744; }
+.badge.star .tag { color: var(--neon); }
+#panel { position: fixed; right: max(16px, env(safe-area-inset-right)); top: 76px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 100px); overflow: auto;
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 16px; display: none; flex-direction: column; gap: 10px; backdrop-filter: blur(6px); }
+#panel.on { display: flex; }
+#panel.wide { width: min(600px, calc(100vw - 32px)); }
+.car { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 0; border-radius: 10px; }
+.car::-webkit-scrollbar { display: none; }
+.slide { flex: 0 0 100%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.slide .media { position: relative; background: #000; border-radius: 10px; overflow: hidden; }
+.slide .media img, .slide .media canvas { display: block; width: 100%; height: auto; max-height: 46vh; object-fit: contain; background: #fff; image-rendering: auto; }
+.slide .media canvas { background: #000; image-rendering: pixelated; }
+.slide h3 { margin: 0; font-size: 16px; }
+.slide .what { font-size: 14px; line-height: 1.5; margin: 0; }
+.slide .how { font-size: 12.5px; line-height: 1.5; margin: 0; color: var(--ink2); border-left: 3px solid var(--cyan); padding-left: 10px; }
+.slide .how b { color: var(--cyan); font-weight: 600; }
+[hidden] { display: none !important; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #000; }
+.duo figure { margin: 0; position: relative; aspect-ratio: 318 / 332; background: #000; }
+.duo canvas, .duo img { position: absolute; inset: 0; width: 100% !important; height: 100% !important; max-height: none !important; object-fit: fill !important; image-rendering: pixelated; background: #000; }
+.duo figcaption { position: absolute; left: 6px; top: 6px; font: 600 11px var(--mono); background: rgba(2,6,15,.85); padding: 3px 7px; border-radius: 5px; color: var(--ink); }
+.vph { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 14px; font-size: 12px; color: var(--ink2); background: repeating-linear-gradient(45deg, #0A1A40, #0A1A40 6px, #0C1F4A 6px, #0C1F4A 12px); }
+.vbar { display: flex; gap: 10px; align-items: center; padding: 8px 10px; background: #050E26; }
+.vbar button { min-height: 36px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--neon); color: #02122E; font: 700 13px var(--display); cursor: pointer; }
+.vbar .when { font: 600 13px var(--mono); } .vbar .prog { flex: 1; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; } .vbar .prog i { display: block; height: 100%; background: var(--neon); width: 0; }
+.pcl { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 10px 10px; background: #050E26; }
+.pcl button { font: 600 12px var(--display); min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; color: var(--ink2); cursor: pointer; }
+.pcl button[aria-pressed="true"] { background: var(--cyan); color: #02122E; border-color: var(--cyan); }
+.vctl { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; gap: 10px; align-items: center; }
+.vctl button { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 0; background: var(--neon); color: #02122E; font: 700 13px var(--display); cursor: pointer; }
+.vctl .when { font: 600 13px var(--mono); background: rgba(2,6,15,.8); padding: 4px 10px; border-radius: 6px; }
+.vctl .prog { flex: 1; height: 4px; background: rgba(255,255,255,.25); border-radius: 2px; overflow: hidden; } .vctl .prog i { display: block; height: 100%; background: var(--neon); width: 0; }
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.nav button.arr { min-width: 42px; min-height: 42px; border-radius: 50%; border: 1px solid var(--edge); background: transparent; color: var(--ink); font-size: 16px; cursor: pointer; }
+.nav button.arr:disabled { opacity: .3; cursor: default; }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.dots button { width: 9px; height: 9px; padding: 0; border-radius: 50%; border: 0; background: #3A5A94; cursor: pointer; }
+.dots button[aria-current="true"] { background: var(--neon); width: 22px; border-radius: 5px; }
+.step { font: 600 11px var(--mono); color: var(--neon); letter-spacing: 1.5px; }
+body.paneled .badge[data-go], body.paneled .hero { display: none; }
+#panel h2 { margin: 0; font-size: 18px; } .k { font: 500 11px var(--mono); color: var(--ink2); letter-spacing: 1.5px; }
+.x { position: absolute; right: 10px; top: 8px; background: none; border: 0; color: var(--ink2); font-size: 22px; cursor: pointer; min-width: 36px; min-height: 36px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cell { background: #0A1A40; border-radius: 8px; padding: 8px 10px; } .cell .v { font: 600 16px var(--mono); color: var(--ink); } .cell .l { font-size: 11px; color: var(--ink2); }
+.thumb { aspect-ratio: 1; border-radius: 8px; border: 1px dashed var(--edge); display: grid; place-items: center; text-align: center; font-size: 11px; color: var(--ink2); padding: 6px;
+  background: repeating-linear-gradient(45deg, #0A1A40, #0A1A40 6px, #0C1F4A 6px, #0C1F4A 12px); }
+.btn { display: inline-flex; justify-content: center; align-items: center; gap: 6px; min-height: 42px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--cyan); color: var(--cyan); background: transparent; font: 600 14px var(--display); text-decoration: none; cursor: pointer; }
+.btn.solid { background: var(--neon); color: #02122E; border-color: var(--neon); }
+.note { font-size: 12px; color: var(--ink2); margin: 0; line-height: 1.45; }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list button { text-align: left; background: #0A1A40; border: 1px solid transparent; color: var(--ink); border-radius: 8px; padding: 8px 10px; font: 13px var(--mono); cursor: pointer; }
+.list button:hover { border-color: var(--cyan); }
+.legend { position: fixed; left: max(16px, env(safe-area-inset-left)); bottom: 16px; background: var(--panel); border: 1px solid var(--edge); border-radius: 10px; padding: 10px 12px; font-size: 12px; color: var(--ink2); display: flex; flex-direction: column; gap: 6px; max-width: 250px; }
+.ramp { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3A6FD0, #5FB4F0, #9FF0FF); }
+.demo { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: 16px; font: 11px var(--mono); color: #FFD27A; background: #2A1E05cc; border: 1px solid #6B5212; border-radius: 8px; padding: 6px 10px; max-width: 300px; }
+@media (max-width: 760px) { #panel { top: 104px; max-height: calc(100vh - 116px); } .badge, .stats { display: none; } .hero { top: 96px; } .legend { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="cv" aria-label="Globo com os quadros do NISAR"></canvas>
+<nav>
+  <div class="brand">Delta L · NISAR Anomaly Watch<small>A VALSA DA SUPERFÍCIE, QUADRO A QUADRO</small></div>
+  <div class="ctrl">
+    <div class="seg" role="group" aria-label="Direção"><button data-dir="all" aria-pressed="true">Todos</button><button data-dir="A" aria-pressed="false">Ascendente</button><button data-dir="D" aria-pressed="false">Descendente</button></div>
+    <button class="btn" id="goP" style="min-height:36px">Ir para o Paiaguás</button>
+  </div>
+</nav>
+<div class="hero"><h1>Cada quadro do NISAR, no planeta inteiro.</h1><p>Arraste para girar, role para aproximar, clique num quadro para ver o primeiro e o último arquivo.</p></div>
+
+<button class="badge star" id="bP" style="left:6vw;top:24vh"><span class="tag">BR</span><div><b>Paiaguás · Pantanal</b><span>Análise completa · 4 geometrias</span></div></button>
+<button class="badge" data-go="-60.0,-3.1" style="right:6vw;top:24vh"><span class="tag">AM</span><div><b>Várzea de Manaus</b><span>Comparação rasa</span></div></button>
+<button class="badge" data-go="-47.5,-10.2" style="left:6vw;bottom:22vh"><span class="tag">TO</span><div><b>Cerrado do Tocantins</b><span>Comparação rasa</span></div></button>
+<button class="badge" data-go="-57.6,-20.3" style="right:6vw;bottom:22vh"><span class="tag">MS</span><div><b>Nabileque</b><span>Comparação rasa</span></div></button>
+
+<div class="stats"><div><b id="sF">–</b><span>quadros sobre terra</span></div><div><b>12 dias</b><span>para repetir a passagem</span></div><div><b>banda L</b><span>vê através de nuvem e de noite</span></div></div>
+<div class="legend"><b style="color:var(--ink)">Passagens por quadro</b><div class="ramp"></div><div style="display:flex;justify-content:space-between"><span>poucas</span><span>muitas</span></div><span><span style="color:var(--neon)">■</span> Paiaguás: análise completa</span></div>
+<div class="demo">PROTÓTIPO · quadros e datas ilustrativos. Na versão final vêm do catálogo da NASA (CMR).</div>
+
+<aside id="panel" aria-live="polite"><button class="x" id="close" aria-label="Fechar">×</button><div id="pbody"></div></aside>
+
+<script src="d3.min.js"></script>
+<script src="topojson-client.min.js"></script>
+<script src="dados.js"></script>
+<script>
+(() => {
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+const land = topojson.feature(WORLD, WORLD.objects.land), borders = topojson.mesh(WORLD, WORLD.objects.countries, (a, b) => a !== b);
+const frames = FRAMES.features; const P = { lon: -56.873, lat: -18.278 };
+const PG = ["031_A_169", "132_A_168", "010_D_098", "111_D_098"];
+const PCELL = { type: "Polygon", coordinates: [[[-56.933, -18.218], [-56.813, -18.218], [-56.813, -18.338], [-56.933, -18.338], [-56.933, -18.218]]] };
+document.getElementById("sF").textContent = frames.length.toLocaleString("pt-BR");
+const maxN = d3.max(frames, (f) => f.properties.n); const col = d3.scaleSequential([0, maxN], d3.interpolateRgbBasis(["#3A6FD0", "#5FB4F0", "#9FF0FF"]));
+let W, H, dpr, dir = "all", sel = null;
+const proj = d3.geoOrthographic().clipAngle(90).precision(0.3);
+const path = d3.geoPath(proj, ctx); const grat = d3.geoGraticule10();
+const stars = d3.range(260).map(() => [Math.random(), Math.random(), Math.random() * 1.2 + 0.2]);
+let base;
+function size() { dpr = window.devicePixelRatio || 1; W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  base = Math.min(W, H) * 0.42; if (!proj._k) proj._k = 1; proj.translate([W / 2, H * 0.54]).scale(base * proj._k); draw(); }
+const vis = (f) => dir === "all" || f.properties.d === dir;
+function draw(fast) {
+  ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
+  stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
+  const [cx, cy] = proj.translate(), r = proj.scale();
+  const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r); g.addColorStop(0, "#0E2A5A"); g.addColorStop(1, "#030C22");
+  ctx.beginPath(); path({ type: "Sphere" }); ctx.fillStyle = g; ctx.fill();
+  ctx.beginPath(); path(grat); ctx.strokeStyle = "rgba(127,232,255,0.06)"; ctx.lineWidth = 0.6; ctx.stroke();
+  ctx.beginPath(); path(land); ctx.fillStyle = "#1C3A2E"; ctx.fill();
+  ctx.beginPath(); path(borders); ctx.strokeStyle = "rgba(200,220,255,0.18)"; ctx.lineWidth = 0.5; ctx.stroke();
+  const k = proj.scale() / base; const step = fast && k < 2 ? 3 : 1;
+  ctx.lineWidth = k > 4 ? 1.1 : 0.5;
+  for (let i = 0; i < frames.length; i += step) { const f = frames[i]; if (!vis(f)) continue;
+    ctx.beginPath(); path(f); const c = d3.color(col(f.properties.n)); c.opacity = k > 3 ? 0.16 : 0.10; ctx.fillStyle = c + ""; ctx.fill(); c.opacity = k > 3 ? 0.9 : 0.55; ctx.strokeStyle = c + ""; ctx.stroke(); }
+  if (sel) { ctx.beginPath(); path(sel); ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 2.4; ctx.stroke(); ctx.fillStyle = "rgba(255,255,255,0.12)"; ctx.fill(); }
+  ctx.beginPath(); path(PCELL); ctx.strokeStyle = "#EAFE07"; ctx.lineWidth = 2; ctx.stroke();
+  const p = proj([P.lon, P.lat]); const vis2 = d3.geoDistance([P.lon, P.lat], proj.invert([cx, cy])) < Math.PI / 2;
+  if (p && vis2) { ctx.beginPath(); ctx.arc(p[0], p[1], 7 + Math.min(10, k), 0, 7); ctx.strokeStyle = "#EAFE07"; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(p[0], p[1], 3, 0, 7); ctx.fillStyle = "#EAFE07"; ctx.fill(); }
+  ctx.beginPath(); path({ type: "Sphere" }); ctx.strokeStyle = "rgba(127,232,255,0.35)"; ctx.lineWidth = 1.2; ctx.stroke();
+}
+// rotate by drag, zoom by wheel / pinch
+let drag = null, moved = false;
+cv.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, r: proj.rotate() }; moved = false; cv.classList.add("drag"); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+  const s = 75 / proj.scale(); proj.rotate([drag.r[0] + dx * s, Math.max(-90, Math.min(90, drag.r[1] - dy * s))]); draw(true); });
+cv.addEventListener("pointerup", (e) => { cv.classList.remove("drag"); const was = drag; drag = null; if (!moved && was) pick(e.clientX, e.clientY); else draw(); });
+cv.addEventListener("wheel", (e) => { e.preventDefault(); proj._k = Math.max(0.8, Math.min(60, proj._k * Math.exp(-e.deltaY * 0.0015))); proj.scale(base * proj._k); draw(true); clearTimeout(cv._t); cv._t = setTimeout(() => draw(), 120); }, { passive: false });
+function fly(lon, lat, k) { const r0 = proj.rotate(), k0 = proj._k; const ri = d3.interpolate(r0, [-lon, -lat]), ki = d3.interpolateNumber(k0, k);
+  const t0 = performance.now(); const tick = (now) => { const t = Math.min(1, (now - t0) / 1100), e = d3.easeCubicInOut(t); proj.rotate(ri(e)); proj._k = ki(e); proj.scale(base * proj._k); draw(t < 1); if (t < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
+const fd = (s) => s.split("-").reverse().join("/");
+const gid = (p) => `${String(p.t).padStart(3, "0")}_${p.d}_${String(p.f).padStart(3, "0")}`;
+const gname = (p) => `pista ${p.t} · ${p.d === "A" ? "ascendente (≈ 5h30)" : "descendente (≈ 18h30)"} · quadro ${p.f}`;
+function pick(x, y) {
+  const ll = proj.invert([x, y]); if (!ll || d3.geoDistance(ll, proj.invert(proj.translate())) > Math.PI / 2) return;
+  if (d3.geoContains(PCELL, ll) || d3.geoDistance(ll, [P.lon, P.lat]) < 0.004 * 60 / proj._k) { showP(); return; }
+  const hits = frames.filter((f) => vis(f) && d3.geoContains(f, ll)); if (!hits.length) { closeP(); return; }
+  showF(hits[0], hits.slice(1));
+}
+const panel = document.getElementById("panel"), pb = document.getElementById("pbody");
+function closeP() { stopV(); panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
+document.getElementById("close").onclick = closeP;
+function showF(f, others) { stopV(); panel.classList.remove("wide"); sel = f; const p = f.properties; draw();
+  const days = (Date.parse(p.p1) - Date.parse(p.p0)) / 864e5;
+  pb.innerHTML = `<div class="k">COMPARAÇÃO RASA</div><h2>Quadro ${gid(p)}</h2><div class="note">${gname(p)}</div>
+  <div class="grid2"><div class="cell"><div class="l">Primeiro arquivo</div><div class="v">${fd(p.p0)}</div></div><div class="cell"><div class="l">Último arquivo</div><div class="v">${fd(p.p1)}</div></div>
+  <div class="cell"><div class="l">Passagens GCOV</div><div class="v">${p.n}</div></div><div class="cell"><div class="l">Intervalo</div><div class="v">${Math.round(days)} dias</div></div></div>
+  <div class="grid2"><div class="thumb">Prévia do primeiro arquivo<br>(${fd(p.p0)})</div><div class="thumb">Prévia do último arquivo<br>(${fd(p.p1)})</div></div>
+  <p class="note">Aqui só olhamos o primeiro e o último arquivo do quadro: as duas prévias (browse) que a NASA publica junto de cada produto e o resumo do catálogo. Serve para comparar lugares e escolher onde aprofundar.</p>
+  ${others.length ? `<div class="k">OUTROS QUADROS NESTE PONTO</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} passagens</button>`).join("")}</div>` : ""}
+  <a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Análise completa: quadro " + gid(p))}" target="_blank" rel="noopener">Pedir análise completa deste quadro</a>`;
+  pb.querySelectorAll("[data-o]").forEach((b) => b.onclick = () => showF(others[+b.dataset.o], [f, ...others.filter((_, j) => j !== +b.dataset.o)]));
+  panel.classList.add("on"); document.body.classList.add("paneled"); }
+const SL = [
+  { t: "O período inteiro, passagem a passagem", video: true,
+    what: "Todas as passagens do NISAR sobre o Paiaguás, de 21/06 a 05/11/2026, lado a lado com a imagem do Planetary Computer mais próxima de cada data. Do inverno para a primavera, a planície seca: o verde some na falsa cor e o radar escurece.",
+    how: "<b>Como vimos:</b> à esquerda, o arquivo GCOV do NISAR (banda L, HV em dB) daquela passagem. À direita, Sentinel-2, Sentinel-1 ou Landsat do mesmo recorte, a no máximo 5 a 8 dias, com a mesma escala de cor em todas as datas. Escuro no radar = pouca vegetação em pé." },
+  { t: "Outros satélites, a mesma história", chart: true,
+    what: "De julho a outubro, o Sentinel-2 vê o verde cair (NDVI de 0,64 para 0,39) e a área marcada como queima ou secagem chegar a 16% em 22/10. O Landsat mede a superfície até 13 °C mais quente, e o Sentinel-1 (banda C) escurece em setembro, junto com a perda de coerência do NISAR.",
+    how: "<b>Como medimos:</b> NDVI e dNBR (queda do índice de queima desde a primeira cena limpa, limiar 0,27) nos pixels sem nuvem do Sentinel-2; temperatura da banda térmica do Landsat; mediana do VH do Sentinel-1. A secagem na foto é gradual e parte dela é da estação seca; o NISAR marca setembro como o salto. Não aparece cicatriz nítida de fogo nas imagens." },
+  { t: "Setembro: o chão mudou", img: "gunw_par_20260908_20260920_031A.png",
+    what: "Entre 08/09 e 20/09, 41% da área perdeu a coerência. No mesmo intervalo, as pistas 132 (03→15/09) e 10 (06→18/09) viram 24 a 25%. Fora de setembro, fica perto de 4%.",
+    how: "<b>Como vimos:</b> no produto GUNW, o NISAR compara a fase de duas passagens separadas por 12 dias. Se a superfície muda (fogo, água, pisoteio, corte), a fase deixa de bater e a coerência cai abaixo de 0,3. Três trilhos independentes, de lados e horários diferentes, confirmam o mesmo." },
+  { t: "O controle: um período calmo", img: "gunw_par_20260628_20260710_031A.png",
+    what: "Mesmo lugar e mesmo trilho, de 28/06 a 10/07: só 2% da área sem coerência. O chão ficou parado.",
+    how: "<b>Por que importa:</b> é a prova de que o vale de setembro não é ruído do instrumento. O método é o mesmo; só a superfície mudou." },
+  { t: "A coerência ao longo do ano", img: "gunw_coerencia_no_tempo.png",
+    what: "Cada traço é um par de passagens. O vale de setembro aparece em três trilhos ao mesmo tempo.",
+    how: "<b>Como filtramos:</b> a pista 111 descendente perde coerência até em períodos calmos (83% em junho), então fica fora das conclusões. Só contamos o que outra direção de passagem confirma." },
+  { t: "O que mudou, pixel a pixel", img: "031_A_169_classes.png",
+    what: "Cerca de 710 ha de alagamento passageiro, 496 ha de água permanente, 127 ha de queda abrupta da vegetação e 684 ha de ganho lento.",
+    how: "<b>Como classificamos:</b> normalizamos cada data pela mediana da área (tira o efeito do instrumento) e, em cada pixel, procuramos o degrau no HV entre antes e depois (teste t). O que não tem degrau vira ritmo sazonal ou tendência lenta." },
+  { t: "Quando mudou", img: "031_A_169_quando_mudou.png",
+    what: "A maior parte das quedas abruptas acontece em setembro e outubro, junto com o vale de coerência.",
+    how: "<b>Como lemos:</b> a cor de cada pixel é a data do degrau detectado. Duas medidas diferentes (brilho e coerência) apontam para o mesmo mês." },
+  { t: "Três tempos numa imagem", img: "031_A_169_rgb_temporal.png",
+    what: "Cinza é o que ficou igual. Cor é o que mudou, e a cor diz em que período.",
+    how: "<b>Como montamos:</b> vermelho = HV no início, verde = no meio, azul = no fim do período. Um truque clássico de radar para ver a mudança de uma vez só." },
+  { t: "O ritmo da área com a chuva", img: "031_A_169_curvas.png",
+    what: "O HH sobe e desce com a umidade do solo: correlação de 0,59 a 0,81 com o SME2, o produto de umidade do próprio NISAR.",
+    how: "<b>Como conferimos:</b> comparamos a curva do radar com a chuva diária, a umidade do NASA POWER e o SME2. É a valsa invisível: o solo respira com a chuva antes de qualquer mudança aparecer na foto." },
+  { t: "A história do ponto", img: "ponto_historia.png",
+    what: "No ponto acompanhado (círculo amarelo no mapa), o HV cai cerca de 0,7 dB entre 08/09 e 27/09, visto pelas pistas 31 e 132.",
+    how: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, desde o primeiro arquivo, com a chuva e a coerência de cada par." }
+];
+const GEOS = ["031_A_169", "132_A_168", "010_D_098", "111_D_098"];
+const PCL = [["nat", "Cor natural", "s2", "natural"], ["fogo", "Fogo", "s2", "queimada"], ["radar", "Radar C", "s1", "radar"], ["temp", "Temperatura", "landsat", "temperatura"]];
+const V = { g: {}, frames: [], car: null, k: 0, timer: null, layer: "nat" };
+async function u8(url) { const bmp = await createImageBitmap(await (await fetch(url)).blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+  const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bmp, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data; const o = new Uint8Array(c.width * c.height); for (let i = 0; i < o.length; i++) o[i] = d[i * 4]; return o; }
+async function loadVideo() { if (V.frames.length) return;
+  await Promise.all(GEOS.map(async (id) => { const meta = await (await fetch(`pg/${id}/app.json`)).json(); const [hv, hh] = await Promise.all([u8(`pg/${id}/hv_u8.png`), u8(`pg/${id}/hh_u8.png`)]); V.g[id] = { meta, hv, hh }; }));
+  try { const r = await fetch("pg/carrossel/carrossel.json"); if (r.ok) V.car = await r.json(); } catch (e) {}
+  const m = {}; GEOS.forEach((id) => { const G = V.g[id], [, H, W] = G.meta.forma, n = H * W; G.meta.datas.forEach((d, k) => {
+    let hv = 0, hh = 0, s = 0; for (let j = 0; j < n; j += 53) { s++; if (G.hv[k * n + j]) hv++; if (G.hh[k * n + j]) hh++; }
+    const cov = Math.max(hv, hh) / s; if (cov < 0.3) return; const score = cov + (hv / s > 0.3 ? 1 : 0);
+    if (!m[d] || score > m[d].score) m[d] = { d, id, k, score }; }); });
+  V.frames = Object.values(m).sort((a, b) => a.d < b.d ? -1 : 1);
+  V.frames.forEach((f) => { f.pc = V.car ? V.car.datas.find((x) => x.data_nisar === f.d) : null; }); }
+function frame(i) { const cv = document.getElementById("vcv"); if (!cv || !V.frames.length) return; const f = V.frames[i], G = V.g[f.id]; const [, H, W] = G.meta.forma, n = H * W;
+  cv.width = W; cv.height = H; const ctx2 = cv.getContext("2d"); const im = ctx2.createImageData(W, H); const d = im.data;
+  let c = 0; for (let j = 0; j < n; j += 97) if (G.hv[f.k * n + j]) c++; const hh = c <= 5; const arr = hh ? G.hh : G.hv; const [lo, hi] = hh ? [-22, 0] : [-26, -8];
+  for (let j = 0; j < n; j++) { const u = arr[f.k * n + j]; const o = j * 4; d[o + 3] = 255; if (!u) continue; const db = -30 + (u - 1) / 254 * 30; const v = Math.max(0, Math.min(255, (db - lo) / (hi - lo) * 255)); d[o] = d[o + 1] = d[o + 2] = v; }
+  ctx2.putImageData(im, 0, 0);
+  const [tr, dr] = f.id.split("_"); document.getElementById("vwhen").textContent = fd(f.d); document.getElementById("vprog").style.width = ((i + 1) / V.frames.length * 100) + "%";
+  document.getElementById("vl").textContent = `NISAR ${hh ? "HH" : "HV"} · pista ${+tr} ${dr === "A" ? "asc." : "desc."}`;
+  const L = PCL.find((x) => x[0] === V.layer); const s = f.pc && f.pc[L[2]]; const img = document.getElementById("vpc"), ph = document.getElementById("vph");
+  if (s && s.imagens && s.imagens[L[3]]) { img.src = "pg/carrossel/" + s.imagens[L[3]]; img.style.filter = L[0] === "nat" ? "brightness(1.8) contrast(1.1)" : ""; img.hidden = false; ph.hidden = true;
+    document.getElementById("vr").textContent = `${s.satelite} · ${fd(s.data)} · ${s.dias ? "±" + s.dias + " d" : "mesmo dia"}`; }
+  else { img.hidden = true; ph.hidden = false; ph.textContent = V.car ? `Sem cena limpa de ${L[1].toLowerCase()} perto desta data` : "Imagens do Planetary Computer: aguardando o run_carrossel.py"; document.getElementById("vr").textContent = "Planetary Computer"; } }
+function drawChart() { const el = document.getElementById("mchart"); if (!el || !V.car) return;
+  const rows = V.car.datas; const S = [["NDVI (Sentinel-2)", (r) => r.s2?.ndvi_mediana, "#7CFC8A", 2], ["Queima/secagem % (Sentinel-2)", (r) => r.s2?.queimada_pct, "#FF8A3D", 1], ["Temperatura °C (Landsat)", (r) => r.landsat?.temperatura_mediana_c, "#FFD27A", 1], ["VH dB (Sentinel-1)", (r) => r.s1?.vh_mediana_db, "#9FC8FF", 1]];
+  const W = 540, h = 52, t0 = Date.parse(rows[0].data_nisar), t1 = Date.parse(rows.at(-1).data_nisar), X = (d) => 8 + (Date.parse(d) - t0) / (t1 - t0) * (W - 110);
+  const sx = X("2026-09-03"), ex = X("2026-09-20");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${S.length * h + 22}" width="100%" role="img" aria-label="Índices do Planetary Computer ao longo do tempo">` +
+    `<rect x="${sx}" y="0" width="${ex - sx}" height="${S.length * h}" fill="#EAFE07" opacity=".14"/><text x="${sx + 2}" y="${S.length * h + 14}" fill="#EAFE07" font-size="10" font-family="Fira Code">NISAR perde coerência</text>` +
+    S.map(([n, f, c, dg], i) => { const pts = rows.map((r) => [r.data_nisar, f(r)]).filter((p) => p[1] != null); const vs = pts.map((p) => p[1]); const lo = Math.min(...vs), hi = Math.max(...vs);
+      const Y = (v) => i * h + 8 + (1 - (v - lo) / (hi - lo || 1)) * (h - 22); const dpath = pts.map((p, j) => `${j ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
+      const last = pts.at(-1), first = pts[0];
+      return `<text x="8" y="${i * h + 8}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">${n}</text><path d="${dpath}" fill="none" stroke="${c}" stroke-width="2"/>` +
+        `<text x="${W - 96}" y="${Y(last[1]) + 4}" fill="${c}" font-size="11" font-family="Fira Code">${first[1].toFixed(dg)} → ${last[1].toFixed(dg)}</text>`; }).join("") +
+    `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">jun</text><text x="${W - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">nov</text></svg>`; }
+function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) b.textContent = "Iniciar"; }
+function startV() { const b = document.getElementById("vbtn"); b.textContent = "Parar"; V.timer = setInterval(() => { V.k = (V.k + 1) % V.frames.length; frame(V.k); }, 1100); }
+async function showP() { sel = null; draw(); stopV(); panel.classList.add("wide");
+  pb.innerHTML = `<div class="k" style="color:var(--neon)">ÁREA DEMARCADA · ANÁLISE COMPLETA</div><h2>Paiaguás · Pantanal (MS)</h2>
+  <div class="note">18,28° S · 56,87° O · 13 × 13 km · 4 direções de passagem · 27 passagens de 21/06 a 05/11/2026</div>
+  <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} de ${SL.length}">
+    <div class="media">${x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure></div>
+      <div class="vbar"><button type="button" id="vbtn">Iniciar</button><span class="when" id="vwhen"></span><span class="prog"><i id="vprog"></i></span></div>
+      <div class="pcl" id="pcl">${PCL.map(([k, n]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${n}</button>`).join("")}</div>` : `<img src="pg/${x.img}" alt="${x.t}" loading="lazy">`}</div>
+    <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${x.t}</h3><p class="what">${x.what}</p><p class="how">${x.how}</p></section>`).join("")}</div>
+  <div class="nav"><button type="button" class="arr" id="cprev" aria-label="Anterior">◀</button><div class="dots" id="cdots">${SL.map((_, i) => `<button type="button" data-s="${i}" aria-label="Ir para ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="Próximo">▶</button></div>
+  <a class="btn" href="https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" target="_blank" rel="noopener" style="align-self:flex-start">Abrir os dados e a ficha técnica</a>`;
+  panel.classList.add("on"); document.body.classList.add("paneled");
+  const car = document.getElementById("car"); const go = (i) => car.scrollTo({ left: i * car.clientWidth, behavior: "smooth" });
+  const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
+    document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === SL.length - 1; if (i !== 0) stopV(); car._i = i; };
+  car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(sync, 80); }); sync();
+  document.getElementById("cprev").onclick = () => go((car._i || 0) - 1); document.getElementById("cnext").onclick = () => go((car._i || 0) + 1);
+  document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
+  document.getElementById("vbtn").onclick = () => V.timer ? stopV() : startV();
+  document.querySelectorAll("#pcl [data-l]").forEach((b) => b.onclick = () => { V.layer = b.dataset.l; document.querySelectorAll("#pcl [data-l]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); frame(V.k); });
+  await loadVideo(); V.k = 0; frame(0); drawChart(); }
+document.getElementById("goP").onclick = document.getElementById("bP").onclick = () => { fly(P.lon, P.lat, 9); setTimeout(showP, 1150); };
+document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => { const [lon, lat] = b.dataset.go.split(",").map(Number); fly(lon, lat, 7);
+  setTimeout(() => { const h = frames.filter((f) => vis(f) && d3.geoContains(f, [lon, lat])); if (h.length) showF(h[0], h.slice(1)); }, 1150); });
+document.querySelectorAll("[data-dir]").forEach((b) => b.onclick = () => { dir = b.dataset.dir; document.querySelectorAll("[data-dir]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(); });
+proj.rotate([60, 15]); addEventListener("resize", size); size();
+})();
+</script>
+</body>
+</html>

@@ -1970,8 +1970,144 @@
      "legenda_pt": "HH e HV de todas as direções, chuva, umidade do solo do NISAR e coerência de cada par.",
      "legenda_en": "HH and HV from every direction, rain, NISAR soil moisture and coherence of each pair.",
      "fonte": "NISAR GCOV, GUNW, SME2"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_inicio_cor_natural.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 9 · cor natural · início (2026-06-26)",
+     "titulo_en": "Landsat 9 · natural colour · start (2026-06-26)",
+     "legenda_pt": "Como o olho veria. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 18%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 18%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_inicio_queimada.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 9 · falsa cor para queimada · início (2026-06-26)",
+     "titulo_en": "Landsat 9 · burn false colour · start (2026-06-26)",
+     "legenda_pt": "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 18%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 18%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_inicio_temperatura.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 9 · temperatura da superfície · início (2026-06-26)",
+     "titulo_en": "Landsat 9 · surface temperature · start (2026-06-26)",
+     "legenda_pt": "Banda térmica em °C: solo queimado e seco esquenta. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 18%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 18%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/sentinel2_inicio_cor_natural.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Sentinel-2 · cor natural · início (2026-06-29)",
+     "titulo_en": "Sentinel-2 · natural colour · start (2026-06-29)",
+     "legenda_pt": "Como o olho veria. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "ESA Copernicus Sentinel-2"
+    },
+    {
+     "arquivo": "paiaguas/galeria/sentinel2_inicio_queimada.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Sentinel-2 · falsa cor para queimada · início (2026-06-29)",
+     "titulo_en": "Sentinel-2 · burn false colour · start (2026-06-29)",
+     "legenda_pt": "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "ESA Copernicus Sentinel-2"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_antes_cor_natural.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 8 · cor natural · antes (2026-08-21)",
+     "titulo_en": "Landsat 8 · natural colour · before (2026-08-21)",
+     "legenda_pt": "Como o olho veria. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_antes_queimada.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 8 · falsa cor para queimada · antes (2026-08-21)",
+     "titulo_en": "Landsat 8 · burn false colour · before (2026-08-21)",
+     "legenda_pt": "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_antes_temperatura.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 8 · temperatura da superfície · antes (2026-08-21)",
+     "titulo_en": "Landsat 8 · surface temperature · before (2026-08-21)",
+     "legenda_pt": "Banda térmica em °C: solo queimado e seco esquenta. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/sentinel2_antes_cor_natural.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Sentinel-2 · cor natural · antes (2026-08-28)",
+     "titulo_en": "Sentinel-2 · natural colour · before (2026-08-28)",
+     "legenda_pt": "Como o olho veria. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 12%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 12%.",
+     "fonte": "ESA Copernicus Sentinel-2"
+    },
+    {
+     "arquivo": "paiaguas/galeria/sentinel2_antes_queimada.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Sentinel-2 · falsa cor para queimada · antes (2026-08-28)",
+     "titulo_en": "Sentinel-2 · burn false colour · before (2026-08-28)",
+     "legenda_pt": "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 12%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 12%.",
+     "fonte": "ESA Copernicus Sentinel-2"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_depois_cor_natural.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 8 · cor natural · depois (2026-10-08)",
+     "titulo_en": "Landsat 8 · natural colour · after (2026-10-08)",
+     "legenda_pt": "Como o olho veria. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_depois_queimada.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 8 · falsa cor para queimada · depois (2026-10-08)",
+     "titulo_en": "Landsat 8 · burn false colour · after (2026-10-08)",
+     "legenda_pt": "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/landsat_depois_temperatura.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Landsat 8 · temperatura da superfície · depois (2026-10-08)",
+     "titulo_en": "Landsat 8 · surface temperature · after (2026-10-08)",
+     "legenda_pt": "Banda térmica em °C: solo queimado e seco esquenta. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 0%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 0%.",
+     "fonte": "NASA/USGS Landsat"
+    },
+    {
+     "arquivo": "paiaguas/galeria/sentinel2_depois_cor_natural.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Sentinel-2 · cor natural · depois (2026-10-22)",
+     "titulo_en": "Sentinel-2 · natural colour · after (2026-10-22)",
+     "legenda_pt": "Como o olho veria. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 12%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 12%.",
+     "fonte": "ESA Copernicus Sentinel-2"
+    },
+    {
+     "arquivo": "paiaguas/galeria/sentinel2_depois_queimada.png",
+     "grupo": "comparacao",
+     "titulo_pt": "Sentinel-2 · falsa cor para queimada · depois (2026-10-22)",
+     "titulo_en": "Sentinel-2 · burn false colour · after (2026-10-22)",
+     "legenda_pt": "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado. Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: 12%.",
+     "legenda_en": "Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: 12%.",
+     "fonte": "ESA Copernicus Sentinel-2"
     }
-   ]
+   ],
+   "carrossel": "paiaguas/carrossel/carrossel.json"
   }
  }
 ]
