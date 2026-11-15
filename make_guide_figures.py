@@ -137,17 +137,17 @@ def rhythm(name, lang, dates, hh, hv, rain, soil, extra_title=""):
     t = [d(x) for x in dates]
     a1.plot(t, hh, "-o", color="#FF8A3D", lw=2, ms=5, label="HH (soil, water)" if lang == "en" else "HH (solo, água)")
     a1.plot(t, hv, "-o", color="#7CFC8A", lw=2, ms=5, label="HV (vegetation)" if lang == "en" else "HV (vegetação)")
-    a1.set_ylabel("dB"); a1.grid(alpha=.4); a1.legend(loc="upper left", ncol=2, fontsize=10)
-    a1.set_title(("Radar brightness of the area, pass by pass" if lang == "en" else "Brilho do radar na área, passagem a passagem") + extra_title)
+    a1.set_ylabel("dB"); a1.grid(alpha=.4); a1.legend(loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, fontsize=10, borderaxespad=0.3, handlelength=1.6)
+    a1.set_title(("Radar brightness of the area, pass by pass" if lang == "en" else "Brilho do radar na área, passagem a passagem") + extra_title, pad=24)
     rd = [d(k) for k in sorted(rain)]
     a2.bar(rd, [rain[k] for k in sorted(rain)], width=1, color="#3FA9F5", label="daily rain (mm)" if lang == "en" else "chuva diária (mm)")
     a2.set_ylabel("mm"); a2.grid(alpha=.4)
     b2 = a2.twinx(); sd = [d(k) for k in sorted(soil)]
     b2.plot(sd, [soil[k] for k in sorted(soil)], color="#7CFC8A", lw=1.8, label="soil moisture (m³/m³)" if lang == "en" else "umidade do solo (m³/m³)")
     b2.set_ylim(0, max(0.6, max(soil.values()) * 1.1)); b2.tick_params(colors=INK2); b2.set_ylabel("m³/m³", color=INK2)
-    h1, l1 = a2.get_legend_handles_labels(); h2, l2 = b2.get_legend_handles_labels(); a2.legend(h1 + h2, l1 + l2, loc="upper left", fontsize=10)
+    h1, l1 = a2.get_legend_handles_labels(); h2, l2 = b2.get_legend_handles_labels(); a2.legend(h1 + h2, l1 + l2, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2, fontsize=10, borderaxespad=0.3, handlelength=1.6)
     a2.set_xlim(t[0] - (t[1] - t[0]) / 2, t[-1] + (t[1] - t[0]) / 2); dfmt(a2, lang)
-    a2.set_title("Rain and soil moisture (NASA POWER)" if lang == "en" else "Chuva e umidade do solo (NASA POWER)", fontsize=12)
+    a2.set_title("Rain and soil moisture (NASA POWER)" if lang == "en" else "Chuva e umidade do solo (NASA POWER)", fontsize=12, pad=24)
     fig.tight_layout(); save(fig, f"{name}_rhythm", lang)
 
 
