@@ -154,7 +154,7 @@ Team **Delta L** (Kayke).
 | Numbers, maps and metrics | Computed by the pipeline from real NASA, ESA and USGS data, never written by AI |
 
 Every Python file starts with an `# AI-assisted` note and commits made with the assistant carry a `Co-Authored-By: Claude` line.
-No AI-generated images or video are used. No NASA logos are used.
+No AI-generated images are used. The 30-second demo (`docs/demo/delta_l_demo_30s.mp4`) is a screen recording of the app, recorded and edited with the AI assistant; it carries a visible "SI-assisted" watermark and a note in its metadata. No NASA logos are used.
 
 ## License
 
