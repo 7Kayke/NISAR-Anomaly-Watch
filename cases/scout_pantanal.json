@@ -1,0 +1,19 @@
+{
+  "nome": "Pantanal",
+  "bbox": [-58.6, -21.6, -54.8, -15.6],
+  "inicio": "2025-07-30",
+  "candidatos": [
+    {"nome": "Ladário / Corumbá (rio Paraguai)", "lat": -19.00, "lon": -57.60, "por_que": "régua do rio Paraguai (referência em solo), cheia abaixo da média em 2026"},
+    {"nome": "Cáceres (rio Paraguai alto)", "lat": -16.07, "lon": -57.68, "por_que": "régua do rio, entrada do Pantanal"},
+    {"nome": "Estação Ecológica de Taiamã", "lat": -16.85, "lon": -57.55, "por_que": "planície alagável preservada, água sob vegetação"},
+    {"nome": "Porto Jofre / Encontro das Águas", "lat": -17.35, "lon": -56.75, "por_que": "rio Cuiabá, área de grandes incêndios"},
+    {"nome": "Poconé / Transpantaneira", "lat": -16.70, "lon": -56.70, "por_que": "campos que alagam e secam, pastagem"},
+    {"nome": "Barão de Melgaço (rio Cuiabá)", "lat": -16.19, "lon": -55.97, "por_que": "baías e lagoas do norte"},
+    {"nome": "Serra do Amolar", "lat": -18.00, "lon": -57.50, "por_que": "fogo recorrente, morraria + planície"},
+    {"nome": "Rio Taquari (arrombados)", "lat": -18.40, "lon": -56.50, "por_que": "rio que muda de leito: mudança geomorfológica"},
+    {"nome": "Paiaguás", "lat": -18.30, "lon": -56.90, "por_que": "planície interna, cheia lenta"},
+    {"nome": "Nhecolândia (baías e salinas)", "lat": -19.20, "lon": -56.60, "por_que": "milhares de lagoas que enchem e secam"},
+    {"nome": "Abobral / Passo do Lontra (rio Miranda)", "lat": -19.57, "lon": -57.03, "por_que": "régua do rio Miranda, campos alagáveis"},
+    {"nome": "Nabileque", "lat": -20.30, "lon": -57.50, "por_que": "planície do sul, cheia tardia"}
+  ]
+}
