@@ -10,3 +10,7 @@ venv/
 *.tgz
 *.zip
 cache/
+# dados pesados vão para uma Release do GitHub, não para o repositório
+**/dados/cubo.nc
+**/dados/*_serie.tif
+docs/results/**/gunw/par_*.tif

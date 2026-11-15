@@ -162,43 +162,14 @@ def animate(path, hv_db, dates, step=2):
     frames[0].save(path, save_all=True, append_images=frames[1:], duration=600, loop=0)
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--case", required=True); ap.add_argument("--out", required=True)
-    ap.add_argument("--start"); ap.add_argument("--end"); ap.add_argument("--max-dates", type=int, default=40)
-    ap.add_argument("--res", type=float, help="resolução da grade em metros (ex.: 200 para o quadro inteiro)")
-    ap.add_argument("--skip-truth", action="store_true"); ap.add_argument("--skip-dem", action="store_true")
-    a = ap.parse_args()
-    case = json.loads(Path(a.case).read_text(encoding="utf-8"))
-    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    cache = Path("cache"); cache.mkdir(exist_ok=True)
-    cfg = case.get("serie", {})
-    start = a.start or cfg.get("inicio", BETA_END)
-    end = a.end or cfg.get("fim", date.today().isoformat())
+def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
+    """Série completa de UMA geometria (pista, direção, quadro) na grade comum."""
     from deltal import sources_nisar as sn
-    sn.login()
-    bbox = case["bbox"]
-    geometry = None
-    if case.get("nisar_quadro"):
-        q = case["nisar_quadro"]
-        geometry = (int(q["pista"]), q["direcao"], int(q["quadro"]))
-        log(f"ajustando a área ao quadro {geometry} ...")
-        bbox, npass = fit_to_frame(bbox, start, end, geometry, sn)
-        log(f"  área comum a {npass} passagens: {bbox}")
-    grid = make_grid(bbox, a.res or case.get("resolucao_m", 20))
+    out.mkdir(parents=True, exist_ok=True)
     px = grid.pixel_area_m2
     ev = (case.get("evento") or {}).get("data")
-    ficha = {"nome": case["nome"], "gerado_em": datetime.now().isoformat(timespec="seconds"), "versao_pipeline": __version__,
-             "area_bbox": bbox, "area_pedida": case["bbox"], "quadro_nisar": geometry, "periodo": [start, end], "evento": case.get("evento"),
-             "grade": {"crs": grid.crs, "resolucao_m": grid.resolution, "largura": grid.width, "altura": grid.height},
-             "metodo": S.__doc__.strip(), "parametros": S.PARAMS, "erros": {}}
-
-    # 1) funil + metadados
-    try:
-        import run_inventory
-        ficha["inventario"] = run_inventory.run(case, out, start, end, grid.bbox, geometry)["por_produto"]
-    except Exception as e:
-        ficha["erros"]["inventario"] = f"{type(e).__name__}: {e}"; traceback.print_exc()
+    ficha = json.loads(json.dumps(ficha, default=str))
+    ficha["quadro_nisar"] = geometry
     log("funil da série NISAR (GCOV, analisado) ...")
     fun, chosen, meta, geoms = sn.funnel_series(grid, start, end, geometry=geometry)
     ficha["funil"] = fun.summary(); ficha["geometrias_que_cobrem"] = geoms
@@ -212,7 +183,10 @@ def main():
     if len(chosen) > a.max_dates:
         chosen = chosen[-a.max_dates:]
     if len(chosen) < 4:
-        raise SystemExit("Menos de 4 passagens na mesma geometria: não dá para falar de ritmo aqui.")
+        log(f"  {geometry}: menos de 4 passagens; sem série aqui")
+        ficha["erros"]["serie"] = "menos de 4 passagens na mesma geometria"
+        report.write_ficha(out, ficha)
+        return None
 
     # 2) pilha
     hh, hv, dates, used = [], [], [], []
@@ -245,22 +219,17 @@ def main():
             ficha["erros"]["dem"] = f"{type(e).__name__}: {e}"
 
     # 4) clima (NASA POWER) e índice de umidade de cada passagem
-    clima, api, gwet = None, None, None
-    try:
-        from deltal.sources_power import climate_daily, antecedent_index
-        w, s_, e_, n_ = grid.bbox
-        d0 = (datetime.fromisoformat(dates[0]) - timedelta(days=10)).strftime("%Y%m%d")
-        clima = climate_daily((w + e_) / 2, (s_ + n_) / 2, d0, dates[-1].replace("-", ""))
+    clima, api, gwet = clima_all, None, None
+    if clima:
+        from deltal.sources_power import antecedent_index
         rain = clima.get("PRECTOTCORR", {})
         api = [antecedent_index(rain, x.replace("-", "")) for x in dates]
         gw = clima.get("GWETTOP", {})
         gwet = [gw.get((datetime.fromisoformat(x) - timedelta(days=1)).strftime("%Y%m%d"), np.nan) for x in dates]
-        ficha["clima"] = {"chuva_total_mm": round(sum(v for k, v in rain.items() if k >= dates[0].replace("-", "")), 1),
+        ficha["clima"] = {"chuva_total_mm": round(sum(v for k, v in rain.items() if dates[0].replace("-", "") <= k <= dates[-1].replace("-", "")), 1),
                           "chuva_antecedente_por_passagem_mm": dict(zip(dates, [round(v, 1) for v in api])),
                           "umidade_solo_superficie_por_passagem": dict(zip(dates, gwet)),
                           "fonte": "NASA POWER diário (PRECTOTCORR, T2M, T2M_MAX, RH2M, GWETTOP, GWETROOT)"}
-    except Exception as e:
-        ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
 
     # 5) análise
     log("classificando o ritmo ...")
@@ -347,12 +316,92 @@ def main():
     if fic.get("erros"):
         lines += ["", "## Erros", ""] + [f"- {k}: {v}" for k, v in fic["erros"].items()]
     (out / "resultado.md").write_text("\n".join(lines), encoding="utf-8")
+    try:
+        from deltal import export
+        export.package(out, grid, dates, hh, hv, res, inv, S)
+    except Exception as e:
+        log(f"  exportação falhou: {type(e).__name__}: {e}"); traceback.print_exc()
+    return fic, lines
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--case", required=True); ap.add_argument("--out", required=True)
+    ap.add_argument("--start"); ap.add_argument("--end"); ap.add_argument("--max-dates", type=int, default=40)
+    ap.add_argument("--res", type=float, help="resolução da grade em metros (ex.: 200 para o quadro inteiro)")
+    ap.add_argument("--skip-truth", action="store_true"); ap.add_argument("--skip-dem", action="store_true")
+    a = ap.parse_args()
+    case = json.loads(Path(a.case).read_text(encoding="utf-8"))
+    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    cache = Path("cache"); cache.mkdir(exist_ok=True)
+    cfg = case.get("serie", {})
+    start = a.start or cfg.get("inicio", BETA_END)
+    end = a.end or cfg.get("fim", date.today().isoformat())
+    from deltal import sources_nisar as sn
+    sn.login()
+    bbox = case["bbox"]
+    geometry = None
+    if case.get("nisar_quadro"):
+        q = case["nisar_quadro"]
+        geometry = (int(q["pista"]), q["direcao"], int(q["quadro"]))
+        log(f"ajustando a área ao quadro {geometry} ...")
+        bbox, npass = fit_to_frame(bbox, start, end, geometry, sn)
+        log(f"  área comum a {npass} passagens: {bbox}")
+    grid = make_grid(bbox, a.res or case.get("resolucao_m", 20))
+    px = grid.pixel_area_m2
+    ev = (case.get("evento") or {}).get("data")
+    ficha = {"nome": case["nome"], "gerado_em": datetime.now().isoformat(timespec="seconds"), "versao_pipeline": __version__,
+             "area_bbox": bbox, "area_pedida": case["bbox"], "quadro_nisar": geometry, "periodo": [start, end], "evento": case.get("evento"),
+             "grade": {"crs": grid.crs, "resolucao_m": grid.resolution, "largura": grid.width, "altura": grid.height},
+             "metodo": S.__doc__.strip(), "parametros": S.PARAMS, "erros": {}}
+
+    # 1) funil + metadados
+    try:
+        import run_inventory
+        ficha["inventario"] = run_inventory.run(case, out, start, end, grid.bbox, geometry)["por_produto"]
+    except Exception as e:
+        ficha["erros"]["inventario"] = f"{type(e).__name__}: {e}"; traceback.print_exc()
+    # geometrias: a pedida e todas as outras com >= 4 passagens cobrindo a área
+    _, _, _, geoms = sn.funnel_series(grid, start, end)
+    geo_list = [geometry] if geometry else []
+    for k, v in sorted(geoms.items(), key=lambda kv: -kv[1]):
+        t, d, f = k.split("_")
+        gk = (int(t), d, int(f))
+        if v >= 4 and gk not in geo_list and case.get("todas_geometrias", True):
+            geo_list.append(gk)
+    log(f"geometrias para analisar: {geo_list} (passagens por geometria: {geoms})")
+    clima_all = None
+    try:
+        from deltal.sources_power import climate_daily
+        w, s_, e_, n_ = grid.bbox
+        d0 = (datetime.fromisoformat(start) - timedelta(days=10)).strftime("%Y%m%d")
+        clima_all = climate_daily((w + e_) / 2, (s_ + n_) / 2, d0, end.replace("-", ""))
+    except Exception as e:
+        ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
+    index = ["# " + case["nome"], "", f"Área {grid.bbox}, {start} a {end}.", ""]
+    results = {}
+    for gk in geo_list:
+        sub = out / f"{gk[0]:03d}_{gk[1]}_{gk[2]:03d}"
+        log(f"=== geometria {gk} -> {sub}")
+        r = analyze(case, a, grid, start, end, gk, sub, cache, ficha, clima_all)
+        if r:
+            results[f"{gk[0]:03d}_{gk[1]}_{gk[2]:03d}"] = r[0]
+            index += [f"## Pista {gk[0]:03d}, {'ascendente' if gk[1] == 'A' else 'descendente'}, quadro {gk[2]:03d}", ""] + r[1][2:] + [""]
+    try:
+        import run_gunw
+        g = run_gunw.run(case, out / "gunw", grid, start, end)
+        if g:
+            index += ["## Interferometria (GUNW): o chão e a coerência", ""] + g + [""]
+    except Exception as e:
+        log(f"GUNW falhou: {type(e).__name__}: {e}"); traceback.print_exc()
+    (out / "resultado.md").write_text("\n".join(index), encoding="utf-8")
     api = Path("docs/api/v1/series"); api.mkdir(parents=True, exist_ok=True)
-    (api / f"{Path(a.case).stem}.json").write_text(json.dumps({"id": Path(a.case).stem, "ficha": fic,
-        "arquivos": sorted(f"{out.as_posix()}/{p.name}" for p in out.iterdir() if p.suffix != ".npz")},
-        ensure_ascii=False, indent=1), encoding="utf-8")
+    (api / f"{Path(a.case).stem}.json").write_text(json.dumps(report._clean({"id": Path(a.case).stem, "geometrias": results,
+        "arquivos": sorted(p.relative_to(Path(".")).as_posix() if not p.is_absolute() else p.as_posix()
+                           for p in out.rglob("*") if p.is_file() and p.suffix not in (".npz",))}),
+        ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     log("pronto")
-    print("\n".join(lines))
+    print("\n".join(index))
 
 
 if __name__ == "__main__":

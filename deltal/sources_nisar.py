@@ -211,73 +211,143 @@ def _find(h5, wanted):
     return hits
 
 
+def _locate(h5, base, contains=None):
+    """Caminho do dataset `base` na frequencyA, de preferência dentro de um grupo que contenha `contains`."""
+    cands = []
+    def visit(name, obj):
+        if name.rsplit("/", 1)[-1] == base and "frequencyA" in name and hasattr(obj, "shape") and len(obj.shape) == 2:
+            cands.append(name)
+    h5.visititems(visit)
+    if contains:
+        pref = [c for c in cands if contains in c]
+        cands = pref or cands
+    if not cands:
+        raise KeyError(f"{base} não encontrado; datasets 2D na frequencyA: {_tree(h5)[:40]}")
+    return sorted(cands, key=len)[0]
+
+
+def _tree(h5):
+    out = []
+    h5.visititems(lambda n, o: out.append(n) if hasattr(o, "shape") and len(o.shape) == 2 and "frequencyA" in n else None)
+    return out
+
+
+def _up(h5, group, name):
+    """Procura `name` no grupo e nos grupos acima (coordenadas e projeção ficam no grupo da grade)."""
+    g = group
+    while g:
+        if f"{g}/{name}" in h5:
+            return f"{g}/{name}"
+        g = g.rsplit("/", 1)[0] if "/" in g else ""
+    raise KeyError(f"{name} não encontrado acima de {group}")
+
+
 def _epsg(h5, group):
-    for cand in [group + "/projection", group.rsplit("/", 1)[0] + "/projection"]:
-        if cand in h5:
-            ds = h5[cand]
-            for k, v in ds.attrs.items():
-                if "epsg" in k.lower():
-                    return int(np.atleast_1d(v)[0])
-            try:
-                return int(ds[()])
-            except Exception:
-                pass
-    raise KeyError("Não achei o código EPSG do GCOV; liste a árvore do arquivo e ajuste _epsg().")
+    ds = h5[_up(h5, group, "projection")]
+    for k, v in ds.attrs.items():
+        if "epsg" in k.lower():
+            return int(np.atleast_1d(v)[0])
+    return int(ds[()])
 
 
-def read_gcov_subset(granule, grid, layers=("HHHH", "HVHV")):
-    """Lê só a janela da área de cada camada e reprojeta para a grade comum."""
+def identification(h5):
+    """Metadados internos do arquivo (grupo identification): direção de visada, órbita, polígono, etc."""
+    out = {}
+    for root in ("science/LSAR/identification", "science/SSAR/identification"):
+        if root in h5:
+            for k, ds in h5[root].items():
+                try:
+                    if hasattr(ds, "shape") and (ds.shape == () or (len(ds.shape) == 1 and ds.shape[0] <= 4)):
+                        v = ds[()]
+                        v = v.decode() if isinstance(v, bytes) else (v.tolist() if hasattr(v, "tolist") else v)
+                        if isinstance(v, list):
+                            v = [x.decode() if isinstance(x, bytes) else x for x in v]
+                        out[k] = v
+                except Exception:
+                    pass
+            out["banda"] = "L" if "LSAR" in root else "S"
+    return out
+
+
+def read_layers(granule, grid, layers, linear=True):
+    """Lê só a janela da área de cada camada e reprojeta para a grade comum.
+
+    layers: {apelido: (nome_do_dataset, trecho_do_caminho_preferido_ou_None)}.
+    linear=True descarta valores <= 0 (potência); False aceita negativos (fase, deslocamento)."""
     import earthaccess
     import h5py
     f = earthaccess.open([granule])[0]
+    out = {}
     with h5py.File(f, "r") as h5:
-        paths = _find(h5, set(layers) | {"xCoordinates", "yCoordinates"})
-        missing = [l for l in layers if l not in paths]
-        if missing:
-            raise KeyError(f"Camadas ausentes {missing}; encontradas: {sorted(paths)}")
-        group = paths[layers[0]].rsplit("/", 1)[0]
-        x = h5[group + "/xCoordinates"][()] if group + "/xCoordinates" in h5 else h5[paths["xCoordinates"]][()]
-        y = h5[group + "/yCoordinates"][()] if group + "/yCoordinates" in h5 else h5[paths["yCoordinates"]][()]
+        ident = identification(h5)
+        paths = {k: _locate(h5, base, cont) for k, (base, cont) in layers.items()}
+        first = next(iter(paths.values()))
+        group = first.rsplit("/", 1)[0]
+        x = h5[_up(h5, group, "xCoordinates")][()]
+        y = h5[_up(h5, group, "yCoordinates")][()]
         epsg = _epsg(h5, group)
         tr = Transformer.from_crs(4326, epsg, always_xy=True)
         w, s, e, n = grid.bbox
         xs, ys = zip(*[tr.transform(a, b) for a, b in [(w, s), (w, n), (e, s), (e, n)]])
-        pad = 3 * abs(x[1] - x[0])
+        dx, dy = x[1] - x[0], y[1] - y[0]
+        pad = 3 * abs(dx)
         ix = np.where((x >= min(xs) - pad) & (x <= max(xs) + pad))[0]
         iy = np.where((y >= min(ys) - pad) & (y <= max(ys) + pad))[0]
         if ix.size == 0 or iy.size == 0:
             raise ValueError("A área não cai dentro desta cena")
         x0, x1, y0, y1 = ix.min(), ix.max() + 1, iy.min(), iy.max() + 1
-        dx, dy = x[1] - x[0], y[1] - y[0]
         src_tr = Affine(dx, 0, x[x0] - dx / 2, 0, dy, y[y0] - dy / 2)
         # grade grossa (visão regional): média em blocos f×f lida em faixas, para não carregar
         # o quadro inteiro na memória (um quadro de 240 km a 10 m tem ~1 GB por camada)
-        f = max(1, int(grid.resolution // (2 * abs(dx))))
-        out = {}
-        for lay in layers:
-            ds = h5[paths[lay]]
-            if f == 1:
-                arr = ds[y0:y1, x0:x1].astype("float32")
-                arr[~np.isfinite(arr) | (arr <= 0)] = np.nan
-                a_tr = src_tr
+        fct = max(1, int(grid.resolution // (2 * abs(dx))))
+        for alias, pth in paths.items():
+            ds = h5[pth]
+            if ds.shape != (len(y), len(x)):          # camada noutra grade (ex.: coerência mais grossa)
+                raise ValueError(f"{pth} tem forma {ds.shape}, diferente das coordenadas {(len(y), len(x))}")
+            def clean(a):
+                a = a.astype("float32")
+                bad = ~np.isfinite(a) | (a <= 0 if linear else False)
+                if not linear:
+                    bad |= a == 0                      # 0 = sem dado nos produtos de fase
+                a[bad] = np.nan
+                return a
+            if fct == 1:
+                arr = clean(ds[y0:y1, x0:x1]); a_tr = src_tr
             else:
-                ny, nx = (y1 - y0) // f, (x1 - x0) // f
+                ny, nx = (y1 - y0) // fct, (x1 - x0) // fct
                 arr = np.full((ny, nx), np.nan, "float32")
-                rows = max(f, (2048 // f) * f)
-                for r0 in range(0, ny * f, rows):
-                    blk = ds[y0 + r0:y0 + min(r0 + rows, ny * f), x0:x0 + nx * f].astype("float32")
-                    blk[~np.isfinite(blk) | (blk <= 0)] = np.nan
-                    br = blk.shape[0] // f
+                rows = max(fct, (2048 // fct) * fct)
+                for r0 in range(0, ny * fct, rows):
+                    blk = clean(ds[y0 + r0:y0 + min(r0 + rows, ny * fct), x0:x0 + nx * fct])
+                    br = blk.shape[0] // fct
                     with np.errstate(invalid="ignore"):
-                        arr[r0 // f:r0 // f + br] = np.nanmean(blk[:br * f].reshape(br, f, nx, f), axis=(1, 3))
-                a_tr = Affine(dx * f, 0, x[x0] - dx / 2, 0, dy * f, y[y0] - dy / 2)
+                        arr[r0 // fct:r0 // fct + br] = np.nanmean(blk[:br * fct].reshape(br, fct, nx, fct), axis=(1, 3))
+                a_tr = Affine(dx * fct, 0, x[x0] - dx / 2, 0, dy * fct, y[y0] - dy / 2)
             dst = np.full((grid.height, grid.width), np.nan, dtype="float32")
             reproject(arr, dst, src_transform=a_tr, src_crs=f"EPSG:{epsg}", src_nodata=np.nan,
                       dst_transform=grid.transform, dst_crs=grid.crs, dst_nodata=np.nan,
                       resampling=Resampling.average)
-            out[lay] = dst.astype("float64")
+            out[alias] = dst.astype("float64")
     meta = parse_name(granule["umm"]["GranuleUR"])
     meta.update({"arquivo": granule["umm"]["GranuleUR"], "epsg_produto": epsg,
                  "janela_linhas": [int(y0), int(y1)], "janela_colunas": [int(x0), int(x1)],
-                 "grupo_hdf5": group, "espacamento_produto_m": float(abs(dx)), "fator_bloco": f})
+                 "caminhos_hdf5": paths, "espacamento_produto_m": float(abs(dx)), "fator_bloco": fct,
+                 "identificacao": ident})
     return out, meta
+
+
+def read_gcov_subset(granule, grid, layers=("HHHH", "HVHV")):
+    return read_layers(granule, grid, {l: (l, None) for l in layers}, linear=True)
+
+
+GUNW_LAYERS = {"fase": ("unwrappedPhase", "unwrappedInterferogram"),
+               "coerencia": ("coherenceMagnitude", "unwrappedInterferogram")}
+WAVELENGTH_L = 0.2385
+
+
+def read_gunw_subset(granule, grid):
+    """Deslocamento na linha de visada (cm) e coerência de um par GUNW, só no recorte.
+    d = -fase · λ / (4π): fase em radianos; sinal positivo = aproximou do satélite (convenção declarada)."""
+    arrs, meta = read_layers(granule, grid, GUNW_LAYERS, linear=False)
+    arrs["deslocamento_cm"] = -arrs["fase"] * WAVELENGTH_L / (4 * np.pi) * 100.0
+    return arrs, meta
