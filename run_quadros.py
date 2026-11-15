@@ -101,9 +101,29 @@ def main():
     for f in frames.values():
         f.pop("dias")
     out = Path(a.out); out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps({"fonte": "NASA CMR (ASF), coleções " + ", ".join(COLS), "gerado": time.strftime("%Y-%m-%d %H:%M"),
-                               "arquivos": total, "quadros": list(frames.values())}, separators=(",", ":")), encoding="utf-8")
-    print(f"pronto: {len(frames)} quadros a partir de {total} arquivos -> {out} ({out.stat().st_size / 1e6:.1f} MB)")
+    write_compact(frames.values(), total, out)
+
+
+def write_compact(frames, total, out):
+    """Formato enxuto para o navegador (~3x menor): listas em vez de objetos, coordenadas com 2 casas (~1 km)
+    e a prévia guardada só como o nome da coleção quando segue o padrão do ASF (a URL é remontada no app)."""
+    import re
+    pat = re.compile(r"^https://nisar\.asf\.earthdatacloud\.nasa\.gov/BROWSE/([A-Z0-9_]+)/(.+?)/\2_LATLON\.png$")
+    cols, rows = [], []
+    def enc(url, gran):
+        m = pat.match(url or "")
+        if m and m.group(2) == gran:
+            if m.group(1) not in cols:
+                cols.append(m.group(1))
+            return cols.index(m.group(1))
+        return url or ""
+    for f in frames:
+        ring = [c for p in f["p"] for c in (round(p[0], 2), round(p[1], 2))]
+        rows.append([f["t"], f["d"], f["f"], f["n"], ring, f["p0"], f["p1"], f["g0"], f["g1"], enc(f["b0"], f["g0"]), enc(f["b1"], f["g1"])])
+    out.write_text(json.dumps({"fonte": "NASA CMR (ASF), coleções " + ", ".join(COLS), "gerado": time.strftime("%Y-%m-%d %H:%M"), "arquivos": total,
+                               "formato": "t,d,f,n,anel,p0,p1,g0,g1,b0,b1", "browse": "https://nisar.asf.earthdatacloud.nasa.gov/BROWSE/{col}/{g}/{g}_LATLON.png",
+                               "colecoes": cols, "q": rows}, separators=(",", ":")), encoding="utf-8")
+    print(f"pronto: {len(rows)} quadros a partir de {total} arquivos -> {out} ({out.stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":
