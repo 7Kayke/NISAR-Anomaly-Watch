@@ -1,0 +1,9 @@
+# Only the static site in docs/ is deployed. The Python pipeline runs locally / in GitHub Actions.
+api/
+deltal/
+cases/
+tests/
+*.py
+requirements*.txt
+docs/results/
+.github/
