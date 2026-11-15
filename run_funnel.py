@@ -8,6 +8,7 @@ resultado.md, figuras PNG/JPG e docs/api/v1/analyses/<nome>.json (a "API GET" es
 """
 import argparse
 import json
+import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,8 +50,12 @@ def main():
     st = {}
 
     def step(name, fn):
+        t0 = time.time()
+        print(f"[{time.strftime('%H:%M:%S')}] {name} ...", flush=True)
         try:
-            return fn()
+            r = fn()
+            print(f"[{time.strftime('%H:%M:%S')}] {name} ok ({time.time() - t0:.0f} s)", flush=True)
+            return r
         except Exception as e:
             ficha["erros"][name] = f"{type(e).__name__}: {e}"
             traceback.print_exc()

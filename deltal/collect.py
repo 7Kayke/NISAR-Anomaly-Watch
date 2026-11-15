@@ -11,12 +11,18 @@ import numpy as np
 from shapely.geometry import box, shape
 from shapely.ops import unary_union
 
+from .grid import make_grid
 from .funnel import Funnel, pair_by_key, MIN_COVER
 from .sources_pc import _search, _load, S2_CLOUD_SCL, S2_WATER_SCL, _s2_offset
 
 LANDSAT_CLOUD_BITS = (1, 2, 3, 4)       # nuvem dilatada, cirro, nuvem, sombra de nuvem
 LANDSAT_WATER_BIT = 7
 MAX_CLOUD = 0.2
+QA_RES_M = 100          # a checagem de nuvem roda numa grade grossa: 25x menos leitura, mesma fração
+
+
+def _log(msg):
+    print(f"    {msg}", flush=True)
 
 
 class Acq:
@@ -74,8 +80,10 @@ def sentinel2(grid, event_date, days=30):
     acqs = fun.add("catalogo", _acquisitions(items), f"{t0} a {t1}, nuvem na cena < 80%")
     acqs = fun.add("cobre_area", _cover(acqs, grid.bbox), f"cobre >= {int(MIN_COVER*100)}% da área")
     good = []
-    for a in acqs:
-        scl = _load(a.items, ["SCL"], grid, resampling="nearest")["SCL"].values[0]
+    qg = make_grid(grid.bbox, QA_RES_M)
+    for n, a in enumerate(acqs, 1):
+        _log(f"Sentinel-2 nuvem {n}/{len(acqs)} ({a.day})")
+        scl = _load(a.items, ["SCL"], qg, resampling="nearest")["SCL"].values[0]
         a.quality["nuvem_na_area"] = round(float(np.isin(scl, list(S2_CLOUD_SCL)).mean()), 3)
         if a.quality["nuvem_na_area"] <= MAX_CLOUD:
             good.append(a)
@@ -105,10 +113,12 @@ def landsat(grid, event_date, days=40):
     acqs = fun.add("catalogo", _acquisitions(items), f"{t0} a {t1}, Landsat 8 e 9, nuvem na cena < 80%")
     acqs = fun.add("cobre_area", _cover(acqs, grid.bbox), f"cobre >= {int(MIN_COVER*100)}% da área")
     good = []
-    for a in acqs:
+    qg = make_grid(grid.bbox, QA_RES_M)
+    for n, a in enumerate(acqs, 1):
         if not all("lwir11" in i.assets for i in a.items):
             continue
-        qa = _load(a.items, ["qa_pixel"], grid, resampling="nearest")["qa_pixel"].values[0].astype("int64")
+        _log(f"Landsat nuvem {n}/{len(acqs)} ({a.day})")
+        qa = _load(a.items, ["qa_pixel"], qg, resampling="nearest")["qa_pixel"].values[0].astype("int64")
         cloud = np.zeros(qa.shape, bool)
         for b in LANDSAT_CLOUD_BITS:
             cloud |= (qa >> b) & 1 == 1

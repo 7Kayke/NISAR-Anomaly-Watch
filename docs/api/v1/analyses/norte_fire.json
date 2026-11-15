@@ -1,0 +1,319 @@
+{
+  "id": "norte_fire",
+  "status": "concluida",
+  "ficha": {
+    "nome": "Incêndio Norte, San Clemente e San Juan Capistrano (Califórnia)",
+    "gerado_em": "2026-11-15T00:56:14+00:00",
+    "versao_pipeline": "0.1.0",
+    "area_bbox": [
+      -117.72,
+      33.42,
+      -117.58,
+      33.53
+    ],
+    "evento": {
+      "data": "2026-10-16",
+      "descricao": "Incêndio Norte (CAL FIRE): ~570 acres, Portico Del Norte e Eminencia Del Norte, San Clemente",
+      "area_oficial_ha": 230.7,
+      "fonte": "https://www.fire.ca.gov/incidents/2026/10/16/norte-fire/updates/620cae70-c20f-4b85-b7e3-553145c2f022"
+    },
+    "grade": {
+      "crs": "EPSG:32611",
+      "resolucao_m": 20,
+      "largura": 655,
+      "altura": 614
+    },
+    "parametros": {
+      "verdade": {
+        "dnbr_min": 0.1,
+        "min_area_m2": 10000.0
+      },
+      "banda_C": {
+        "veg_drop_db": -6.0,
+        "min_area_m2": 40000.0
+      },
+      "landsat": {
+        "dnbr_min": 0.1,
+        "dlst_min_c": 3.0
+      },
+      "consenso": {
+        "min_votes": 2,
+        "min_area_m2": 40000.0
+      }
+    },
+    "funil": [
+      {
+        "fonte": "s2",
+        "colecao": "s2",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 3,
+            "aproveitamento_pct": null,
+            "nota": ""
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 2,
+            "aproveitamento_pct": 66.7,
+            "nota": ""
+          },
+          {
+            "etapa": "pareados",
+            "n": 2,
+            "aproveitamento_pct": 100.0,
+            "nota": ""
+          }
+        ],
+        "aproveitamento_total_pct": 66.7
+      },
+      {
+        "fonte": "ls",
+        "colecao": "ls",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 3,
+            "aproveitamento_pct": null,
+            "nota": ""
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 2,
+            "aproveitamento_pct": 66.7,
+            "nota": ""
+          },
+          {
+            "etapa": "pareados",
+            "n": 2,
+            "aproveitamento_pct": 100.0,
+            "nota": ""
+          }
+        ],
+        "aproveitamento_total_pct": 66.7
+      },
+      {
+        "fonte": "s1",
+        "colecao": "s1",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 3,
+            "aproveitamento_pct": null,
+            "nota": ""
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 2,
+            "aproveitamento_pct": 66.7,
+            "nota": ""
+          },
+          {
+            "etapa": "pareados",
+            "n": 2,
+            "aproveitamento_pct": 100.0,
+            "nota": ""
+          }
+        ],
+        "aproveitamento_total_pct": 66.7
+      },
+      {
+        "fonte": "aster",
+        "colecao": "aster",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 3,
+            "aproveitamento_pct": null,
+            "nota": ""
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 2,
+            "aproveitamento_pct": 66.7,
+            "nota": ""
+          },
+          {
+            "etapa": "pareados",
+            "n": 2,
+            "aproveitamento_pct": 100.0,
+            "nota": ""
+          }
+        ],
+        "aproveitamento_total_pct": 66.7
+      },
+      {
+        "fonte": "dem",
+        "colecao": "dem",
+        "etapas": [
+          {
+            "etapa": "catalogo",
+            "n": 3,
+            "aproveitamento_pct": null,
+            "nota": ""
+          },
+          {
+            "etapa": "cobre_area",
+            "n": 2,
+            "aproveitamento_pct": 66.7,
+            "nota": ""
+          },
+          {
+            "etapa": "pareados",
+            "n": 2,
+            "aproveitamento_pct": 100.0,
+            "nota": ""
+          }
+        ],
+        "aproveitamento_total_pct": 66.7
+      }
+    ],
+    "fontes": {
+      "sentinel2": {
+        "antes": "2026-10-10",
+        "depois": "2026-10-20",
+        "itens_antes": [
+          "2026-10-10"
+        ],
+        "itens_depois": [
+          "2026-10-20"
+        ]
+      },
+      "sentinel1": {
+        "antes": [
+          "2026-10-10"
+        ],
+        "depois": [
+          "2026-10-20"
+        ]
+      },
+      "landsat": {
+        "antes": [
+          "2026-10-10"
+        ],
+        "depois": [
+          "2026-10-20"
+        ]
+      }
+    },
+    "resultados": {
+      "verdade_sentinel2": {
+        "area_queimada_ha": 480.0,
+        "maior_grupo_ha": 480.0,
+        "area_oficial_ha": 230.7,
+        "razao_maior_grupo_oficial": 2.0806
+      },
+      "relevo": {
+        "declividade_media_graus": 23.4189
+      },
+      "sentinel1": {
+        "stats": {
+          "lr_co_mediana_db": -0.0114,
+          "lr_co_mad_db": 0.4331,
+          "lr_cross_mediana_db": -0.0287,
+          "lr_cross_mad_db": 0.4316,
+          "vegetacao_area_ha": 447.28,
+          "agua_area_ha": 0.0,
+          "vegetacao_grupos": [
+            11182
+          ],
+          "agua_grupos": [],
+          "pixels_validos": 402170
+        },
+        "intervalo_dias": 12,
+        "orbita": {
+          "relativa": 71,
+          "direcao": "ascending"
+        },
+        "pixels_mascarados_relevo": 0,
+        "metricas": {
+          "VP": 11182,
+          "FP": 0,
+          "FN": 818,
+          "VN": 390170,
+          "precisao": 1.0,
+          "sensibilidade": 0.9318,
+          "f1": 0.9647,
+          "iou": 0.9318,
+          "falso_alarme": 0.0,
+          "area_detectada_ha": 447.28,
+          "area_real_ha": 480.0
+        }
+      },
+      "landsat": {
+        "intervalo_dias": 10,
+        "lst_mediana_antes_c": 25.0012,
+        "lst_mediana_depois_c": 25.0351,
+        "area_dnbr_ha": 480.0,
+        "area_aquecida_ha": 480.16,
+        "metricas_dnbr": {
+          "VP": 12000,
+          "FP": 0,
+          "FN": 0,
+          "VN": 390170,
+          "precisao": 1.0,
+          "sensibilidade": 1.0,
+          "f1": 1.0,
+          "iou": 1.0,
+          "falso_alarme": 0.0,
+          "area_detectada_ha": 480.0,
+          "area_real_ha": 480.0
+        },
+        "metricas_termico": {
+          "VP": 11998,
+          "FP": 6,
+          "FN": 2,
+          "VN": 390164,
+          "precisao": 0.9995,
+          "sensibilidade": 0.9998,
+          "f1": 0.9997,
+          "iou": 0.9993,
+          "falso_alarme": 0.0,
+          "area_detectada_ha": 480.16,
+          "area_real_ha": 480.0
+        },
+        "aquecimento_na_cicatriz_c": 7.9728
+      },
+      "consenso": {
+        "fontes": [
+          "sentinel1",
+          "landsat_dnbr",
+          "landsat_termico"
+        ],
+        "area_consenso_ha": 480.0,
+        "metricas": {
+          "VP": 12000,
+          "FP": 0,
+          "FN": 0,
+          "VN": 390170,
+          "precisao": 1.0,
+          "sensibilidade": 1.0,
+          "f1": 1.0,
+          "iou": 1.0,
+          "falso_alarme": 0.0,
+          "area_detectada_ha": 480.0,
+          "area_real_ha": 480.0
+        },
+        "fontes_disponiveis_media": 3.0
+      }
+    },
+    "contexto": {
+      "chuva": {
+        "total_mm": 0.0
+      }
+    },
+    "erros": {}
+  },
+  "arquivos": [
+    "/tmp/smoke_out/confianca.png",
+    "/tmp/smoke_out/consenso.png",
+    "/tmp/smoke_out/ficha_tecnica.csv",
+    "/tmp/smoke_out/ficha_tecnica.json",
+    "/tmp/smoke_out/funil.json",
+    "/tmp/smoke_out/landsat_termico_delta.png",
+    "/tmp/smoke_out/resultado.md",
+    "/tmp/smoke_out/s1_mudanca_vh.png",
+    "/tmp/smoke_out/s2_antes_cor_natural.png",
+    "/tmp/smoke_out/s2_depois_cor_natural.png"
+  ]
+}

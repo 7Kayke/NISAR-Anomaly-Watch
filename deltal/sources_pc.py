@@ -11,6 +11,10 @@ import pystac_client
 import odc.stac
 from odc.geo.geobox import GeoBox
 
+# leitura em nuvem mais rápida: não lista diretórios, reaproveita conexões HTTP
+odc.stac.configure_rio(cloud_defaults=True, GDAL_HTTP_MULTIPLEX="YES", GDAL_HTTP_MAX_RETRY="4",
+                       GDAL_HTTP_RETRY_DELAY="2", VSI_CACHE="TRUE")
+
 STAC_URL = "https://planetarycomputer.microsoft.com/api/stac/v1"
 S2_CLOUD_SCL = {0, 1, 3, 8, 9, 10}   # sem dado, saturado, sombra, nuvem média/alta, cirrus
 S2_WATER_SCL = {6}
@@ -32,7 +36,7 @@ def _search(collection, bbox, start, end, query=None):
 
 def _load(items, bands, grid, resampling="bilinear"):
     return odc.stac.load(items, bands=bands, geobox=_geobox(grid), groupby="solar_day",
-                         resampling=resampling, chunks=None)
+                         resampling=resampling, chunks=None, pool=8)
 
 
 def _day(dt):
