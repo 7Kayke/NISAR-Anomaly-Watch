@@ -77,7 +77,7 @@ nav > * { pointer-events: auto; }
 .nexts div { background: #0A1A40; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
 .nexts span { font-size: 20px; } .nexts b { font-size: 13.5px; } .nexts small { font-size: 12px; color: var(--ink2); line-height: 1.4; }
 .trio3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .trio3 .thumb { aspect-ratio: auto; display: flex; flex-direction: column; gap: 4px; background: none; border: 0; padding: 0 !important; place-items: stretch; }
-.trio3 canvas { aspect-ratio: 320 / 288; height: auto !important; border-radius: 6px; } .trio3 .cap { position: static; background: none; padding: 0; font-size: 9.5px; color: var(--ink2); }
+.trio3 canvas { aspect-ratio: 192 / 172; height: auto !important; border-radius: 6px; } .trio3 .cap { position: static; background: none; padding: 0; font-size: 9.5px; color: var(--ink2); }
 .thumb .cap { position: absolute; left: 4px; bottom: 4px; right: 4px; font: 600 10px var(--mono); background: rgba(2,6,15,.85); color: var(--ink); padding: 3px 6px; border-radius: 5px; text-align: left; line-height: 1.35; }
 .sum { background: #0A1A40; border-left: 3px solid var(--cyan); border-radius: 8px; padding: 8px 12px; font-size: 13px; line-height: 1.5; }
 .sum p { margin: 4px 0; } .sum b { color: var(--cyan); font-weight: 600; }
@@ -207,10 +207,10 @@ const loc = () => (lang === "pt" ? "pt-BR" : "en-US");
 // ---------------------------------------------------------------- globe
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
 const land = topojson.feature(WORLD, WORLD.objects.land), borders = topojson.mesh(WORLD, WORLD.objects.countries, (a, b) => a !== b);
-let frames = FRAMES.features, REAL = false, QINFO = null; const P = { lon: -56.873, lat: -18.278 };
+let frames = window.FRAMES ? FRAMES.features : [], REAL = false, QINFO = null; const P = { lon: -56.873, lat: -18.278 };
 const PG = ["031_A_169", "132_A_168", "010_D_098", "111_D_098"];
 const PCELL = { type: "Polygon", coordinates: [[[-56.933, -18.218], [-56.813, -18.218], [-56.813, -18.338], [-56.933, -18.338], [-56.933, -18.218]]] };
-let maxN = d3.max(frames, (f) => f.properties.n); let col = d3.scaleSequential([0, maxN], d3.interpolateRgbBasis(["#3A6FD0", "#5FB4F0", "#9FF0FF"]));
+let maxN = d3.max(frames, (f) => f.properties.n) || 30; let col = d3.scaleSequential([0, maxN], d3.interpolateRgbBasis(["#3A6FD0", "#5FB4F0", "#9FF0FF"]));
 let W, H, dpr, dir = "all", sel = null;
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.3);
 const path = d3.geoPath(proj, ctx); const grat = d3.geoGraticule10();
@@ -327,7 +327,7 @@ function pick(x, y) {
   showF(hits[0], hits.slice(1));
 }
 const panel = document.getElementById("panel"), pb = document.getElementById("pbody");
-function closeP() { stopV(); view = null; panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
+function closeP() { stopV(); if (optAbort) optAbort.abort(); view = null; panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
 function openP() { const k = REAL ? 9 : 11; fly(P.lon + (W > 900 ? 300 / (base * k) / RAD : 0), P.lat + (W > 900 ? 0 : -H * 0.26 / (base * k) / RAD), k); setTimeout(showP, 1150); }
 document.getElementById("close").onclick = closeP;
 const thumb = (u, d, label, i) => `<div class="thumb" id="b${i}">${u ? `<img src="${u}" alt="NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('${t("noPrev")}'))">` : `${label}<br>(${fd(d)})`}</div>`;
@@ -386,9 +386,10 @@ function summary(f, o0, o1, R) { const p = f.properties, pt = lang === "pt"; con
 // for the first file, the SAME sensor and the SAME path/row (or tile), so only time changes between the two images.
 const PCS = "https://planetarycomputer.microsoft.com/api/stac/v1/search";
 const shiftDay = (d, n) => new Date(Date.parse(d) + n * 864e5).toISOString().slice(0, 10);
-async function pcSearch(coll, ll, d, win, extra) { const body = { collections: [coll], intersects: { type: "Point", coordinates: [ll[0], ll[1]] },
+let optAbort = null;
+async function pcSearch(coll, ll, d, win, extra, signal) { const body = { collections: [coll], intersects: { type: "Point", coordinates: [ll[0], ll[1]] },
     datetime: `${shiftDay(d, -win)}T00:00:00Z/${shiftDay(d, win)}T23:59:59Z`, limit: 60, query: Object.assign({ "eo:cloud_cover": { lt: 40 } }, extra || {}) };
-  const r = await fetch(PCS, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); if (!r.ok) throw new Error(r.status); return (await r.json()).features || []; }
+  const r = await fetch(PCS, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal }); if (!r.ok) throw new Error(r.status); return (await r.json()).features || []; }
 const score = (it, d) => Math.abs(Date.parse(it.properties.datetime) - Date.parse(d)) / 864e5 + 0.5 * (it.properties["eo:cloud_cover"] ?? 50);
 const best = (items, d) => items.slice().sort((a, b) => score(a, d) - score(b, d))[0];
 const sensorName = (it) => it.properties.platform ? it.properties.platform.replace("landsat-", "Landsat ").replace("sentinel-2", "Sentinel-2 ").replace(/^Sentinel-2 ([ab])$/i, (m, x) => "Sentinel-2" + x.toUpperCase()) : it.collection;
@@ -404,8 +405,8 @@ function cropURL(it, box, kind) { const ls = it.collection === "landsat-c2-l2"; 
   if (kind === "ndvi") { q.set("expression", ls ? "(nir08-red)/(nir08+red-14545.45)" : "(B08-B04)/(B08+B04-2000)"); q.set("asset_as_band", "true"); q.set("rescale", "-1,1"); }
   else { (ls ? ["red", "green", "blue"] : ["B04", "B03", "B02"]).forEach((a) => q.append("assets", a)); q.set("rescale", ls ? "7300,18000" : "0,2600"); q.set("color_formula", "Gamma RGB 1.6 Saturation 1.2"); }
   if (ls) q.set("nodata", "0");
-  return `${PCD}/bbox/${box.map((v) => v.toFixed(4)).join(",")}/320x288.png?${q}`; }
-async function pixels(url) { const r = await fetch(url); if (!r.ok) throw new Error("data " + r.status); const bmp = await createImageBitmap(await r.blob());
+  return `${PCD}/bbox/${box.map((v) => v.toFixed(4)).join(",")}/192x172.png?${q}`; }
+async function pixels(url, signal) { const r = await fetch(url, { signal }); if (!r.ok) throw new Error("data " + r.status); const bmp = await createImageBitmap(await r.blob());
   const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bmp, 0, 0); return { w: c.width, h: c.height, d: x.getImageData(0, 0, c.width, c.height).data, c }; }
 function compare(tc0, nd0, tc1, nd1) { const n = tc0.w * tc0.h; let both = 0, valid = 0, loss = 0, gain = 0, w0 = 0, w1 = 0, s0 = 0, s1 = 0, cl = 0; const map = new Uint8ClampedArray(n * 4);
   const cloudy = (t, i) => { const r = t.d[i], g = t.d[i + 1], b = t.d[i + 2]; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx > 215 && mx - mn < 40; };
@@ -418,26 +419,38 @@ function compare(tc0, nd0, tc1, nd1) { const n = tc0.w * tc0.h; let both = 0, va
   const c = document.createElement("canvas"); c.width = tc0.w; c.height = tc0.h; c.getContext("2d").putImageData(new ImageData(map, tc0.w, tc0.h), 0, 0);
   return { map: c, clear: valid ? both / valid : 0, cloud: valid ? cl / valid : 0, ndvi0: both ? s0 / both : null, ndvi1: both ? s1 / both : null,
     loss: both ? loss / both : 0, gain: both ? gain / both : 0, water0: both ? w0 / both : 0, water1: both ? w1 / both : 0, px: both }; }
+const optCache = new Map();
 async function optical(p, ll) { const box = document.getElementById("opt"), note = document.getElementById("optNote"); if (!box) return; const myView = view;
-  const B = [ll[0] - 0.14, ll[1] - 0.12, ll[0] + 0.14, ll[1] + 0.12];
-  try { let last = null, coll = null;
-    for (const [c, extra] of [["landsat-c2-l2", { platform: { eq: "landsat-9" } }], ["landsat-c2-l2", { platform: { in: ["landsat-8", "landsat-9"] } }], ["sentinel-2-l2a", null]]) {
-      const items = (await pcSearch(c, ll, p.p1, 16, extra)).filter((it) => covers(it, B)); if (items.length) { last = best(items, p.p1); coll = c; break; } }
+  if (optAbort) optAbort.abort(); optAbort = new AbortController(); const sig = optAbort.signal;
+  const B = [ll[0] - 0.14, ll[1] - 0.12, ll[0] + 0.14, ll[1] + 0.12]; const key = `${p.t}${p.d}${p.f}|${ll[0].toFixed(2)},${ll[1].toFixed(2)}`;
+  try { let last = null, coll = null, first = null;
+    const hit = optCache.get(key);
+    if (hit) ({ last, coll, first } = hit);
+    else {
+      const LS = { platform: { in: ["landsat-8", "landsat-9"] } };
+      const [l1, l0, s1, s0] = await Promise.all([pcSearch("landsat-c2-l2", ll, p.p1, 16, LS, sig), pcSearch("landsat-c2-l2", ll, p.p0, 24, LS, sig),
+        pcSearch("sentinel-2-l2a", ll, p.p1, 16, null, sig), pcSearch("sentinel-2-l2a", ll, p.p0, 24, null, sig)].map((q) => q.catch((e) => { if (e.name === "AbortError") throw e; return []; })));
+      const pick = (lastItems, firstItems, sameKey, prefer) => { const L = lastItems.filter((it) => covers(it, B)); if (!L.length) return null;
+        const pool = prefer ? (L.filter(prefer).length ? L.filter(prefer) : L) : L; const ls = best(pool, p.p1);
+        const F = firstItems.filter((it) => covers(it, B) && sameKey(it, ls)); return { last: ls, first: F.length ? best(F, p.p0) : null }; };
+      const sameL = (a, b2) => a.properties.platform === b2.properties.platform && a.properties["landsat:wrs_path"] === b2.properties["landsat:wrs_path"] && a.properties["landsat:wrs_row"] === b2.properties["landsat:wrs_row"];
+      const sameS = (a, b2) => a.properties["s2:mgrs_tile"] === b2.properties["s2:mgrs_tile"];
+      const L = pick(l1, l0, sameL, (it) => it.properties.platform === "landsat-9"), S2 = pick(s1, s0, sameS);
+      const choice = L && L.first ? ["landsat-c2-l2", L] : S2 && S2.first ? ["sentinel-2-l2a", S2] : L ? ["landsat-c2-l2", L] : S2 ? ["sentinel-2-l2a", S2] : null;
+      if (choice) { coll = choice[0]; last = choice[1].last; first = choice[1].first; }
+      optCache.set(key, { last, coll, first }); }
     if (view !== myView) return; if (!last) { box.innerHTML = `<div class="thumb">${t("optNone")}</div><div class="thumb">${t("optNone")}</div>`; return; }
-    const same = coll === "landsat-c2-l2" ? { "landsat:wrs_path": { eq: last.properties["landsat:wrs_path"] }, "landsat:wrs_row": { eq: last.properties["landsat:wrs_row"] }, platform: { eq: last.properties.platform } }
-      : { "s2:mgrs_tile": { eq: last.properties["s2:mgrs_tile"] } };
-    const firstItems = (await pcSearch(coll, ll, p.p0, 24, same)).filter((it) => covers(it, B)); const first = firstItems.length ? best(firstItems, p.p0) : null; if (view !== myView) return;
     const lab = (it, d) => { const dd = it.properties.datetime.slice(0, 10); const gap = Math.round(Math.abs(Date.parse(dd) - Date.parse(d)) / 864e5); return `${sensorName(it)} · ${fd(dd)}<br>±${gap} ${t("days")} · ${t("cloud")} ${Math.round(it.properties["eo:cloud_cover"] ?? 0)}%`; };
     const tile = (inner, cap) => `<div class="thumb" style="padding:0;position:relative;overflow:hidden">${inner}<span class="cap">${cap}</span></div>`;
     note.innerHTML = t("optRule")(sensorName(last), coll === "landsat-c2-l2" ? `${t("pathrow")} ${last.properties["landsat:wrs_path"]}/${last.properties["landsat:wrs_row"]}` : `${t("tile")} ${last.properties["s2:mgrs_tile"]}`);
     if (!first) { box.innerHTML = `<div class="thumb">${t("optNone")}</div>` + tile(`<img src="${cropURL(last, B, "tc")}" alt="" style="width:100%;height:100%;object-fit:cover">`, lab(last, p.p1)); const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], null, last); return; }
     box.innerHTML = `<div class="thumb">${t("optCalc")}</div><div class="thumb">${t("optCalc")}</div>`;
-    const [tc0, nd0, tc1, nd1] = await Promise.all([cropURL(first, B, "tc"), cropURL(first, B, "ndvi"), cropURL(last, B, "tc"), cropURL(last, B, "ndvi")].map(pixels)); if (view !== myView) return;
+    const [tc0, nd0, tc1, nd1] = await Promise.all([cropURL(first, B, "tc"), cropURL(first, B, "ndvi"), cropURL(last, B, "tc"), cropURL(last, B, "ndvi")].map((u) => pixels(u, sig))); if (view !== myView) return;
     const R = compare(tc0, nd0, tc1, nd1); R.km2 = R.px * (0.28 * 111.32 * Math.cos(ll[1] * RAD) / tc0.w) * (0.24 * 110.57 / tc0.h); R.days = Math.round((Date.parse(last.properties.datetime) - Date.parse(first.properties.datetime)) / 864e5); R.m0 = +first.properties.datetime.slice(5, 7); R.m1 = +last.properties.datetime.slice(5, 7); R.lat = ll[1];
     box.outerHTML = `<div class="trio3" id="opt">${tile("", lab(first, p.p0))}${tile("", lab(last, p.p1))}${tile("", t("chgCap"))}</div>`;
     const cells = document.querySelectorAll("#opt .thumb"); [tc0.c, tc1.c, R.map].forEach((cv2, i) => { cv2.style.cssText = "width:100%;height:100%;object-fit:cover;display:block"; cells[i].prepend(cv2); });
     const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], first, last, R);
-  } catch (e) { if (view === myView) { const b2 = document.getElementById("opt"); if (b2) b2.innerHTML = `<div class="thumb">${t("optFail")}</div><div class="thumb">${t("optFail")}</div>`; console.log("optical", e); } } }
+  } catch (e) { if (e.name === "AbortError") return; if (view === myView) { const b2 = document.getElementById("opt"); if (b2) b2.innerHTML = `<div class="thumb">${t("optFail")}</div><div class="thumb">${t("optFail")}</div>`; console.log("optical", e); } } }
 
 // live lookup in NASA's public catalog: any place, without the team uploading anything first
 const CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json?provider=ASF&short_name=NISAR_L2_GCOV_PROVISIONAL_V1&short_name=NISAR_L2_GCOV_V1&short_name=NISAR_L2_GCOV_BETA_V1&page_size=1";
