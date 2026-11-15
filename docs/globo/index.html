@@ -156,7 +156,9 @@ const T = {
     nisarLbl: (hh, tr, a) => `NISAR ${hh ? "HH" : "HV"} · track ${tr} ${a ? "asc." : "desc."}`,
     layers: [["nat", "Natural colour"], ["fogo", "Fire"], ["radar", "C-band radar"], ["temp", "Temperature"]],
     glossT: "GLOSSARY: WHAT EACH DATA LAYER MEANS", gTerm: "Term", gWhat: "What it is", gUse: "What we use it for",
-    of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next", hlKick: "HIGHLIGHT", hlNote: "Highlight areas use real NISAR results with a lighter analysis than Paiaguás.", hasHL: (n) => `This frame has a highlight: ${n}`, lgHL: "Highlight areas",
+    optT: "SAME PLACE, SAME DATES, IN OPTICAL", optWait: "Searching Planetary Computer…", optNone: "No clear optical scene near this date", optFail: "Planetary Computer not reachable from here",
+    optRule: (s, g) => `Chosen by calculation, not by hand: the ${s} scene closest to each NISAR file with the least cloud, and the same sensor and ${g} on both dates, so only time changes between the two images.`,
+    pathrow: "path/row", tile: "tile", cloud: "cloud", of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next", hlKick: "HIGHLIGHT", hlNote: "Highlight areas use real NISAR results with a lighter analysis than Paiaguás.", hasHL: (n) => `This frame has a highlight: ${n}`, lgHL: "Highlight areas",
     cohKeep: ["track 31 · ascending", "track 132 · ascending", "track 10 · descending", "track 111 · unreliable"],
     cohAxis: "height = % of the area that lost coherence (changed) between the two passes", cohNorm: "normal band: under 10% (ground did not move)",
     cohTip: "without coherence", months: ["Jul", "Aug", "Sep", "Oct"], jun: "Jun", nov: "Nov",
@@ -183,7 +185,9 @@ const T = {
     nisarLbl: (hh, tr, a) => `NISAR ${hh ? "HH" : "HV"} · pista ${tr} ${a ? "asc." : "desc."}`,
     layers: [["nat", "Cor natural"], ["fogo", "Fogo"], ["radar", "Radar C"], ["temp", "Temperatura"]],
     glossT: "GLOSSÁRIO: O QUE SIGNIFICA CADA DADO", gTerm: "Termo", gWhat: "O que é", gUse: "Para que usamos",
-    of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo", hlKick: "DESTAQUE", hlNote: "As áreas em destaque usam resultados reais do NISAR, com uma análise mais leve que a do Paiaguás.", hasHL: (n) => `Este quadro tem um destaque: ${n}`, lgHL: "Áreas em destaque",
+    optT: "MESMO LUGAR, MESMAS DATAS, NO ÓPTICO", optWait: "Buscando no Planetary Computer…", optNone: "Sem cena óptica limpa perto desta data", optFail: "Sem acesso ao Planetary Computer daqui",
+    optRule: (s, g) => `Escolhidas por cálculo, não a dedo: a cena do ${s} mais próxima de cada arquivo do NISAR e com menos nuvem, com o mesmo sensor e a mesma ${g} nas duas datas, para que só o tempo mude entre as duas imagens.`,
+    pathrow: "órbita/linha", tile: "quadrícula", cloud: "nuvem", of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo", hlKick: "DESTAQUE", hlNote: "As áreas em destaque usam resultados reais do NISAR, com uma análise mais leve que a do Paiaguás.", hasHL: (n) => `Este quadro tem um destaque: ${n}`, lgHL: "Áreas em destaque",
     cohKeep: ["pista 31 · ascendente", "pista 132 · ascendente", "pista 10 · descendente", "pista 111 · não confiável"],
     cohAxis: "altura = % da área que perdeu a coerência (mudou) entre as duas passagens", cohNorm: "faixa normal: menos de 10% (chão parado)",
     cohTip: "sem coerência", months: ["jul", "ago", "set", "out"], jun: "jun", nov: "nov",
@@ -311,7 +315,7 @@ const gname = (p) => `${t("track")} ${p.t} · ${p.d === "A" ? t("asc") : t("desc
 let lastLL = null, view = null;
 function pick(x, y) {
   const ll = proj.invert([x, y]); if (!ll || d3.geoDistance(ll, proj.invert(proj.translate())) > Math.PI / 2) return;
-  if (d3.geoContains(PCELL, ll) || d3.geoDistance(ll, [P.lon, P.lat]) < 0.004 * 60 / proj._k) { showP(); return; }
+  if (d3.geoContains(PCELL, ll) || (proj._k > 3 && d3.geoDistance(ll, [P.lon, P.lat]) < 16 / proj.scale())) { showP(); return; }
   const hA = HL.find((A) => d3.geoDistance(ll, [A.lon, A.lat]) < 16 / proj.scale()); if (hA && proj._k > 3) { showA(hA); return; }
   lastLL = ll; const hits = frames.filter((f) => vis(f) && d3.geoContains(f, ll)); if (!hits.length) { closeP(); return; }
   showF(hits[0], hits.slice(1));
@@ -328,12 +332,39 @@ function showF(f, others, noLive) { stopV(); view = ["F", f, others]; panel.clas
   <div class="cell"><div class="l">${t("passes")}</div><div class="v">${p.n}</div></div><div class="cell"><div class="l">${t("span")}</div><div class="v">${Math.round(days)} ${t("days")}</div></div></div>
   <div class="grid2">${thumb(p.b0, p.p0, t("prev0"), 0)}${thumb(p.b1, p.p1, t("prev1"), 1)}</div>
   ${p.real ? `<div class="note" style="color:#8FD9A8">${t("realNote")} ${p.g0 ? p.g0.slice(0, 26) + "…" : ""}</div>` : `<div class="note" id="live" style="color:#FFD27A">${t("asking")}</div>`}
+  <div class="k" style="margin-top:4px">${t("optT")}</div>
+  <div class="grid2" id="opt"><div class="thumb">${t("optWait")}</div><div class="thumb">${t("optWait")}</div></div>
+  <div class="note" id="optNote"></div>
   <p class="note">${t("shallowNote")}</p>
   ${others.length ? `<div class="k">${t("others")}</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} ${lang === "pt" ? "passagens" : "passes"}</button>`).join("")}</div>` : ""}
   ${(REAL ? PG.includes(p.id) : d3.geoContains(f, [P.lon, P.lat])) ? `<button type="button" class="btn solid" id="toP">${t("hasFull")}</button>` : hlOf(p) ? `<button type="button" class="btn" id="toA" style="border-color:var(--cyan);color:var(--cyan)">${t("hasHL")(L2(hlOf(p).name))}</button>` : `<a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Full analysis: frame " + gid(p))}" target="_blank" rel="noopener">${t("ask")}</a>`}`;
   const tp = document.getElementById("toP"); if (tp) tp.onclick = openP; const ta = document.getElementById("toA"); if (ta) ta.onclick = () => openA(hlOf(p));
   pb.querySelectorAll("[data-o]").forEach((b) => b.onclick = () => showF(others[+b.dataset.o], [f, ...others.filter((_, j) => j !== +b.dataset.o)]));
-  panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL && !p.real && !noLive) live(lastLL); }
+  panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL && !p.real && !noLive) live(lastLL); optical(p, lastLL || d3.geoCentroid(f)); }
+// Optical twin of any frame, chosen by calculation (Microsoft Planetary Computer STAC, public):
+// for NISAR's last file, the closest Landsat 9 scene (else Landsat 8, else Sentinel-2) with the least cloud;
+// for the first file, the SAME sensor and the SAME path/row (or tile), so only time changes between the two images.
+const PCS = "https://planetarycomputer.microsoft.com/api/stac/v1/search";
+const shiftDay = (d, n) => new Date(Date.parse(d) + n * 864e5).toISOString().slice(0, 10);
+async function pcSearch(coll, ll, d, win, extra) { const body = { collections: [coll], intersects: { type: "Point", coordinates: [ll[0], ll[1]] },
+    datetime: `${shiftDay(d, -win)}T00:00:00Z/${shiftDay(d, win)}T23:59:59Z`, limit: 60, query: Object.assign({ "eo:cloud_cover": { lt: 40 } }, extra || {}) };
+  const r = await fetch(PCS, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); if (!r.ok) throw new Error(r.status); return (await r.json()).features || []; }
+const score = (it, d) => Math.abs(Date.parse(it.properties.datetime) - Date.parse(d)) / 864e5 + 0.5 * (it.properties["eo:cloud_cover"] ?? 50);
+const best = (items, d) => items.slice().sort((a, b) => score(a, d) - score(b, d))[0];
+const sensorName = (it) => it.properties.platform ? it.properties.platform.replace("landsat-", "Landsat ").replace("sentinel-2", "Sentinel-2 ").replace(/^Sentinel-2 ([ab])$/i, (m, x) => "Sentinel-2" + x.toUpperCase()) : it.collection;
+async function optical(p, ll) { const box = document.getElementById("opt"), note = document.getElementById("optNote"); if (!box) return; const myView = view;
+  try { let last = null, coll = null;
+    for (const [c, extra] of [["landsat-c2-l2", { platform: { eq: "landsat-9" } }], ["landsat-c2-l2", { platform: { in: ["landsat-8", "landsat-9"] } }], ["sentinel-2-l2a", null]]) {
+      const items = await pcSearch(c, ll, p.p1, 16, extra); if (items.length) { last = best(items, p.p1); coll = c; break; } }
+    if (view !== myView) return; if (!last) { box.innerHTML = `<div class="thumb">${t("optNone")}</div><div class="thumb">${t("optNone")}</div>`; return; }
+    const same = coll === "landsat-c2-l2" ? { "landsat:wrs_path": { eq: last.properties["landsat:wrs_path"] }, "landsat:wrs_row": { eq: last.properties["landsat:wrs_row"] }, platform: { eq: last.properties.platform } }
+      : { "s2:mgrs_tile": { eq: last.properties["s2:mgrs_tile"] } };
+    const firstItems = await pcSearch(coll, ll, p.p0, 24, same); const first = firstItems.length ? best(firstItems, p.p0) : null; if (view !== myView) return;
+    const card = (it, d) => { if (!it) return `<div class="thumb">${t("optNone")}</div>`; const a = it.assets.rendered_preview; const dd = it.properties.datetime.slice(0, 10); const gap = Math.round(Math.abs(Date.parse(dd) - Date.parse(d)) / 864e5);
+      return `<div class="thumb" style="padding:0;position:relative;overflow:hidden">${a ? `<img src="${a.href}" alt="${sensorName(it)} ${fd(dd)}" style="width:100%;height:100%;object-fit:cover" loading="lazy">` : ""}<span style="position:absolute;left:4px;bottom:4px;right:4px;font:600 10.5px var(--mono);background:rgba(2,6,15,.85);color:var(--ink);padding:3px 6px;border-radius:5px;text-align:left">${sensorName(it)} · ${fd(dd)}<br>±${gap} ${t("days")} · ${t("cloud")} ${Math.round(it.properties["eo:cloud_cover"] ?? 0)}%</span></div>`; };
+    box.innerHTML = card(first, p.p0) + card(last, p.p1);
+    note.innerHTML = t("optRule")(sensorName(last), coll === "landsat-c2-l2" ? `${t("pathrow")} ${last.properties["landsat:wrs_path"]}/${last.properties["landsat:wrs_row"]}` : `${t("tile")} ${last.properties["s2:mgrs_tile"]}`);
+  } catch (e) { if (view === myView) { box.innerHTML = `<div class="thumb">${t("optFail")}</div><div class="thumb">${t("optFail")}</div>`; } } }
 // live lookup in NASA's public catalog: any place, without the team uploading anything first
 const CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json?provider=ASF&short_name=NISAR_L2_GCOV_PROVISIONAL_V1&short_name=NISAR_L2_GCOV_V1&short_name=NISAR_L2_GCOV_BETA_V1&page_size=1";
 const att = (u, n) => ((u.AdditionalAttributes || []).find((a) => a.Name === n) || {}).Values?.[0];
