@@ -17,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 from deltal import __version__, collect, report
-from deltal.change import nbr, min_area_filter, to_db
+from deltal.change import nbr, min_area_filter, robust_z, to_db
 from deltal.consensus import combine
 from deltal.grid import make_grid
 from deltal.layers import compute_layers
@@ -26,7 +26,7 @@ from deltal.validate import metrics
 
 TRUTH = {"dnbr_min": 0.1, "min_area_m2": 10000.0}
 CAL_C = {"veg_drop_db": -6.0, "min_area_m2": 40000.0}     # calibrado no caso de treino (Incêndio Norte)
-LANDSAT = {"dnbr_min": 0.1, "dlst_min_c": 3.0}
+LANDSAT = {"dnbr_min": 0.1, "dlst_min_c": 3.0, "dlst_z": 2.5}
 CONSENSUS = {"min_votes": 2, "min_area_m2": 40000.0}
 
 
@@ -41,12 +41,14 @@ def main():
     case = json.loads(Path(a.case).read_text(encoding="utf-8"))
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     grid = make_grid(case["bbox"], case.get("resolucao_m", 20))
+    from deltal import funnel as _f
+    _f.POST_MIN_DAYS = case["evento"].get("dias_apos_minimo", _f.POST_MIN_DAYS)
     ev = case["evento"]["data"]
     px = grid.pixel_area_m2
     ficha = {"nome": case["nome"], "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
              "versao_pipeline": __version__, "area_bbox": case["bbox"], "evento": case["evento"],
              "grade": {"crs": grid.crs, "resolucao_m": grid.resolution, "largura": grid.width, "altura": grid.height},
-             "parametros": {"verdade": TRUTH, "banda_C": CAL_C, "landsat": LANDSAT, "consenso": CONSENSUS},
+             "parametros": {"dias_apos_minimo": case["evento"].get("dias_apos_minimo", 2), "verdade": TRUTH, "banda_C": CAL_C, "landsat": LANDSAT, "consenso": CONSENSUS},
              "funil": [], "fontes": {}, "resultados": {}, "contexto": {}, "erros": {}}
     st = {}
 
@@ -158,7 +160,11 @@ def main():
             rel0 = t0 - np.nanmedian(t0[v]); rel1 = t1 - np.nanmedian(t1[v])
             dlst = rel1 - rel0
         burn, _ = min_area_filter(v & (dnbr_l > LANDSAT["dnbr_min"]), int(TRUTH["min_area_m2"] / px))
-        hot, _ = min_area_filter(v & (dlst > LANDSAT["dlst_min_c"]), int(TRUTH["min_area_m2"] / px))
+        # aquecimento ANÔMALO: acima de +3 °C e fora do comportamento da cena (z robusto),
+        # porque mudanças de estação aquecem/esfriam tipos de cobertura de forma diferente
+        zt, _, _ = robust_z(dlst, v)
+        hot, _ = min_area_filter(v & (dlst > LANDSAT["dlst_min_c"]) & (zt > LANDSAT["dlst_z"]),
+                                 int(TRUTH["min_area_m2"] / px))
         e = {"intervalo_dias": gap, "lst_mediana_antes_c": float(np.nanmedian(t0[v])), "lst_mediana_depois_c": float(np.nanmedian(t1[v])),
              "area_dnbr_ha": burn.sum() * px / 1e4, "area_aquecida_ha": hot.sum() * px / 1e4}
         if truth is not None:

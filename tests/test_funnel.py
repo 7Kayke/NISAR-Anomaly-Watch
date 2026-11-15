@@ -64,3 +64,13 @@ def test_consensus_votes_and_availability():
     assert c["consenso"][10:40, 10:40].all()
     assert not c["consenso"][50:55, 50:55].any()            # só uma fonte viu
     assert c["confianca"][20, 20] == 1.0 and c["disponiveis"][20, 35] == 2
+
+
+def test_post_scene_must_wait_after_event_day():
+    # cena do próprio dia do incêndio (16/10, 18h UTC) não pode ser o "depois"
+    ev = datetime(2026, 10, 16)
+    items = [datetime(2026, 10, 14, 18), datetime(2026, 10, 16, 18), datetime(2026, 10, 19, 18)]
+    k, a, b, gap = pair_by_key(items, ev, key=lambda i: "s2", date_of=lambda i: i)
+    assert b.day == 19 and a.day == 14
+    k, a, b, gap = pair_by_key(items, ev, key=lambda i: "s2", date_of=lambda i: i, post_min_days=0)
+    assert b.day == 16

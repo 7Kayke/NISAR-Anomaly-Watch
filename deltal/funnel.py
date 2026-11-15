@@ -14,6 +14,10 @@ from dataclasses import dataclass, field
 from shapely.geometry import box, shape
 
 MIN_COVER = 0.9
+# O "depois" precisa começar DEPOIS que o evento acabou de acontecer: uma cena do próprio dia
+# do início do incêndio mostra a área ainda queimando (Incêndio Norte: S2 de 16/10 viu só 36 ha,
+# a de 19/10 viu ~227 ha). Ajustável por caso em "evento.dias_apos_minimo".
+POST_MIN_DAYS = 2
 
 
 @dataclass
@@ -58,18 +62,22 @@ def covering(items, bbox, min_cover=MIN_COVER, geom_of=lambda it: it.geometry):
     return [it for it in items if coverage(geom_of(it), bbox) >= min_cover]
 
 
-def pair_by_key(items, event_dt, key, date_of):
+def pair_by_key(items, event_dt, key, date_of, post_min_days=None):
     """Par antes/depois com o menor intervalo, dentro do mesmo grupo de geometria (key).
 
+    antes: data < dia do evento (00:00). depois: data >= dia do evento + post_min_days.
     date_of(item) e event_dt são datetimes. Devolve (chave, antes, depois, intervalo_dias) ou None.
     """
+    from datetime import timedelta
+    day0 = event_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    post0 = day0 + timedelta(days=POST_MIN_DAYS if post_min_days is None else post_min_days)
     groups = {}
     for it in items:
         groups.setdefault(key(it), []).append(it)
     best = None
     for k, its in groups.items():
-        pre = [i for i in its if date_of(i) < event_dt]
-        post = [i for i in its if date_of(i) > event_dt]
+        pre = [i for i in its if date_of(i) < day0]
+        post = [i for i in its if date_of(i) >= post0]
         if pre and post:
             a = max(pre, key=date_of)
             b = min(post, key=date_of)

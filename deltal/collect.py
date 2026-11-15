@@ -194,19 +194,20 @@ def naip(grid, event_date, years=6):
 
 
 def naip_load_rgb(acq, grid, resolution=4.0):
-    """Mosaico RGB do NAIP reamostrado para a área (o asset 'image' tem 4 bandas: R, G, B, NIR)."""
+    """Mosaico RGB do NAIP a ~4 m. Lê pelas pirâmides (overviews) do COG via WarpedVRT:
+    baixar a resolução cheia de 0,6 m levava ~20 min; assim são segundos."""
     import rasterio
-    from rasterio.warp import reproject, Resampling
+    from rasterio.enums import Resampling
+    from rasterio.vrt import WarpedVRT
     from .grid import make_grid
     g = make_grid(grid.bbox, resolution)
     rgb = np.zeros((3, g.height, g.width), "uint8")
     for it in acq.items:
-        with rasterio.open(it.assets["image"].href) as src:
-            for b in range(3):
-                dst = np.zeros((g.height, g.width), "uint8")
-                reproject(rasterio.band(src, b + 1), dst, dst_transform=g.transform, dst_crs=g.crs,
-                          resampling=Resampling.average, dst_nodata=0)
-                rgb[b] = np.where(dst > 0, dst, rgb[b])
+        with rasterio.open(it.assets["image"].href) as src, \
+                WarpedVRT(src, crs=g.crs, transform=g.transform, width=g.width, height=g.height,
+                          resampling=Resampling.average, nodata=0) as vrt:
+            arr = vrt.read([1, 2, 3])
+        rgb = np.where(arr > 0, arr, rgb)
     return np.moveaxis(rgb, 0, -1), g
 
 
