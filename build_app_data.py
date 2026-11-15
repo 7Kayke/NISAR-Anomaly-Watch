@@ -251,11 +251,14 @@ def build_area(folder, region_id):
             png_u8(a, gd / f"{fn}.png")
         f = json.loads((sub / "ficha_tecnica.json").read_text(encoding="utf-8")) if (sub / "ficha_tecnica.json").exists() else {}
         res = f.get("resumo", {})
+        pas = [{"data": u.get("data"), "arquivo": u.get("arquivo"), "colecao": u.get("colecao"), "crid": u.get("crid"), "ciclo": u.get("ciclo"),
+                "hora_utc": (u.get("identificacao") or {}).get("zeroDopplerStartTime", "")[11:16] if isinstance(u.get("identificacao"), dict) else None}
+               for u in f.get("passagens_usadas", [])]
         geos.append({"id": sub.name, "pasta": f"{region_id}/area/{sub.name}", "passagens": len(m["datas"]),
                      "primeira": m["datas"][0], "ultima": m["datas"][-1], "forma": m["forma"],
                      "classes_ha": res.get("classes_ha"), "quedas_por_intervalo_ha": res.get("quedas_por_intervalo_ha"),
                      "valsa_invisivel": f.get("valsa_invisivel"), "relevo_mascarado_ha": f.get("relevo_mascarado_ha"),
-                     "clima": f.get("clima", {}).get("chuva_antecedente_por_passagem_mm")})
+                     "clima": f.get("clima", {}).get("chuva_antecedente_por_passagem_mm"), "passagens_lista": pas})
     geos.sort(key=lambda g: -g["passagens"])
     out = {"geometrias": geos}
     if (folder / "assertividade.json").exists():
@@ -274,6 +277,7 @@ def build_area(folder, region_id):
         for p_ in pares:
             med.setdefault(p_["geometria"].split("_")[0], []).append(p_["coerencia_mediana"])
         ok_tracks = {k for k, v in med.items() if statistics.median(v) >= 0.4}
+        out["ok_tracks"] = sorted(ok_tracks); out["bad_tracks"] = sorted(k for k in med if k not in ok_tracks)
         hit = [p_ for p_ in pares if p_["geometria"].split("_")[0] in ok_tracks and p_["area_coerencia_baixa_pct"] >= 20]
         if len({p_["geometria"].split("_")[0] for p_ in hit}) >= 2:
             d0 = min(p_["data1"] for p_ in hit); d1 = max(p_["data2"] for p_ in hit)
@@ -306,6 +310,69 @@ def build_area(folder, region_id):
     return out
 
 
+GALLERY = [
+    # (pasta relativa à série, arquivo, grupo, título pt, título en, legenda pt, legenda en, fonte)
+    ("{main}", "classes.png", "nisar", "Mapa de mudanças", "Change map",
+     "Cada pixel classificado pelo seu ritmo ao longo das passagens: queda abrupta (laranja), alagamento passageiro (ciano), água permanente (azul), mudança lenta (roxo/verde).",
+     "Each pixel classified by its rhythm across the passes: abrupt drop (orange), transient flooding (cyan), permanent water (blue), slow change (purple/green).", "NISAR GCOV"),
+    ("{main}", "quando_mudou.png", "nisar", "Quando mudou", "When it changed",
+     "A data da mudança abrupta em cada pixel: as cores mais quentes são as de setembro e outubro.", "The date of the abrupt change in each pixel: warmer colours are September and October.", "NISAR GCOV"),
+    ("gunw", "par_20260628_20260710_031A.png", "nisar", "Coerência num período calmo (28/06 → 10/07)", "Coherence in a calm period (Jun 28 → Jul 10)",
+     "Chão estável: coerência alta e quase nenhum movimento relativo.", "Stable ground: high coherence and almost no relative motion.", "NISAR GUNW"),
+    ("gunw", "par_20260908_20260920_031A.png", "nisar", "Coerência em setembro (08/09 → 20/09)", "Coherence in September (Sep 08 → Sep 20)",
+     "A superfície mudou: a coerência despenca em grande parte da área, mesmo onde a imagem de brilho parece igual.", "The surface changed: coherence collapses over much of the area, even where the brightness image looks the same.", "NISAR GUNW"),
+    ("gunw", "coerencia_no_tempo.png", "nisar", "Coerência ao longo do ano", "Coherence through the year",
+     "Cada traço é um par de passagens; o vale de setembro aparece em vários trilhos.", "Each bar is a pair of passes; the September dip shows up on several tracks.", "NISAR GUNW"),
+    ("{main}", "rgb_temporal.png", "nisar", "Três tempos em uma imagem", "Three times in one image",
+     "HV em três períodos (vermelho, verde, azul): cinza não mudou, cor mudou.", "HV in three periods (red, green, blue): grey did not change, colour did.", "NISAR GCOV"),
+    ("{main}", "curvas.png", "nisar", "O ritmo da área com a chuva", "The area's rhythm with the rain",
+     "Radar da área inteira, chuva diária e umidade do solo (NASA POWER), e o ritmo de cada classe.", "Whole-area radar, daily rain and soil wetness (NASA POWER), and the rhythm of each class.", "NISAR GCOV + NASA POWER"),
+    ("{main}", "animacao_hv.gif", "nisar", "A valsa: todas as passagens", "The waltz: every pass",
+     "O HV passagem a passagem, de junho a outubro.", "HV pass by pass, June to October.", "NISAR GCOV"),
+]
+
+
+def build_gallery(serie, point_dir, region_id, extra_dir=None):
+    folder = Path(serie)
+    dest = APP / region_id / "galeria"
+    dest.mkdir(parents=True, exist_ok=True)
+    geos = sorted([p for p in folder.iterdir() if (p / "app" / "app.json").exists()],
+                  key=lambda p: (not (p / "classes.png").exists(), -len(json.loads((p / "app" / "app.json").read_text())["datas"]), p.name))
+    main = geos[0].name if geos else ""
+    out = []
+    for sub, fn, grp, tpt, ten, lpt, len_, src in GALLERY:
+        sp = folder / sub.format(main=main) / fn
+        if sp.exists():
+            name = f"{sub.format(main=main)}_{fn}".replace("/", "_")
+            shutil.copy(sp, dest / name)
+            out.append({"arquivo": f"{region_id}/galeria/{name}", "grupo": grp, "titulo_pt": tpt, "titulo_en": ten,
+                        "legenda_pt": lpt, "legenda_en": len_, "fonte": src})
+    if point_dir and (Path(point_dir) / "historia_do_ponto.png").exists():
+        shutil.copy(Path(point_dir) / "historia_do_ponto.png", dest / "ponto_historia.png")
+        out.append({"arquivo": f"{region_id}/galeria/ponto_historia.png", "grupo": "nisar", "titulo_pt": "A história do ponto",
+                    "titulo_en": "The point's story", "legenda_pt": "HH e HV de todas as direções, chuva, umidade do solo do NISAR e coerência de cada par.",
+                    "legenda_en": "HH and HV from every direction, rain, NISAR soil moisture and coherence of each pair.", "fonte": "NISAR GCOV, GUNW, SME2"})
+    gal = folder / "galeria" if extra_dir is None else Path(extra_dir)
+    if (gal / "galeria.json").exists():
+        jan = {"inicio": ("início", "start"), "antes": ("antes", "before"), "depois": ("depois", "after")}
+        tipo = {"cor_natural": ("cor natural", "natural colour", "Como o olho veria."), "queimada": ("falsa cor para queimada", "burn false colour", "SWIR, NIR e vermelho: cicatriz de fogo em marrom-avermelhado."),
+                "temperatura": ("temperatura da superfície", "surface temperature", "Banda térmica em °C: solo queimado e seco esquenta.")}
+        for rec in json.loads((gal / "galeria.json").read_text(encoding="utf-8")):
+            for fn in rec["imagens"]:
+                if not (gal / fn).exists():
+                    continue
+                shutil.copy(gal / fn, dest / fn)
+                k = next((k for k in tipo if k in fn), None)
+                jp, je = jan.get(rec["janela"], (rec["janela"], rec["janela"]))
+                tp, te, lp = tipo.get(k, ("", "", ""))
+                out.append({"arquivo": f"{region_id}/galeria/{fn}", "grupo": "comparacao",
+                            "titulo_pt": f"{rec['satelite']} · {tp} · {jp} ({rec['data']})", "titulo_en": f"{rec['satelite']} · {te} · {je} ({rec['data']})",
+                            "legenda_pt": f"{lp} Contorno amarelo: queda no NISAR; tracejado ciano: perda de coerência. Nuvem na área: {round(100 * (rec.get('nuvem_area') or 0))}%.",
+                            "legenda_en": f"Yellow outline: NISAR drop; cyan dashes: coherence loss. Cloud over the area: {round(100 * (rec.get('nuvem_area') or 0))}%.",
+                            "fonte": "NASA/USGS Landsat" if "Landsat" in rec["satelite"] else "ESA Copernicus Sentinel-2"})
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--id", required=True); ap.add_argument("--malha", help="pasta do run_scout.py (com malha.geojson); opcional")
@@ -322,12 +389,15 @@ def main():
         (dest / "malha.geojson").write_text(json.dumps(g, ensure_ascii=False), encoding="utf-8")
     pts = [build_point(p, a.id) for p in a.ponto]
     area = build_area(a.serie, a.id) if a.serie else None
+    if area is not None:
+        area["galeria"] = build_gallery(a.serie, a.ponto[0] if a.ponto else None, a.id)
     idx_f = APP / "regioes.json"
     idx = json.loads(idx_f.read_text(encoding="utf-8")) if idx_f.exists() else []
     caso = json.loads(Path(a.caso).read_text(encoding="utf-8")) if a.caso else {}
     idx = [r for r in idx if r["id"] != a.id] + [{"id": a.id, "nome": a.nome or caso.get("nome") or g.get("regiao", a.id),
                                                   "contexto_pt": caso.get("contexto"), "contexto_en": caso.get("contexto_en"),
-                                                  "area_ponto": caso.get("ponto"), "bbox": g.get("bbox"),
+                                                  "area_ponto": caso.get("ponto"), "par_inicial": caso.get("par_inicial"),
+                                                  "areas_demarcadas": caso.get("areas_demarcadas"), "bbox_area": caso.get("bbox"), "bbox": g.get("bbox"),
                                                   "periodo": g.get("periodo"), "malha": f"{a.id}/malha.geojson" if g else None, "pontos": pts,
                                                   "area": area}]
     idx_f.write_text(json.dumps(clean(idx), ensure_ascii=False, indent=1, allow_nan=False), encoding="utf-8")

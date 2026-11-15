@@ -8,6 +8,48 @@
    "lat": -18.278,
    "lon": -56.873
   },
+  "par_inicial": [
+   "2026-09-08",
+   "2026-09-20"
+  ],
+  "areas_demarcadas": [
+   {
+    "nome": "Nhecolândia (baías e salinas)",
+    "lat": -19.2,
+    "lon": -56.6,
+    "info": "Mesmas passagens NISAR · ainda não calculado"
+   },
+   {
+    "nome": "Rio Taquari (arrombados)",
+    "lat": -18.4,
+    "lon": -56.5,
+    "info": "Mesmas passagens NISAR · ainda não calculado"
+   },
+   {
+    "nome": "Serra do Amolar",
+    "lat": -18.0,
+    "lon": -57.5,
+    "info": "Mesmas passagens NISAR · ainda não calculado"
+   },
+   {
+    "nome": "Ladário / Corumbá (rio Paraguai)",
+    "lat": -19.0,
+    "lon": -57.6,
+    "info": "Régua do rio · ainda não calculado"
+   },
+   {
+    "nome": "Porto Jofre / Encontro das Águas",
+    "lat": -17.35,
+    "lon": -56.75,
+    "info": "Área de grandes incêndios · ainda não calculado"
+   }
+  ],
+  "bbox_area": [
+   -56.933,
+   -18.338,
+   -56.813,
+   -18.218
+  ],
   "bbox": null,
   "periodo": null,
   "malha": null,
@@ -68,7 +110,81 @@
       "2026-10-02": 27.6,
       "2026-10-14": 7.3,
       "2026-10-26": 6.2
-     }
+     },
+     "passagens_lista": [
+      {
+       "data": "2026-06-28",
+       "arquivo": "NISAR_L2_PR_GCOV_024_031_A_169_2005_DHDH_M_20260628T093408_20260628T093442_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 24,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-07-10",
+       "arquivo": "NISAR_L2_PR_GCOV_025_031_A_169_2005_DHDH_M_20260710T093407_20260710T093442_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 25,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-08-15",
+       "arquivo": "NISAR_L2_PR_GCOV_028_031_A_169_2005_DHDH_M_20260815T093405_20260815T093440_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 28,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-08-27",
+       "arquivo": "NISAR_L2_PR_GCOV_029_031_A_169_2005_DHDH_M_20260827T093405_20260827T093440_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 29,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-09-08",
+       "arquivo": "NISAR_L2_PR_GCOV_030_031_A_169_2005_DHDH_M_20260908T093405_20260908T093440_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 30,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-09-20",
+       "arquivo": "NISAR_L2_PR_GCOV_031_031_A_169_2005_DHDH_M_20260920T093405_20260920T093440_P05023_F_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 31,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-10-02",
+       "arquivo": "NISAR_L2_PR_GCOV_032_031_A_169_2005_DHDH_M_20261002T093405_20261002T093440_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 32,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-10-14",
+       "arquivo": "NISAR_L2_PR_GCOV_033_031_A_169_2005_DHDH_M_20261014T093405_20261014T093440_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 33,
+       "hora_utc": "09:34"
+      },
+      {
+       "data": "2026-10-26",
+       "arquivo": "NISAR_L2_PR_GCOV_034_031_A_169_2005_DHDH_M_20261026T093405_20261026T093440_P05036_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_V1",
+       "crid": "P05036",
+       "ciclo": 34,
+       "hora_utc": "09:34"
+      }
+     ]
     },
     {
      "id": "132_A_168",
@@ -115,7 +231,81 @@
       "2026-09-27": 0.2,
       "2026-10-09": 11.9,
       "2026-10-21": 7.1
-     }
+     },
+     "passagens_lista": [
+      {
+       "data": "2026-07-05",
+       "arquivo": "NISAR_L2_PR_GCOV_024_132_A_168_2005_DHDH_A_20260705T094154_20260705T094228_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 24,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-07-17",
+       "arquivo": "NISAR_L2_PR_GCOV_025_132_A_168_2005_DHDH_A_20260717T094153_20260717T094228_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 25,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-08-10",
+       "arquivo": "NISAR_L2_PR_GCOV_027_132_A_168_2005_DHDH_A_20260810T094152_20260810T094226_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 27,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-08-22",
+       "arquivo": "NISAR_L2_PR_GCOV_028_132_A_168_2005_DHDH_A_20260822T094151_20260822T094226_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 28,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-09-03",
+       "arquivo": "NISAR_L2_PR_GCOV_029_132_A_168_2005_DHDH_A_20260903T094151_20260903T094226_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 29,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-09-15",
+       "arquivo": "NISAR_L2_PR_GCOV_030_132_A_168_2005_DHDH_A_20260915T094151_20260915T094225_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 30,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-09-27",
+       "arquivo": "NISAR_L2_PR_GCOV_031_132_A_168_2005_DHDH_A_20260927T094151_20260927T094225_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 31,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-10-09",
+       "arquivo": "NISAR_L2_PR_GCOV_032_132_A_168_2005_DHDH_A_20261009T094151_20261009T094225_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 32,
+       "hora_utc": "09:41"
+      },
+      {
+       "data": "2026-10-21",
+       "arquivo": "NISAR_L2_PR_GCOV_033_132_A_168_2005_DHDH_A_20261021T094151_20261021T094226_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 33,
+       "hora_utc": "09:41"
+      }
+     ]
     },
     {
      "id": "010_D_098",
@@ -155,7 +345,49 @@
       "2026-09-18": 14.9,
       "2026-10-12": 14.2,
       "2026-11-05": 9.8
-     }
+     },
+     "passagens_lista": [
+      {
+       "data": "2026-07-08",
+       "arquivo": "NISAR_L2_PR_GCOV_025_010_D_098_2005_DHDH_A_20260708T215601_20260708T215636_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 25,
+       "hora_utc": "21:56"
+      },
+      {
+       "data": "2026-08-25",
+       "arquivo": "NISAR_L2_PR_GCOV_029_010_D_098_2005_DHDH_A_20260825T215559_20260825T215634_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 29,
+       "hora_utc": "21:55"
+      },
+      {
+       "data": "2026-09-18",
+       "arquivo": "NISAR_L2_PR_GCOV_031_010_D_098_2005_DHDH_A_20260918T215559_20260918T215633_P05023_F_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 31,
+       "hora_utc": "21:55"
+      },
+      {
+       "data": "2026-10-12",
+       "arquivo": "NISAR_L2_PR_GCOV_033_010_D_098_2005_DHDH_A_20261012T215559_20261012T215634_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 33,
+       "hora_utc": "21:55"
+      },
+      {
+       "data": "2026-11-05",
+       "arquivo": "NISAR_L2_PR_GCOV_035_010_D_098_2005_DHDH_A_20261105T215600_20261105T215634_P05036_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_V1",
+       "crid": "P05036",
+       "ciclo": 35,
+       "hora_utc": "21:56"
+      }
+     ]
     },
     {
      "id": "111_D_098",
@@ -191,7 +423,41 @@
       "2026-09-01": 2.5,
       "2026-09-25": 0.4,
       "2026-10-19": 10.3
-     }
+     },
+     "passagens_lista": [
+      {
+       "data": "2026-06-21",
+       "arquivo": "NISAR_L2_PR_GCOV_023_111_D_098_2005_DHDH_A_20260621T220422_20260621T220456_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 23,
+       "hora_utc": "22:04"
+      },
+      {
+       "data": "2026-09-01",
+       "arquivo": "NISAR_L2_PR_GCOV_029_111_D_098_2005_DHDH_A_20260901T220418_20260901T220453_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 29,
+       "hora_utc": "22:04"
+      },
+      {
+       "data": "2026-09-25",
+       "arquivo": "NISAR_L2_PR_GCOV_031_111_D_098_2005_DHDH_A_20260925T220418_20260925T220453_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 31,
+       "hora_utc": "22:04"
+      },
+      {
+       "data": "2026-10-19",
+       "arquivo": "NISAR_L2_PR_GCOV_033_111_D_098_2005_DHDH_A_20261019T220418_20261019T220453_P05023_N_F_J_001",
+       "colecao": "NISAR_L2_GCOV_PROVISIONAL_V1",
+       "crid": "P05023",
+       "ciclo": 33,
+       "hora_utc": "22:04"
+      }
+     ]
     }
    ],
    "assertividade": {
@@ -1287,6 +1553,14 @@
      "en": "Between Sep 03 and Sep 20, 24 to 41% of the area lost coherence (below 0.3), against 4% in the other pairs. 3 independent tracks saw the same: the surface really changed (fire, drying or land management), even where the image looks the same."
     }
    ],
+   "ok_tracks": [
+    "010",
+    "031",
+    "132"
+   ],
+   "bad_tracks": [
+    "111"
+   ],
    "limitacoes": [
     {
      "pt": "Trilho(s) 111 com coerência baixa em quase todos os pares: fora das conclusões sobre o chão.",
@@ -1614,7 +1888,90 @@
      "deslocamento_p95_abs_cm": 2.51
     }
    ],
-   "coerencia": "paiaguas/area/coerencia_u8.png"
+   "coerencia": "paiaguas/area/coerencia_u8.png",
+   "galeria": [
+    {
+     "arquivo": "paiaguas/galeria/031_A_169_classes.png",
+     "grupo": "nisar",
+     "titulo_pt": "Mapa de mudanças",
+     "titulo_en": "Change map",
+     "legenda_pt": "Cada pixel classificado pelo seu ritmo ao longo das passagens: queda abrupta (laranja), alagamento passageiro (ciano), água permanente (azul), mudança lenta (roxo/verde).",
+     "legenda_en": "Each pixel classified by its rhythm across the passes: abrupt drop (orange), transient flooding (cyan), permanent water (blue), slow change (purple/green).",
+     "fonte": "NISAR GCOV"
+    },
+    {
+     "arquivo": "paiaguas/galeria/031_A_169_quando_mudou.png",
+     "grupo": "nisar",
+     "titulo_pt": "Quando mudou",
+     "titulo_en": "When it changed",
+     "legenda_pt": "A data da mudança abrupta em cada pixel: as cores mais quentes são as de setembro e outubro.",
+     "legenda_en": "The date of the abrupt change in each pixel: warmer colours are September and October.",
+     "fonte": "NISAR GCOV"
+    },
+    {
+     "arquivo": "paiaguas/galeria/gunw_par_20260628_20260710_031A.png",
+     "grupo": "nisar",
+     "titulo_pt": "Coerência num período calmo (28/06 → 10/07)",
+     "titulo_en": "Coherence in a calm period (Jun 28 → Jul 10)",
+     "legenda_pt": "Chão estável: coerência alta e quase nenhum movimento relativo.",
+     "legenda_en": "Stable ground: high coherence and almost no relative motion.",
+     "fonte": "NISAR GUNW"
+    },
+    {
+     "arquivo": "paiaguas/galeria/gunw_par_20260908_20260920_031A.png",
+     "grupo": "nisar",
+     "titulo_pt": "Coerência em setembro (08/09 → 20/09)",
+     "titulo_en": "Coherence in September (Sep 08 → Sep 20)",
+     "legenda_pt": "A superfície mudou: a coerência despenca em grande parte da área, mesmo onde a imagem de brilho parece igual.",
+     "legenda_en": "The surface changed: coherence collapses over much of the area, even where the brightness image looks the same.",
+     "fonte": "NISAR GUNW"
+    },
+    {
+     "arquivo": "paiaguas/galeria/gunw_coerencia_no_tempo.png",
+     "grupo": "nisar",
+     "titulo_pt": "Coerência ao longo do ano",
+     "titulo_en": "Coherence through the year",
+     "legenda_pt": "Cada traço é um par de passagens; o vale de setembro aparece em vários trilhos.",
+     "legenda_en": "Each bar is a pair of passes; the September dip shows up on several tracks.",
+     "fonte": "NISAR GUNW"
+    },
+    {
+     "arquivo": "paiaguas/galeria/031_A_169_rgb_temporal.png",
+     "grupo": "nisar",
+     "titulo_pt": "Três tempos em uma imagem",
+     "titulo_en": "Three times in one image",
+     "legenda_pt": "HV em três períodos (vermelho, verde, azul): cinza não mudou, cor mudou.",
+     "legenda_en": "HV in three periods (red, green, blue): grey did not change, colour did.",
+     "fonte": "NISAR GCOV"
+    },
+    {
+     "arquivo": "paiaguas/galeria/031_A_169_curvas.png",
+     "grupo": "nisar",
+     "titulo_pt": "O ritmo da área com a chuva",
+     "titulo_en": "The area's rhythm with the rain",
+     "legenda_pt": "Radar da área inteira, chuva diária e umidade do solo (NASA POWER), e o ritmo de cada classe.",
+     "legenda_en": "Whole-area radar, daily rain and soil wetness (NASA POWER), and the rhythm of each class.",
+     "fonte": "NISAR GCOV + NASA POWER"
+    },
+    {
+     "arquivo": "paiaguas/galeria/031_A_169_animacao_hv.gif",
+     "grupo": "nisar",
+     "titulo_pt": "A valsa: todas as passagens",
+     "titulo_en": "The waltz: every pass",
+     "legenda_pt": "O HV passagem a passagem, de junho a outubro.",
+     "legenda_en": "HV pass by pass, June to October.",
+     "fonte": "NISAR GCOV"
+    },
+    {
+     "arquivo": "paiaguas/galeria/ponto_historia.png",
+     "grupo": "nisar",
+     "titulo_pt": "A história do ponto",
+     "titulo_en": "The point's story",
+     "legenda_pt": "HH e HV de todas as direções, chuva, umidade do solo do NISAR e coerência de cada par.",
+     "legenda_en": "HH and HV from every direction, rain, NISAR soil moisture and coherence of each pair.",
+     "fonte": "NISAR GCOV, GUNW, SME2"
+    }
+   ]
   }
  }
 ]
