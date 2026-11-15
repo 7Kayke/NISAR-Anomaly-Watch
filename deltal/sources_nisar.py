@@ -122,8 +122,13 @@ def _umm_meta(sn, g):
     te = u.get("TemporalExtent", {}).get("RangeDateTime", {})
     meta["inicio_utc"], meta["fim_utc"] = te.get("BeginningDateTime"), te.get("EndingDateTime")
     try:
-        meta["tamanho_mb"] = round(sum(f.get("Size", 0) * (1024 if f.get("SizeUnit") == "GB" else 1)
-                                       for f in u["DataGranule"]["ArchiveAndDistributionInformation"]), 1)
+        tot = 0.0
+        for f in u["DataGranule"]["ArchiveAndDistributionInformation"]:
+            if f.get("SizeInBytes"):
+                tot += f["SizeInBytes"] / 1e6
+            else:
+                tot += float(f.get("Size", 0) or 0) * {"GB": 1024, "KB": 1 / 1024, "B": 1e-6}.get(f.get("SizeUnit"), 1)
+        meta["tamanho_mb"] = round(tot, 1)
     except (KeyError, TypeError):
         pass
     for a in u.get("AdditionalAttributes", []) or []:
@@ -346,6 +351,8 @@ def read_layers(granule, grid, layers, linear=True):
                       resampling=Resampling.average)
             out[alias] = dst.astype("float64")
     meta = parse_name(granule["umm"]["GranuleUR"])
+    meta["valores_mascaras"] = {k: {str(int(v)): int(c) for v, c in zip(*np.unique(out[k], return_counts=True))}
+                                for k in out if opts.get(k, {}).get("classes")}
     meta.update({"arquivo": granule["umm"]["GranuleUR"], "epsg_produto": epsg,
                  "janela_linhas": [int(y0), int(y1)], "janela_colunas": [int(x0), int(x1)],
                  "caminhos_hdf5": paths, "espacamento_produto_m": float(abs(dx)), "fator_bloco": fct,
@@ -354,11 +361,49 @@ def read_layers(granule, grid, layers, linear=True):
 
 
 def read_gcov_subset(granule, grid, layers=("HHHH", "HVHV"), with_mask=True):
-    """HH e HV + a máscara de layover/sombra do PRÓPRIO produto (quando existir no arquivo)."""
-    spec = {l: (l, None) for l in layers}
+    """HH e HV + as máscaras do PRÓPRIO produto quando existirem.
+    Passagens de polarização simples (SHSH) só têm HH: o HV fica de fora (opcional)."""
+    spec = {l: (l, None, {"opcional": l != "HHHH"}) for l in layers}
     if with_mask:
         spec["mascara_relevo"] = ("layoverShadowMask", None, {"opcional": True, "classes": True})
+        spec["mascara"] = ("mask", None, {"opcional": True, "classes": True})
+        spec["excecao_entrada"] = ("inputDataExceptionMask", None, {"opcional": True, "classes": True})
     return read_layers(granule, grid, spec, linear=True)
+
+
+def read_sme2_point(granule, lon, lat):
+    """Umidade do solo do NISAR (SME2) no ponto: procura datasets 2D com 'oil' e 'oisture' no nome.
+    A estrutura exata do SME2 ainda não foi conferida: na falha, devolve a lista de datasets do arquivo."""
+    import earthaccess
+    import h5py
+    f = earthaccess.open([granule])[0]
+    with h5py.File(f, "r") as h5:
+        names = []
+        h5.visititems(lambda n, o: names.append(n) if hasattr(o, "shape") and len(o.shape) == 2 else None)
+        sm = [n for n in names if "oisture" in n and "rror" not in n and "ncert" not in n]
+        if not sm:
+            return {"erro": "sem camada de umidade", "datasets_2d": names[:60]}
+        pth = sorted(sm, key=len)[0]
+        group = pth.rsplit("/", 1)[0]
+        try:
+            x = h5[_up(h5, group, "xCoordinates")][()]; y = h5[_up(h5, group, "yCoordinates")][()]
+            epsg = _epsg(h5, group)
+            px, py = Transformer.from_crs(4326, epsg, always_xy=True).transform(lon, lat)
+        except KeyError:
+            lat_n = [n for n in names if n.rsplit("/", 1)[-1].lower() in ("latitude", "lat")]
+            lon_n = [n for n in names if n.rsplit("/", 1)[-1].lower() in ("longitude", "lon")]
+            if not lat_n:
+                return {"erro": "sem coordenadas reconhecidas", "camada": pth, "datasets_2d": names[:60]}
+            la, lo = h5[lat_n[0]][()], h5[lon_n[0]][()]
+            i, j = np.unravel_index(np.nanargmin((la - lat) ** 2 + (lo - lon) ** 2), la.shape)
+            v = float(h5[pth][i, j])
+            return {"camada": pth, "valor": v, "linha": int(i), "coluna": int(j)}
+        j = int(np.argmin(np.abs(x - px))); i = int(np.argmin(np.abs(y - py)))
+        v = h5[pth][max(i - 1, 0):i + 2, max(j - 1, 0):j + 2].astype("float64")
+        v[(v < 0) | (v > 1.5)] = np.nan
+        attrs = {k: (v_.decode() if isinstance(v_, bytes) else str(v_)) for k, v_ in h5[pth].attrs.items()}
+        return {"camada": pth, "valor": float(np.nanmean(v)) if np.isfinite(v).any() else None,
+                "espacamento_m": float(abs(x[1] - x[0])), "atributos": attrs}
 
 
 def relief_mask(code):

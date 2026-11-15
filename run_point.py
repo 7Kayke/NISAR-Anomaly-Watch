@@ -172,7 +172,7 @@ def main():
     pts = []
     for i, r in enumerate(gcov, 1):
         snm, g = objs[r["arquivo"]]
-        f = cache / f"{r['arquivo']}_pt_{lat:.4f}_{lon:.4f}.npz"
+        f = cache / f"{r['arquivo']}_pt2_{lat:.4f}_{lon:.4f}.npz"
         t0 = time.time()
         log(f"GCOV {i}/{len(gcov)} {r.get('inicio', '')[:8]} {_geo_key(r)} {r['maturidade']}")
         try:
@@ -183,23 +183,30 @@ def main():
                 np.savez_compressed(f, meta=json.dumps(meta, default=str), **{k: v.astype("float32") for k, v in arrs.items()})
         except Exception as e:
             ficha["erros"][r["arquivo"]] = f"{type(e).__name__}: {e}"; log(f"   falhou: {e}"); continue
-        hh, hv = arrs["HHHH"], arrs["HVHV"]
-        okm = disk & np.isfinite(hh) & np.isfinite(hv)
+        hh = arrs["HHHH"]
+        hv = arrs.get("HVHV", np.full(hh.shape, np.nan))
+        okm = disk & np.isfinite(hh)
         relief = sn.relief_mask(arrs["mascara_relevo"]) if "mascara_relevo" in arrs else np.zeros(hh.shape, bool)
         dt = datetime.strptime(r["inicio"], "%Y%m%dT%H%M%S")
         row = {"data": dt.strftime("%Y-%m-%d"), "hora_utc": dt.strftime("%H:%M"), "geometria": _geo_key(r),
                "maturidade": r["maturidade"], "crid": r.get("crid"), "modo_banda": r.get("modo_banda"), "polarizacao": r.get("polarizacao"),
                "pixels_validos": int(okm.sum()), "relevo_mascarado_pct": round(100 * float(relief[disk].mean()), 1),
                "hh_db": round(float(to_db(np.nanmean(hh[okm]))), 3) if okm.any() else None,
-               "hv_db": round(float(to_db(np.nanmean(hv[okm]))), 3) if okm.any() else None,
+               "hv_db": round(float(to_db(np.nanmean(hv[okm]))), 3) if np.isfinite(hv[okm]).any() else None,
+               "hv_anel_db": round(float(to_db(np.nanmean(hv[ring]))), 3) if np.isfinite(hv[ring]).any() else None,
                "hh_anel_db": round(float(to_db(np.nanmean(hh[ring]))), 3) if np.isfinite(hh[ring]).any() else None,
                "arquivo": r["arquivo"], "segundos": round(time.time() - t0, 1)}
         idt = meta.get("identificacao") or {}
         for k in ("lookDirection", "orbitPassDirection", "absoluteOrbitNumber", "isUrgentObservation", "isJointObservation"):
             if k in idt:
                 row["id_" + k] = idt[k]
-        if row["hh_db"] is not None:
+        if row["hh_db"] is not None and row["hv_db"] is not None:
             row["hh_menos_hv_db"] = round(row["hh_db"] - row["hv_db"], 3)
+        if row["hh_db"] is not None and row["hh_anel_db"] is not None:
+            row["hh_contraste_db"] = round(row["hh_db"] - row["hh_anel_db"], 3)     # ponto menos o entorno
+        if row["hv_db"] is not None and row["hv_anel_db"] is not None:
+            row["hv_contraste_db"] = round(row["hv_db"] - row["hv_anel_db"], 3)
+        row["mascaras"] = json.dumps(meta.get("valores_mascaras", {}))
         pts.append(row)
         # miniatura (HV em dB, 3 km) para a animação do ponto
         try:
@@ -220,12 +227,31 @@ def main():
     except Exception as e:
         ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
 
+    # 3b) SME2: umidade do solo do próprio NISAR no ponto
+    sme = [r for r in kept if r["produto"] == "SME2"]
+    sme_rows = []
+    for i, r in enumerate(sme, 1):
+        snm, g = objs[r["arquivo"]]
+        log(f"SME2 {i}/{len(sme)} {r.get('inicio', '')[:8]} {_geo_key(r)}")
+        try:
+            v = sn.read_sme2_point(g, lon, lat)
+        except Exception as e:
+            v = {"erro": f"{type(e).__name__}: {e}"}
+        v.update({"data": f"{r['inicio'][:4]}-{r['inicio'][4:6]}-{r['inicio'][6:8]}", "geometria": _geo_key(r), "arquivo": r["arquivo"]})
+        sme_rows.append(v)
+        if "erro" in v and i == 1:
+            log(f"   SME2 não lido: {v['erro']} (estrutura registrada na ficha)")
+    ficha["sme2"] = sme_rows
+    sm_by = {(x["data"], x["geometria"]): x.get("valor") for x in sme_rows}
+    for p in pts:
+        p["nisar_umidade"] = sm_by.get((p["data"], p["geometria"]))
+
     # 4) GUNW no ponto
     gunw_rows = []
     gun = [r for r in kept if r["produto"] == "GUNW"]
     for i, r in enumerate(gun, 1):
         snm, g = objs[r["arquivo"]]
-        f = cache / f"{r['arquivo']}_pt_{lat:.4f}_{lon:.4f}.npz"
+        f = cache / f"{r['arquivo']}_pt2_{lat:.4f}_{lon:.4f}.npz"
         log(f"GUNW {i}/{len(gun)} {r.get('inicio', '')[:8]} -> {(r.get('inicio_par2') or '')[:8]} {_geo_key(r)}")
         try:
             if f.exists():
@@ -245,31 +271,55 @@ def main():
                           if np.isfinite(d[disk]).any() and np.isfinite(d[ring]).any() else None,
                           "arquivo": r["arquivo"]})
 
-    # 5) análise por geometria (1 pixel = a média do círculo)
+    # 5) passagens anômalas: o ENTORNO inteiro (anel de 1 a 1,5 km) saltou mais de 3 dB em relação
+    #    à mediana da geometria. Mudança real no chão não muda tudo ao redor de uma vez; isso é a passagem.
     by_geo = defaultdict(list)
     for p in pts:
         if p["hh_db"] is not None:
             by_geo[p["geometria"]].append(p)
+    anomalas = []
+    for gk, ps in by_geo.items():
+        med = np.nanmedian([p["hh_anel_db"] for p in ps if p["hh_anel_db"] is not None])
+        for p in ps:
+            p["passagem_anomala"] = bool(p["hh_anel_db"] is not None and abs(p["hh_anel_db"] - med) > 3.0)
+            if p["passagem_anomala"]:
+                anomalas.append({"data": p["data"], "geometria": gk, "salto_do_entorno_db": round(p["hh_anel_db"] - med, 2)})
+    ficha["passagens_anomalas"] = anomalas
+    by_geo = {gk: [p for p in ps if not p["passagem_anomala"]] for gk, ps in by_geo.items()}
     ana = {}
     for gk, ps in by_geo.items():
         if len(ps) < 4:
             ana[gk] = {"passagens": len(ps), "nota": "menos de 4 passagens: sem análise de quebra"}
             continue
         dates = [p["data"] for p in ps]
-        hv = np.array([[[p["hv_db"]]] for p in ps]); hh = np.array([[[p["hh_db"]]] for p in ps])
+        nan = float("nan")
+        hv = np.array([[[p["hv_db"] if p["hv_db"] is not None else nan]] for p in ps]); hh = np.array([[[p["hh_db"]]] for p in ps])
         t_days = [(datetime.fromisoformat(x) - datetime.fromisoformat(dates[0])).days for x in dates]
-        k, dlt, tt, resid = S.breakpoint(hv, 2)
-        slope, ts = S.trend(hv, t_days)
+        base = hv if np.isfinite(hv).sum() >= 4 else hh          # só HH nas pistas de polarização simples
+        k, dlt, tt, resid = S.breakpoint(base, 2)
+        slope, ts = S.trend(base, t_days)
         e = {"passagens": len(ps), "primeira": dates[0], "ultima": dates[-1],
-             "hv_media_db": round(float(hv.mean()), 2), "hv_amplitude_db": round(float(hv.max() - hv.min()), 2),
-             "hh_amplitude_db": round(float(hh.max() - hh.min()), 2),
-             "maior_degrau_hv_db": round(float(dlt[0, 0]), 2), "t_do_degrau": round(float(tt[0, 0]), 1),
+             "passagens_com_hv": int(np.isfinite(hv).sum()),
+             "hv_media_db": round(float(np.nanmean(hv)), 2), "hv_amplitude_db": round(float(np.nanmax(hv) - np.nanmin(hv)), 2),
+             "hh_amplitude_db": round(float(np.nanmax(hh) - np.nanmin(hh)), 2),
+             "canal_da_analise": "HV" if base is hv else "HH",
+             "maior_degrau_db": round(float(dlt[0, 0]), 2), "t_do_degrau": round(float(tt[0, 0]), 1),
              "degrau_entre": [dates[int(k[0, 0]) - 1], dates[int(k[0, 0])]] if k[0, 0] > 0 else None,
-             "tendencia_hv_db_mes": round(float(slope[0, 0]), 3), "t_tendencia": round(float(ts[0, 0]), 1)}
+             "tendencia_db_mes": round(float(slope[0, 0]), 3), "t_tendencia": round(float(ts[0, 0]), 1)}
         if clima:
             w = [p.get("chuva_7d_mm") for p in ps]
             r_hh, _ = S.moisture_response(hh, w); r_hv, _ = S.moisture_response(hv, w)
             e["r_hh_chuva"], e["r_hv_chuva"] = round(float(r_hh[0, 0]), 3), round(float(r_hv[0, 0]), 3)
+            u = [p.get("umidade_solo_sup") if p.get("umidade_solo_sup") is not None else nan for p in ps]
+            r_u, sl_u = S.moisture_response(hh, u)
+            e["r_hh_umidade_solo"], e["hh_db_por_0_1_umidade"] = round(float(r_u[0, 0]), 3), round(float(sl_u[0, 0]) * 0.1, 2)
+            if "nisar_umidade" in ps[0] or any(p.get("nisar_umidade") is not None for p in ps):
+                n_ = [p.get("nisar_umidade") if p.get("nisar_umidade") is not None else nan for p in ps]
+                r_n, _ = S.moisture_response(hh, n_)
+                e["r_hh_umidade_nisar_sme2"] = round(float(r_n[0, 0]), 3)
+        cst = np.array([[[p.get("hh_contraste_db", nan)]] for p in ps])
+        sc, tc = S.trend(cst, t_days)
+        e["contraste_hh_tendencia_db_mes"], e["t_contraste"] = round(float(sc[0, 0]), 3), round(float(tc[0, 0]), 1)
         ana[gk] = e
     ficha["analise_por_geometria"] = ana
     ficha["gunw"] = gunw_rows
@@ -281,7 +331,7 @@ def main():
     if gunw_rows:
         with open(out / "gunw_ponto.csv", "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=list(gunw_rows[0])); w.writeheader(); w.writerows(gunw_rows)
-    plot_point(out / "historia_do_ponto.png", a.nome, by_geo, gunw_rows, clima, a.inicio, a.fim)
+    plot_point(out / "historia_do_ponto.png", a.nome, by_geo, gunw_rows, clima, a.inicio, a.fim, anomalas, sme_rows)
     try:
         from PIL import Image, ImageDraw
         frames = []
@@ -301,6 +351,14 @@ def main():
     lines = [f"# {a.nome} ({lat}, {lon}): a história no NISAR", "", f"Período {a.inicio} a {a.fim}.", "",
              "| Produto | catálogo | contém o ponto | uma por passagem |", "|---|---|---|---|"]
     lines += [f"| {p} | {v['catalogo']} | {v['contem_ponto']} | {v['uma_por_passagem']} |" for p, v in fic["funil_por_produto"].items()]
+    if fic.get("passagens_anomalas"):
+        lines += ["", "## Passagens anômalas (fora da análise)", ""] + [f"- {x['data']} {x['geometria']}: o entorno inteiro saltou {x['salto_do_entorno_db']} dB" for x in fic["passagens_anomalas"]]
+    if sme_rows:
+        ok_s = [x for x in sme_rows if x.get("valor") is not None]
+        lines += ["", f"## SME2 (umidade do solo NISAR): {len(ok_s)} de {len(sme_rows)} lidos", ""]
+        lines += [f"- {x['data']} {x['geometria']}: {round(x['valor'], 3)}" for x in ok_s]
+        if not ok_s:
+            lines.append(f"- não lido: {sme_rows[0].get('erro')}")
     lines += ["", "## Por geometria (GCOV)", ""]
     for gk, e in fic["analise_por_geometria"].items():
         lines.append(f"- **{gk}**: " + ", ".join(f"{k.replace('_', ' ')} {v}" for k, v in e.items()))
@@ -314,13 +372,13 @@ def main():
     print("\n".join(lines))
 
 
-def plot_point(path, nome, by_geo, gunw_rows, clima, start, end):
+def plot_point(path, nome, by_geo, gunw_rows, clima, start, end, anomalas=(), sme_rows=()):
     fig, axs = plt.subplots(3, 1, figsize=(11, 9), dpi=110, sharex=True, gridspec_kw={"height_ratios": [2, 1.2, 1.2]})
     cols = [report.ELECTRIC, "#FF6B00", "#3BB273", "#B5179E", report.YONDER, "#7A5C00"]
     for i, (gk, ps) in enumerate(sorted(by_geo.items())):
         d = [datetime.fromisoformat(p["data"]) for p in ps]
         c = cols[i % len(cols)]
-        axs[0].plot(d, [p["hv_db"] for p in ps], "o-", color=c, label=f"HV {gk} ({len(ps)})")
+        axs[0].plot(d, [p["hv_db"] if p["hv_db"] is not None else np.nan for p in ps], "o-", color=c, label=f"HV {gk} ({len(ps)})")
         axs[0].plot(d, [p["hh_db"] for p in ps], "s--", ms=3, lw=0.8, color=c, alpha=0.6, label=f"HH {gk}")
     axs[0].set_ylabel("radar dB"); axs[0].legend(fontsize=7, ncol=2); axs[0].set_title(f"{nome}: o ponto ao longo do tempo", color=report.DEEP)
     rain = clima.get("PRECTOTCORR") if clima else None
@@ -330,6 +388,9 @@ def plot_point(path, nome, by_geo, gunw_rows, clima, start, end):
         if clima.get("GWETTOP"):
             t = axs[1].twinx(); t.plot([datetime.strptime(k, "%Y%m%d") for k in clima["GWETTOP"]], list(clima["GWETTOP"].values()), color="#0B6E4F")
             t.set_ylim(0, 1); t.set_ylabel("umidade do solo")
+            sv = [(datetime.fromisoformat(x["data"]), x["valor"]) for x in sme_rows if x.get("valor") is not None]
+            if sv:
+                t.plot(*zip(*sv), "D", color="#B5179E", ms=5, label="NISAR SME2"); t.legend(fontsize=7, loc="upper right")
     for g in gunw_rows:
         if g["coerencia_ponto"] is not None and g["data2"]:
             axs[2].plot([datetime.fromisoformat(g["data1"]), datetime.fromisoformat(g["data2"])], [g["coerencia_ponto"]] * 2, "-", lw=2, color=report.ELECTRIC)
@@ -338,6 +399,10 @@ def plot_point(path, nome, by_geo, gunw_rows, clima, start, end):
         ax.axvspan(datetime.fromisoformat(LAUNCH), datetime.fromisoformat(BETA_END), color="#eee", alpha=0.7)
         for g0, g1, _ in GAPS:
             ax.axvspan(datetime.fromisoformat(g0), datetime.fromisoformat(g1), color="#ccc", alpha=0.5)
+    for an in anomalas:
+        axs[0].axvline(datetime.fromisoformat(an["data"]), color="red", ls=":", lw=1)
+        axs[0].text(datetime.fromisoformat(an["data"]), axs[0].get_ylim()[0], f" passagem anômala {an['geometria']}", rotation=90,
+                    va="bottom", fontsize=7, color="red")
     axs[0].text(datetime.fromisoformat(LAUNCH), axs[0].get_ylim()[1], " beta", va="top", fontsize=8, color="#666")
     axs[2].set_xlim(datetime.fromisoformat(start), datetime.fromisoformat(end))
     fig.autofmt_xdate(); fig.savefig(path, bbox_inches="tight", facecolor="white"); plt.close(fig)
