@@ -373,6 +373,23 @@ def build_gallery(serie, point_dir, region_id, extra_dir=None):
     return out
 
 
+def build_carousel(src, region_id):
+    """Copia as imagens do Planetary Computer (run_carrossel.py) e devolve o caminho do índice para o app."""
+    import shutil
+    if not (src / "carrossel.json").exists():
+        return None
+    dest = APP / region_id / "carrossel"
+    dest.mkdir(parents=True, exist_ok=True)
+    idx = json.loads((src / "carrossel.json").read_text(encoding="utf-8"))
+    for r in idx["datas"]:
+        for k in ("s2", "landsat", "s1"):
+            for fn in (r.get(k) or {}).get("imagens", {}).values():
+                if (src / fn).exists() and not (dest / fn).exists():
+                    shutil.copy2(src / fn, dest / fn)
+    (dest / "carrossel.json").write_text(json.dumps(clean(idx), ensure_ascii=False, allow_nan=False), encoding="utf-8")
+    return f"{region_id}/carrossel/carrossel.json"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--id", required=True); ap.add_argument("--malha", help="pasta do run_scout.py (com malha.geojson); opcional")
@@ -380,6 +397,7 @@ def main():
     ap.add_argument("--ponto", action="append", default=[])
     ap.add_argument("--caso", help="arquivo do caso (nome, contexto, ponto)")
     ap.add_argument("--serie", help="pasta do run_series.py da área (mapas de mudança por geometria)")
+    ap.add_argument("--carrossel", help="pasta do run_carrossel.py (padrão: <serie>/carrossel)")
     a = ap.parse_args()
     dest = APP / a.id
     dest.mkdir(parents=True, exist_ok=True)
@@ -391,6 +409,7 @@ def main():
     area = build_area(a.serie, a.id) if a.serie else None
     if area is not None:
         area["galeria"] = build_gallery(a.serie, a.ponto[0] if a.ponto else None, a.id)
+        area["carrossel"] = build_carousel(Path(a.carrossel) if a.carrossel else Path(a.serie) / "carrossel", a.id)
     idx_f = APP / "regioes.json"
     idx = json.loads(idx_f.read_text(encoding="utf-8")) if idx_f.exists() else []
     caso = json.loads(Path(a.caso).read_text(encoding="utf-8")) if a.caso else {}

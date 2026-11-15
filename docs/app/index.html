@@ -82,6 +82,24 @@ td.f { font-family: var(--mono); font-size: 11px; word-break: break-all; }
 dialog { border: 0; border-radius: 12px; padding: 12px; max-width: min(96vw, 1200px); }
 dialog img { max-width: 100%; height: auto; display: block; }
 dialog::backdrop { background: rgba(7, 23, 63, 0.75); }
+.car-ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.car-ctl input[type=range] { flex: 1 1 220px; accent-color: var(--blue); min-height: 32px; }
+.car-date { font: 700 18px var(--mono); color: var(--deep); }
+.swipe { position: relative; max-width: 640px; width: 100%; }
+.swipe canvas, .swipe img { display: block; width: 100%; height: auto; border-radius: 8px; image-rendering: pixelated; }
+.swipe img.top { position: absolute; inset: 0; height: 100%; object-fit: fill; }
+.swipe .bar { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--neon); box-shadow: 0 0 0 1px #000; pointer-events: none; }
+.swipe .lab { position: absolute; top: 8px; font: 600 12px var(--mono); background: rgba(7,23,63,.85); color: #fff; padding: 3px 8px; border-radius: 6px; pointer-events: none; }
+.thumbs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.thumbs button { font: inherit; text-align: left; border: 2px solid var(--line); border-radius: 10px; padding: 6px; background: #fff; cursor: pointer; display: flex; flex-direction: column; gap: 4px; color: var(--ink); }
+.thumbs button[aria-pressed="true"] { border-color: var(--blue); }
+.thumbs button:disabled { cursor: default; opacity: .55; }
+.thumbs img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; background: var(--soft); }
+.thumbs .ph { width: 100%; aspect-ratio: 1; border-radius: 6px; display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--ink3); padding: 8px;
+  background: repeating-linear-gradient(45deg, #F4F6FA, #F4F6FA 6px, #EBEFF5 6px, #EBEFF5 12px); }
+.thumbs b { font-size: 13px; } .thumbs span { font-size: 12px; color: var(--ink3); }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.metrics div { background: var(--soft); border-radius: 8px; padding: 8px 10px; } .metrics small { display: block; font-size: 11px; color: var(--ink3); } .metrics b { font: 600 16px var(--mono); }
 footer { max-width: 1400px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 40px; font-size: 13px; color: var(--ink3); }
 </style>
 
@@ -177,6 +195,32 @@ footer { max-width: 1400px; margin: 0 auto; padding-left: max(16px, env(safe-are
       </div>
     </section>
 
+    <section class="card" id="carrossel">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline">
+        <h2 data-i="carT"></h2><span class="lbl" id="carGeo"></span>
+      </div>
+      <p style="margin:0;font-size:14px;color:var(--ink2)" data-i="carP"></p>
+      <div class="car-ctl">
+        <button type="button" class="btn" id="carPrev" aria-label="&lt;">◀</button>
+        <button type="button" class="btn solid" id="carPlay" data-i="play"></button>
+        <button type="button" class="btn" id="carNext" aria-label="&gt;">▶</button>
+        <span class="car-date" id="carDate"></span>
+        <input type="range" id="carRange" min="0" max="0" value="0" aria-label="Data">
+      </div>
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1 1 360px;min-width:0;display:flex;flex-direction:column;gap:6px">
+          <div class="swipe" id="swipe"><canvas id="cvCar"></canvas><img class="top" id="carTop" alt=""><div class="bar" id="carBar"></div>
+            <span class="lab" style="left:8px">NISAR HV</span><span class="lab" id="carLabR" style="right:8px"></span></div>
+          <input type="range" id="carSwipe" min="0" max="100" value="50" aria-label="Comparar" style="accent-color:var(--neon)">
+          <p class="small" data-i="carSwipeNote"></p>
+        </div>
+        <div style="flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div class="thumbs" id="carThumbs"></div>
+          <div class="metrics" id="carMetrics"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="card val">
       <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:center">
         <h2 data-i="valT"></h2>
@@ -244,6 +288,11 @@ pt: { h1: "Escolha qualquer lugar e duas datas. As contas ficam com a gente.", p
   galT: "Galeria da análise", galP: "As imagens da análise e, para comparação, o que o olho veria. O contorno amarelo marca onde o NISAR viu a queda; o tracejado ciano, a perda de coerência.",
   galN: "Análises do NISAR", galC: "Comparação: Landsat 9 (NASA/USGS) e Sentinel-2 (ESA)", galWait: "As imagens de comparação aparecem aqui depois de rodar o run_gallery.py.",
   close: "Fechar",
+  carT: "A valsa, data a data", carP: "Para cada passagem do NISAR, a imagem do Planetary Computer mais próxima, no mesmo recorte e com a mesma escala de cor em todas as datas. Arraste a barra amarela para comparar o radar com o que o olho veria.",
+  play: "▶ Tocar", pause: "❚❚ Pausar", carSwipeNote: "Esquerda: NISAR (HV, banda L). Direita: a camada escolhida ao lado. As duas cobrem a mesma área de ~13 × 13 km.",
+  carWait: "As imagens do Planetary Computer aparecem aqui depois de rodar o run_carrossel.py.", carNone: "Sem cena limpa até", days: "dias",
+  s2nat: "Sentinel-2 · cor natural", s2brn: "Sentinel-2 · falsa cor de fogo", s1: "Sentinel-1 · radar banda C", lst: "Landsat · temperatura",
+  mNdvi: "NDVI (vegetação)", mBurn: "Queimada desde o início", mWater: "Água (Sentinel-2)", mLst: "Temperatura da superfície", mVh: "Sentinel-1 VH", mCloud: "Nuvem na área",
   foot: "Dados: NISAR L2 GCOV, L2 GUNW e L3 SME2 (NASA/JPL, ASF DAAC); chuva do NASA POWER; comparação Landsat (NASA/USGS) e Sentinel-2 (ESA). Feito pela equipe Delta L para o NASA Space Apps 2026. Parte do código teve ajuda de um assistente de IA (Claude) e foi revisada pela equipe.",
   stNone: "Sem mudança", stHint: "Indício: confirmar", stYes: "Mudança confirmada",
   pass: "passagens", hhTag: "só HH" },
@@ -267,6 +316,11 @@ en: { h1: "Pick any place and two dates. We do the math.", pillData: "Real data:
   galT: "Analysis gallery", galP: "The analysis images and, for comparison, what the eye would see. The yellow outline marks where NISAR saw the drop; cyan dashes, the coherence loss.",
   galN: "NISAR analyses", galC: "Comparison: Landsat 9 (NASA/USGS) and Sentinel-2 (ESA)", galWait: "Comparison images appear here after running run_gallery.py.",
   close: "Close",
+  carT: "The waltz, date by date", carP: "For every NISAR pass, the closest Planetary Computer image, on the same crop and with the same colour scale on every date. Drag the yellow bar to compare the radar with what the eye would see.",
+  play: "▶ Play", pause: "❚❚ Pause", carSwipeNote: "Left: NISAR (HV, L-band). Right: the layer picked alongside. Both cover the same ~13 × 13 km area.",
+  carWait: "Planetary Computer images appear here after running run_carrossel.py.", carNone: "No clear scene within", days: "days",
+  s2nat: "Sentinel-2 · natural colour", s2brn: "Sentinel-2 · fire false colour", s1: "Sentinel-1 · C-band radar", lst: "Landsat · temperature",
+  mNdvi: "NDVI (vegetation)", mBurn: "Burned since start", mWater: "Water (Sentinel-2)", mLst: "Surface temperature", mVh: "Sentinel-1 VH", mCloud: "Cloud in area",
   foot: "Data: NISAR L2 GCOV, L2 GUNW and L3 SME2 (NASA/JPL, ASF DAAC); NASA POWER rain; Landsat (NASA/USGS) and Sentinel-2 (ESA) for comparison. Built by team Delta L for NASA Space Apps 2026. Parts of the code were written with help from an AI assistant (Claude) and reviewed by the team.",
   stNone: "No change", stHint: "Hint: confirm", stYes: "Change confirmed",
   pass: "passes", hhTag: "HH only" } };
@@ -418,13 +472,54 @@ function renderGallery() {
   document.querySelectorAll("[data-zoom]").forEach((im) => im.addEventListener("click", () => { $("dlgimg").src = im.src; $("dlgimg").alt = im.alt; try { $("dlg").showModal(); } catch (e) { window.open(im.src, "_blank"); } }));
 }
 
+// ---------- carrossel: NISAR + Planetary Computer, data a data
+const CAR = { idx: null, dates: [], i: 0, layer: "s2nat", geo: {}, timer: null };
+async function geoData(id) { if (CAR.geo[id]) return CAR.geo[id]; const g = S.area.geometrias.find((x) => x.id === id); if (!g) return null; const base = "data/" + g.pasta + "/";
+  const meta = await getJSON(base + "app.json"); const [hv, hh] = await Promise.all([getU8(base + "hv_u8.png"), getU8(base + "hh_u8.png")]); return (CAR.geo[id] = { meta, hv, hh }); }
+function drawGeo(cv, G, k) { const [, H, W] = G.meta.forma, n = H * W; cv.width = W; cv.height = H; const ctx = cv.getContext("2d"); const im = ctx.createImageData(W, H); const d = im.data;
+  let c = 0; for (let i = 0; i < n; i += 97) if (G.hv[k * n + i]) c++; const useHH = c <= 5; const arr = useHH ? G.hh : G.hv; const [l, h] = useHH ? [-22, 0] : [-26, -8];
+  for (let i = 0; i < n; i++) { const u = arr[k * n + i]; const o = i * 4; d[o + 3] = 255; if (!u) continue; const v = Math.max(0, Math.min(255, ((dB(u) - l) / (h - l)) * 255)); d[o] = d[o + 1] = d[o + 2] = v; }
+  ctx.putImageData(im, 0, 0); return useHH; }
+const LAYERS = [["s2nat", "s2", "natural"], ["s2brn", "s2", "queimada"], ["s1", "s1", "radar"], ["lst", "landsat", "temperatura"]];
+async function renderCarousel() {
+  if (!CAR.dates.length) return; const r = CAR.dates[CAR.i]; $("carRange").value = CAR.i; $("carDate").textContent = fd(r.data_nisar);
+  const gid = r.geometrias[0]; $("carGeo").textContent = `NISAR · ${geoName(gid)}`;
+  const G = await geoData(gid); if (G) { const k = G.meta.datas.indexOf(r.data_nisar); if (k >= 0) { const hh = drawGeo($("cvCar"), G, k); $("cvCar").title = hh ? "HH" : "HV"; } }
+  const src = (L) => { const [, key, im] = LAYERS.find((x) => x[0] === L); const s = r[key]; return s && s.imagens && s.imagens[im] ? { s, url: "data/" + CAR.base + s.imagens[im] } : null; };
+  if (!src(CAR.layer)) { const f = LAYERS.find((x) => src(x[0])); if (f) CAR.layer = f[0]; }
+  const cur = src(CAR.layer); const top = $("carTop");
+  if (cur) { top.hidden = false; top.src = cur.url; top.alt = t(CAR.layer); $("carLabR").textContent = `${t(CAR.layer).split(" · ")[0]} ${fd(cur.s.data)}`; $("carLabR").hidden = false; }
+  else { top.hidden = true; $("carLabR").hidden = true; }
+  swipe();
+  $("carThumbs").innerHTML = LAYERS.map(([L, key]) => { const x = src(L); const win = { s2: 5, landsat: 8, s1: 6 }[key];
+    return `<button type="button" data-cl="${L}" aria-pressed="${L === CAR.layer && !!x}"${x ? "" : " disabled"}>${x ? `<img src="${x.url}" alt="${esc(t(L))}" loading="lazy">` : `<div class="ph">${esc(CAR.idx ? `${t("carNone")} ±${win} ${t("days")}` : t("carWait"))}</div>`}
+      <b>${esc(t(L))}</b><span>${x ? `${fd(x.s.data)} · ${x.s.dias === 0 ? (lang === "pt" ? "mesmo dia" : "same day") : `±${x.s.dias} ${t("days")}`}${x.s.nuvem_area != null ? ` · ${lang === "pt" ? "nuvem" : "cloud"} ${nf(x.s.nuvem_area * 100, 0)}%` : ""}` : "–"}</span></button>`; }).join("");
+  $("carThumbs").querySelectorAll("[data-cl]").forEach((b) => b.addEventListener("click", () => { CAR.layer = b.dataset.cl; renderCarousel(); }));
+  const M = [[t("mNdvi"), r.s2?.ndvi_mediana ?? r.landsat?.ndvi_mediana, (v) => nf(v, 2)], [t("mBurn"), r.s2?.queimada_pct, (v) => nf(v, 1) + "%"], [t("mWater"), r.s2?.agua_pct, (v) => nf(v, 1) + "%"],
+    [t("mLst"), r.landsat?.temperatura_mediana_c, (v) => nf(v, 1) + " °C"], [t("mVh"), r.s1?.vh_mediana_db, (v) => nf(v, 1) + " dB"]];
+  $("carMetrics").innerHTML = M.map(([k, v, f]) => `<div><small>${esc(k)}</small><b>${v == null ? "–" : esc(f(v))}</b></div>`).join("");
+}
+function swipe() { const p = +$("carSwipe").value; $("carTop").style.clipPath = `inset(0 0 0 ${p}%)`; $("carBar").style.left = `calc(${p}% - 1px)`; $("carBar").hidden = $("carTop").hidden; }
+$("carSwipe").addEventListener("input", swipe);
+$("carRange").addEventListener("input", (e) => { CAR.i = +e.target.value; renderCarousel(); });
+$("carPrev").addEventListener("click", () => { CAR.i = (CAR.i - 1 + CAR.dates.length) % CAR.dates.length; renderCarousel(); });
+$("carNext").addEventListener("click", () => { CAR.i = (CAR.i + 1) % CAR.dates.length; renderCarousel(); });
+$("carPlay").addEventListener("click", () => { if (CAR.timer) { clearInterval(CAR.timer); CAR.timer = null; $("carPlay").textContent = t("play"); return; }
+  $("carPlay").textContent = t("pause"); CAR.timer = setInterval(() => { CAR.i = (CAR.i + 1) % CAR.dates.length; renderCarousel(); }, 1600); });
+async function initCarousel() {
+  if (S.area.carrossel) { try { CAR.idx = await getJSON("data/" + S.area.carrossel); CAR.base = S.area.carrossel.replace(/[^/]+$/, ""); CAR.dates = CAR.idx.datas; } catch (e) { CAR.idx = null; } }
+  if (!CAR.dates.length) { const m = {}; S.area.geometrias.forEach((g) => g.passagens_lista.forEach((p) => { (m[p.data] = m[p.data] || []).push(g.id); }));
+    CAR.dates = Object.keys(m).sort().map((d) => ({ data_nisar: d, geometrias: m[d] })); }
+  $("carRange").max = CAR.dates.length - 1; CAR.i = Math.max(0, CAR.dates.findIndex((r) => r.data_nisar === (S.R.par_inicial || [])[1])); renderCarousel();
+}
+
 ["cvArea", "cvB", "cvAf", "cvC"].forEach((id) => $(id).addEventListener("click", (e) => { const r = e.currentTarget.getBoundingClientRect(); const [, H, W] = S.meta.forma;
   S.pix = [Math.min(W - 1, Math.floor((e.clientX - r.left) / r.width * W)), Math.min(H - 1, Math.floor((e.clientY - r.top) / r.height * H))]; placeMarks(); renderPix(); }));
 $("draw").addEventListener("click", () => { $("drawmsg").textContent = t("drawMsg"); });
 $("geo").addEventListener("change", (e) => loadGeo(e.target.value));
 $("csvbtn").addEventListener("click", async () => { const [tr, d, f] = S.geo.id.split("_"); const rows = [["date", "track", "direction", "frame", "collection", "crid", "file"]].concat(S.geo.passagens_lista.map((p) => [p.data, tr, d, f, p.colecao, p.crid, p.arquivo]));
   try { await navigator.clipboard.writeText(rows.map((r) => r.join(",")).join("\n")); $("csvmsg").textContent = t("copied"); } catch (e) { $("csvmsg").textContent = t("copyFail"); } });
-["pt", "en"].forEach((l) => $("l-" + l).addEventListener("click", () => { lang = l; try { localStorage.setItem("dl-lang", l); } catch (e) {} renderStatic(); if (S.meta) renderPair(); }));
+["pt", "en"].forEach((l) => $("l-" + l).addEventListener("click", () => { lang = l; try { localStorage.setItem("dl-lang", l); } catch (e) {} renderStatic(); if (S.meta) renderPair(); if (CAR.dates.length) { $("carPlay").textContent = t(CAR.timer ? "pause" : "play"); renderCarousel(); } }));
 
 async function loadGeo(id) {
   S.geo = S.area.geometrias.find((g) => g.id === id) || S.area.geometrias[0]; const base = "data/" + S.geo.pasta + "/";
@@ -441,6 +536,7 @@ async function loadGeo(id) {
   $("jsonlink").href = "data/regioes.json";
   if (S.area.coerencia) { try { S.coh = await getU8("data/" + S.area.coerencia); } catch (e) {} }
   await loadGeo(S.area.geometrias[0].id);
+  await initCarousel();
 })();
 })();
 </script>
