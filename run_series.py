@@ -395,6 +395,11 @@ def main():
         gk = (int(t), d, int(f))
         if v >= 4 and gk not in geo_list and case.get("todas_geometrias", True) and not (a.uma_geometria and geo_list):
             geo_list.append(gk)
+    seen, uniq = set(), []
+    for gk in geo_list:
+        if (gk[0], gk[1]) not in seen:
+            seen.add((gk[0], gk[1])); uniq.append(gk)
+    geo_list = uniq
     log(f"geometrias para analisar: {geo_list} (passagens por geometria: {geoms})")
     clima_all = None
     if case.get("clima_nasa_power", True):
@@ -425,7 +430,8 @@ def main():
         for i in keys:
             ei = extras[i]
             for j in keys:
-                if i == j:
+                # o mesmo trilho em quadros vizinhos é a MESMA passagem: não conta como confirmação independente
+                if i == j or i.split("_")[:2] == j.split("_")[:2]:
                     continue
                 ej = extras[j]
                 for c, nm in ((3, "queda_abrupta"), (4, "subida_abrupta")):
