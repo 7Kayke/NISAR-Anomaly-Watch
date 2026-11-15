@@ -22,11 +22,12 @@ from datetime import datetime
 import numpy as np
 
 CLASSES = {0: "sem dado", 1: "estável", 2: "ritmo forte (sazonal)", 3: "queda abrupta",
-           4: "subida abrupta", 5: "alagamento passageiro", 6: "água permanente"}
+           4: "subida abrupta", 5: "alagamento passageiro", 6: "água permanente",
+           7: "queda gradual", 8: "subida gradual"}
 CLASS_COLORS = {0: "#00000000", 1: "#8A93A6", 2: "#2E96F5", 3: "#FF6B00", 4: "#EAFE07",
-                5: "#00C2D1", 6: "#0042A6"}
+                5: "#00C2D1", 6: "#0042A6", 7: "#B5179E", 8: "#3BB273"}
 PARAMS = {"queda_db": 2.5, "t_min": 4.0, "ritmo_db": 1.5, "agua_db": -18.0, "min_lados": 2,
-          "min_validas": 5}
+          "min_validas": 5, "gradual_db": 2.0, "t_tendencia": 4.0}
 
 
 def normalize(stack, land):
@@ -61,7 +62,49 @@ def breakpoint(stack, min_side=2):
     return best_k.reshape(shp), best_d.reshape(shp), best_t.reshape(shp), best_r.reshape(shp)
 
 
-def classify(hh_db, hv_db, land, params=None, valid=None):
+def trend(stack, t_days):
+    """Tendência linear por pixel (mínimos quadrados, ignora NaN). Devolve (dB por mês, t da inclinação)."""
+    T = stack.shape[0]
+    x = stack.reshape(T, -1)
+    ok = np.isfinite(x)
+    t = (np.asarray(t_days, float) / 30.44)[:, None] * ok
+    n = ok.sum(0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        tm = t.sum(0) / n
+        xm = np.where(ok, x, 0).sum(0) / n
+        dt = np.where(ok, t - tm, 0)
+        dx = np.where(ok, x - xm, 0)
+        sxx = (dt * dt).sum(0)
+        b = (dt * dx).sum(0) / sxx
+        res = np.where(ok, dx - b * dt, 0)
+        se = np.sqrt((res * res).sum(0) / np.maximum(n - 2, 1) / sxx)
+        tt = b / np.maximum(se, 1e-6)
+    shp = stack.shape[1:]
+    return b.reshape(shp), tt.reshape(shp)
+
+
+def moisture_response(stack, wet):
+    """Correlação (r) e inclinação (dB por unidade do índice) entre o radar e um índice de umidade por data.
+    É a valsa invisível da água: solo e vegetação mais úmidos devolvem mais energia (constante dielétrica)."""
+    T = stack.shape[0]
+    w = np.asarray(wet, float)
+    x = stack.reshape(T, -1)
+    ok = np.isfinite(x) & np.isfinite(w)[:, None]
+    n = ok.sum(0)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        wm = np.where(ok, w[:, None], 0).sum(0) / n
+        xm = np.where(ok, x, 0).sum(0) / n
+        dw = np.where(ok, w[:, None] - wm, 0)
+        dx = np.where(ok, x - xm, 0)
+        cov = (dw * dx).sum(0)
+        r = cov / np.sqrt((dw * dw).sum(0) * (dx * dx).sum(0))
+        slope = cov / (dw * dw).sum(0)
+    r[n < 4] = np.nan
+    shp = stack.shape[1:]
+    return r.reshape(shp), slope.reshape(shp)
+
+
+def classify(hh_db, hv_db, land, params=None, valid=None, t_days=None):
     """land: pixels usados na normalização (terra). valid: pixels que recebem classe (padrão: todos com dado)."""
     p = dict(PARAMS, **(params or {}))
     hv_n, hv_curve = normalize(hv_db, land)
@@ -73,6 +116,13 @@ def classify(hh_db, hv_db, land, params=None, valid=None):
     cls = np.ones(hv_db.shape[1:], "uint8")
     cls[resid >= p["ritmo_db"]] = 2
     cls[(hh_min < p["agua_db"]) & ~(hh_med < p["agua_db"])] = 5
+    slope = tt = None
+    if t_days is not None:
+        slope, tt = trend(hv_n, t_days)
+        span = (max(t_days) - min(t_days)) / 30.44
+        grad = np.abs(tt) >= p["t_tendencia"]
+        cls[grad & (slope * span <= -p["gradual_db"])] = 7
+        cls[grad & (slope * span >= p["gradual_db"])] = 8
     strong = np.abs(t) >= p["t_min"]
     cls[strong & (d <= -p["queda_db"])] = 3
     cls[strong & (d >= p["queda_db"])] = 4
@@ -82,6 +132,7 @@ def classify(hh_db, hv_db, land, params=None, valid=None):
     cls[(nvalid < p["min_validas"]) | ~valid] = 0
     when = np.where(np.isin(cls, (3, 4)), k, -1)
     return {"classe": cls, "quebra_indice": when, "delta_db": d, "t": t, "residuo_db": resid,
+            "tendencia_db_mes": slope, "tendencia_t": tt,
             "curva_cena_hv": hv_curve, "curva_cena_hh": hh_curve, "hv_norm": hv_n, "params": p}
 
 

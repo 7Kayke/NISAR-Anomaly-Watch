@@ -49,3 +49,20 @@ def test_temporal_rgb_shape():
     hh, hv = _scene(9)
     rgb, labels = S.temporal_rgb(hv, [f"d{i}" for i in range(9)])
     assert rgb.shape == (40, 40, 3) and len(labels) == 3
+
+
+def test_trend_and_moisture():
+    T = 20
+    rng = np.random.default_rng(3)
+    t_days = np.arange(T) * 12
+    hh, hv = _scene(T, seed=3)
+    hv[:, 0:10, :] += (t_days / 30.44 * -0.5)[:, None, None]    # perde 0,5 dB por mês (degradação lenta)
+    wet = rng.uniform(0, 40, T)
+    hh[:, 20:30, :] += (wet * 0.1)[:, None, None]                # solo que responde à chuva: +1 dB a cada 10 mm
+    land = np.ones(hv.shape[1:], bool)
+    r = S.classify(hh, hv, land, t_days=list(t_days))
+    assert (r["classe"][1:9, 5:35] == 7).mean() > 0.9
+    assert abs(np.median(r["tendencia_db_mes"][1:9]) + 0.5) < 0.1
+    rr, sl = S.moisture_response(hh, wet)
+    assert np.median(rr[20:30]) > 0.8 and abs(np.median(sl[20:30]) - 0.1) < 0.02
+    assert abs(np.median(rr[32:40])) < 0.3

@@ -130,12 +130,14 @@ def _umm_meta(sn, g):
 MATURITY = {"NISAR_L2_GCOV_V1": 0, "NISAR_L2_GCOV_PROVISIONAL_V1": 1}
 
 
-def funnel_series(grid, start, end, short_names=("NISAR_L2_GCOV_V1", "NISAR_L2_GCOV_PROVISIONAL_V1")):
+def funnel_series(grid, start, end, short_names=("NISAR_L2_GCOV_V1", "NISAR_L2_GCOV_PROVISIONAL_V1"),
+                  geometry=None, min_cover=None):
     """Funil da SÉRIE: catálogo -> cobre a área -> uma versão por passagem -> mesma geometria.
 
     Devolve (Funnel, escolhidos [(short_name, granulo)] em ordem de data, metadados de TODOS os
     grânulos do catálogo com a etapa em que cada um parou e o porquê)."""
     from .funnel import Funnel, coverage, MIN_COVER
+    MIN_COVER = MIN_COVER if min_cover is None else min_cover
     fun = Funnel("NISAR GCOV (banda L), série temporal", " + ".join(short_names))
     grans = [(sn, g) for sn in short_names for g in search(grid.bbox, start, end, short_name=sn)]
     meta = {}
@@ -175,8 +177,12 @@ def funnel_series(grid, start, end, short_names=("NISAR_L2_GCOV_V1", "NISAR_L2_G
         i = parse_name(g["umm"]["GranuleUR"])
         groups.setdefault((i["pista"], i["direcao"], i["quadro"]), []).append((sn, g))
     chosen, gkey = [], None
-    if groups:
+    if geometry:
+        gkey = tuple(geometry)
+        groups.setdefault(gkey, [])
+    elif groups:
         gkey = max(groups, key=lambda k: (len(groups[k]), -k[0]))
+    if gkey is not None:
         chosen = sorted(groups[gkey], key=lambda x: parse_name(x[1]["umm"]["GranuleUR"])["inicio"])
     for sn, g in uniq:
         mm = meta[g["umm"]["GranuleUR"]]
@@ -238,17 +244,34 @@ def read_gcov_subset(granule, grid, layers=("HHHH", "HVHV")):
         x0, x1, y0, y1 = ix.min(), ix.max() + 1, iy.min(), iy.max() + 1
         dx, dy = x[1] - x[0], y[1] - y[0]
         src_tr = Affine(dx, 0, x[x0] - dx / 2, 0, dy, y[y0] - dy / 2)
+        # grade grossa (visão regional): média em blocos f×f lida em faixas, para não carregar
+        # o quadro inteiro na memória (um quadro de 240 km a 10 m tem ~1 GB por camada)
+        f = max(1, int(grid.resolution // (2 * abs(dx))))
         out = {}
         for lay in layers:
-            arr = h5[paths[lay]][y0:y1, x0:x1].astype("float32")
-            arr[~np.isfinite(arr) | (arr <= 0)] = np.nan
+            ds = h5[paths[lay]]
+            if f == 1:
+                arr = ds[y0:y1, x0:x1].astype("float32")
+                arr[~np.isfinite(arr) | (arr <= 0)] = np.nan
+                a_tr = src_tr
+            else:
+                ny, nx = (y1 - y0) // f, (x1 - x0) // f
+                arr = np.full((ny, nx), np.nan, "float32")
+                rows = max(f, (2048 // f) * f)
+                for r0 in range(0, ny * f, rows):
+                    blk = ds[y0 + r0:y0 + min(r0 + rows, ny * f), x0:x0 + nx * f].astype("float32")
+                    blk[~np.isfinite(blk) | (blk <= 0)] = np.nan
+                    br = blk.shape[0] // f
+                    with np.errstate(invalid="ignore"):
+                        arr[r0 // f:r0 // f + br] = np.nanmean(blk[:br * f].reshape(br, f, nx, f), axis=(1, 3))
+                a_tr = Affine(dx * f, 0, x[x0] - dx / 2, 0, dy * f, y[y0] - dy / 2)
             dst = np.full((grid.height, grid.width), np.nan, dtype="float32")
-            reproject(arr, dst, src_transform=src_tr, src_crs=f"EPSG:{epsg}", src_nodata=np.nan,
+            reproject(arr, dst, src_transform=a_tr, src_crs=f"EPSG:{epsg}", src_nodata=np.nan,
                       dst_transform=grid.transform, dst_crs=grid.crs, dst_nodata=np.nan,
                       resampling=Resampling.average)
             out[lay] = dst.astype("float64")
     meta = parse_name(granule["umm"]["GranuleUR"])
     meta.update({"arquivo": granule["umm"]["GranuleUR"], "epsg_produto": epsg,
                  "janela_linhas": [int(y0), int(y1)], "janela_colunas": [int(x0), int(x1)],
-                 "grupo_hdf5": group})
+                 "grupo_hdf5": group, "espacamento_produto_m": float(abs(dx)), "fator_bloco": f})
     return out, meta

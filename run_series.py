@@ -67,12 +67,12 @@ def s2_truth(grid, event_date):
 
 
 def plot_classes(path, cls, title):
-    cmap = ListedColormap([S.CLASS_COLORS[c] if c else "#FFFFFF" for c in range(7)])
+    cmap = ListedColormap([S.CLASS_COLORS[c] if c else "#FFFFFF" for c in range(9)])
     fig, ax = plt.subplots(figsize=(7.5, 7), dpi=110)
-    ax.imshow(cls, cmap=cmap, vmin=-0.5, vmax=6.5, interpolation="nearest")
+    ax.imshow(cls, cmap=cmap, vmin=-0.5, vmax=8.5, interpolation="nearest")
     ax.set_axis_off(); ax.set_title(title, color=DEEP, fontsize=11)
-    handles = [plt.Rectangle((0, 0), 1, 1, color=S.CLASS_COLORS[c]) for c in range(1, 7)]
-    ax.legend(handles, [S.CLASSES[c] for c in range(1, 7)], loc="lower left", fontsize=8, framealpha=0.85)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=S.CLASS_COLORS[c]) for c in range(1, 9)]
+    ax.legend(handles, [S.CLASSES[c] for c in range(1, 9)], loc="lower left", fontsize=8, framealpha=0.85)
     fig.savefig(path, bbox_inches="tight", facecolor="white"); plt.close(fig)
 
 
@@ -87,32 +87,64 @@ def plot_when(path, when, dates, title):
     fig.savefig(path, bbox_inches="tight", facecolor="white"); plt.close(fig)
 
 
-def plot_curves(path, dates, res, rain, event_date, title):
+def plot_curves(path, dates, res, clima, event_date, title):
     d = [datetime.fromisoformat(x) for x in dates]
-    fig, (a1, a2) = plt.subplots(2, 1, figsize=(10, 6.5), dpi=110, sharex=True,
-                                 gridspec_kw={"height_ratios": [2, 1.3]})
+    fig, (a1, a3, a2) = plt.subplots(3, 1, figsize=(10, 9), dpi=110, sharex=True,
+                                     gridspec_kw={"height_ratios": [2, 1.4, 1.6]})
     a1.plot(d, res["curva_cena_hh"], "o-", color=ELECTRIC, label="HH (mediana da área)")
     a1.plot(d, res["curva_cena_hv"], "o-", color=YONDER, label="HV (mediana da área)")
-    a1.set_ylabel("dB"); a1.set_title(title, color=DEEP, fontsize=11)
+    a1.set_ylabel("radar dB"); a1.set_title(title, color=DEEP, fontsize=11)
+    clima = clima or {}
+    rain = clima.get("PRECTOTCORR")
     if rain:
-        ax2 = a1.twinx()
         rd = [datetime.strptime(k, "%Y%m%d") for k in rain]
-        ax2.bar(rd, list(rain.values()), width=1.0, color="#7FB3D5", alpha=0.45, label="chuva (mm/dia)")
-        ax2.set_ylabel("chuva mm/dia (NASA POWER)")
+        a3.bar(rd, list(rain.values()), width=1.0, color="#7FB3D5", label="chuva mm/dia")
+        a3.set_ylabel("chuva mm/dia")
+    if clima.get("GWETTOP"):
+        ax4 = a3.twinx()
+        gd = [datetime.strptime(k, "%Y%m%d") for k in clima["GWETTOP"]]
+        ax4.plot(gd, list(clima["GWETTOP"].values()), color="#0B6E4F", lw=1.4, label="umidade do solo (sup.)")
+        if clima.get("GWETROOT"):
+            ax4.plot(gd, [clima["GWETROOT"].get(k) for k in clima["GWETTOP"]], color="#7A5C00", lw=1.2, ls="--",
+                     label="umidade do solo (raízes)")
+        ax4.set_ylim(0, 1); ax4.set_ylabel("umidade 0-1 (MERRA-2)"); ax4.legend(loc="upper right", fontsize=7)
+    a3.set_title("Clima (NASA POWER)", fontsize=9, color=DEEP)
     hv_n, cls = res["hv_norm"], res["classe"]
-    for c in (1, 2, 3, 4, 5):
+    for c in (1, 2, 3, 4, 5, 7, 8):
         m = cls == c
         if m.sum() > 20:
             a2.plot(d, [np.nanmedian(s[m]) for s in hv_n], "o-", ms=3, color=S.CLASS_COLORS[c],
                     label=f"{S.CLASSES[c]} ({m.sum()} px)")
-    a2.axhline(0, color="#999", lw=0.8); a2.set_ylabel("HV menos a cena (dB)")
-    for ax in (a1, a2):
+    a2.axhline(0, color="#999", lw=0.8); a2.set_ylabel("HV menos a área (dB)")
+    for ax in (a1, a2, a3):
         for g0, g1, _ in GAPS:
             ax.axvspan(datetime.fromisoformat(g0), datetime.fromisoformat(g1), color="#ccc", alpha=0.35)
         if event_date:
             ax.axvline(datetime.fromisoformat(event_date), color="#FF6B00", ls="--", lw=1.2)
     a1.legend(loc="upper left", fontsize=8); a2.legend(loc="lower left", fontsize=7, ncol=2)
     fig.autofmt_xdate(); fig.savefig(path, bbox_inches="tight", facecolor="white"); plt.close(fig)
+
+
+def fit_to_frame(aoi, start, end, geometry, sn):
+    """Maior retângulo (lon/lat) dentro da área comum a TODAS as passagens do quadro escolhido."""
+    from shapely.geometry import box, shape
+    holder = make_grid(aoi, 2000)
+    _, chosen, _, _ = sn.funnel_series(holder, start, end, geometry=geometry, min_cover=0.0)
+    inter = box(*aoi)
+    for _, g in chosen:
+        geo = sn._umm_geometry(g)
+        if geo:
+            inter = inter.intersection(shape(geo))
+    if inter.is_empty:
+        raise SystemExit(f"Nenhuma passagem do quadro {geometry} cobre a área pedida")
+    w, s, e, n = inter.bounds
+    cx, cy = inter.centroid.x, inter.centroid.y
+    for k in range(60):
+        f = 1 - 0.015 * k
+        bb = (cx + (w - cx) * f, cy + (s - cy) * f, cx + (e - cx) * f, cy + (n - cy) * f)
+        if inter.intersection(box(*bb)).area / box(*bb).area >= 0.98:
+            return [round(v, 4) for v in bb], len(chosen)
+    return [round(v, 4) for v in bb], len(chosen)
 
 
 def animate(path, hv_db, dates, step=2):
@@ -134,6 +166,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--case", required=True); ap.add_argument("--out", required=True)
     ap.add_argument("--start"); ap.add_argument("--end"); ap.add_argument("--max-dates", type=int, default=40)
+    ap.add_argument("--res", type=float, help="resolução da grade em metros (ex.: 200 para o quadro inteiro)")
     ap.add_argument("--skip-truth", action="store_true"); ap.add_argument("--skip-dem", action="store_true")
     a = ap.parse_args()
     case = json.loads(Path(a.case).read_text(encoding="utf-8"))
@@ -142,19 +175,27 @@ def main():
     cfg = case.get("serie", {})
     start = a.start or cfg.get("inicio", BETA_END)
     end = a.end or cfg.get("fim", date.today().isoformat())
-    grid = make_grid(case["bbox"], case.get("resolucao_m", 20))
+    from deltal import sources_nisar as sn
+    sn.login()
+    bbox = case["bbox"]
+    geometry = None
+    if case.get("nisar_quadro"):
+        q = case["nisar_quadro"]
+        geometry = (int(q["pista"]), q["direcao"], int(q["quadro"]))
+        log(f"ajustando a área ao quadro {geometry} ...")
+        bbox, npass = fit_to_frame(bbox, start, end, geometry, sn)
+        log(f"  área comum a {npass} passagens: {bbox}")
+    grid = make_grid(bbox, a.res or case.get("resolucao_m", 20))
     px = grid.pixel_area_m2
     ev = (case.get("evento") or {}).get("data")
     ficha = {"nome": case["nome"], "gerado_em": datetime.now().isoformat(timespec="seconds"), "versao_pipeline": __version__,
-             "area_bbox": case["bbox"], "periodo": [start, end], "evento": case.get("evento"),
+             "area_bbox": bbox, "area_pedida": case["bbox"], "quadro_nisar": geometry, "periodo": [start, end], "evento": case.get("evento"),
              "grade": {"crs": grid.crs, "resolucao_m": grid.resolution, "largura": grid.width, "altura": grid.height},
              "metodo": S.__doc__.strip(), "parametros": S.PARAMS, "erros": {}}
 
     # 1) funil + metadados
-    from deltal import sources_nisar as sn
-    sn.login()
     log("funil da série NISAR ...")
-    fun, chosen, meta, geoms = sn.funnel_series(grid, start, end)
+    fun, chosen, meta, geoms = sn.funnel_series(grid, start, end, geometry=geometry)
     ficha["funil"] = fun.summary(); ficha["geometrias_que_cobrem"] = geoms
     keys = sorted({k for m in meta for k in m})
     with open(out / "metadados.csv", "w", newline="", encoding="utf-8") as fh:
@@ -198,9 +239,42 @@ def main():
         except Exception as e:
             ficha["erros"]["dem"] = f"{type(e).__name__}: {e}"
 
-    # 4) análise
+    # 4) clima (NASA POWER) e índice de umidade de cada passagem
+    clima, api, gwet = None, None, None
+    try:
+        from deltal.sources_power import climate_daily, antecedent_index
+        w, s_, e_, n_ = grid.bbox
+        d0 = (datetime.fromisoformat(dates[0]) - timedelta(days=10)).strftime("%Y%m%d")
+        clima = climate_daily((w + e_) / 2, (s_ + n_) / 2, d0, dates[-1].replace("-", ""))
+        rain = clima.get("PRECTOTCORR", {})
+        api = [antecedent_index(rain, x.replace("-", "")) for x in dates]
+        gw = clima.get("GWETTOP", {})
+        gwet = [gw.get((datetime.fromisoformat(x) - timedelta(days=1)).strftime("%Y%m%d"), np.nan) for x in dates]
+        ficha["clima"] = {"chuva_total_mm": round(sum(v for k, v in rain.items() if k >= dates[0].replace("-", "")), 1),
+                          "chuva_antecedente_por_passagem_mm": dict(zip(dates, [round(v, 1) for v in api])),
+                          "umidade_solo_superficie_por_passagem": dict(zip(dates, gwet)),
+                          "fonte": "NASA POWER diário (PRECTOTCORR, T2M, T2M_MAX, RH2M, GWETTOP, GWETROOT)"}
+    except Exception as e:
+        ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
+
+    # 5) análise
     log("classificando o ritmo ...")
-    res = S.classify(hh, hv, land, valid=valid)
+    t_days = [(datetime.fromisoformat(x) - datetime.fromisoformat(dates[0])).days for x in dates]
+    res = S.classify(hh, hv, land, valid=valid, t_days=t_days)
+    inv = {}
+    if api is not None:
+        for nm, stack in (("HH", hh), ("HV", hv)):
+            r, sl = S.moisture_response(stack, api)
+            inv[nm] = (r, sl)
+        cur = np.asarray(res["curva_cena_hh"])
+        okc = np.isfinite(cur)
+        ficha["valsa_invisivel"] = {
+            "correlacao_area_HH_vs_chuva_antecedente": round(float(np.corrcoef(cur[okc], np.asarray(api)[okc])[0, 1]), 3),
+            "correlacao_area_HH_vs_umidade_solo": round(float(np.corrcoef(cur[okc & np.isfinite(gwet)],
+                                                                          np.asarray(gwet)[okc & np.isfinite(gwet)])[0, 1]), 3)
+            if np.sum(okc & np.isfinite(gwet)) > 3 else None,
+            "pixels_que_respondem_a_chuva_pct": round(100 * float(np.nanmean(inv["HH"][0][valid] > 0.6)), 1),
+            "tendencia_mediana_db_mes": round(float(np.nanmedian(res["tendencia_db_mes"][valid])), 3)}
     truth = None
     if ev and not a.skip_truth:
         try:
@@ -214,21 +288,6 @@ def main():
         from deltal.validate import metrics
         ficha["validacao_queda_no_evento"] = metrics(res["queda_evento"], truth, okt & land, px)
 
-    # 5) chuva
-    rain = None
-    try:
-        from deltal.sources_power import rain_between
-        w, s_, e_, n_ = case["bbox"]
-        rr = rain_between((w + e_) / 2, (s_ + n_) / 2, dates[0].replace("-", ""), dates[-1].replace("-", ""))
-        rain = rr["diario_mm"]
-        ficha["chuva_total_mm"] = rr["total_mm"]
-        ficha["chuva_entre_passagens_mm"] = {
-            f"{dates[i-1]}→{dates[i]}": round(sum(v for k, v in rain.items()
-                                                  if dates[i-1].replace("-", "") < k <= dates[i].replace("-", "")), 1)
-            for i in range(1, len(dates))}
-    except Exception as e:
-        ficha["erros"]["chuva"] = f"{type(e).__name__}: {e}"
-
     # 6) saídas
     log("figuras ...")
     plot_classes(out / "classes.png", res["classe"], f"Ritmo de cada pixel, {dates[0]} a {dates[-1]} ({len(dates)} passagens)")
@@ -236,10 +295,17 @@ def main():
     rgb, labels = S.temporal_rgb(hv, dates)
     report.overlay_png(out / "rgb_temporal.png", rgb, truth=truth,
                        title=f"HV em 3 tempos: R {labels[0]} | G {labels[1]} | B {labels[2]}")
-    plot_curves(out / "curvas.png", dates, res, rain, ev, "O ritmo da área: radar e chuva")
+    plot_curves(out / "curvas.png", dates, res, clima, ev, "O ritmo da área: radar, chuva e umidade do solo")
+    report.save_png(out / "tendencia.png", res["tendencia_db_mes"], cmap="PuOr", vmin=-1, vmax=1,
+                    title="Valsa lenta: tendência do HV (dB por mês, relativa à área)")
+    if inv:
+        report.save_png(out / "resposta_umidade_hh.png", inv["HH"][0], cmap="BrBG", vmin=-1, vmax=1,
+                        title="Valsa invisível: o quanto o HH acompanha a chuva (correlação r)")
+        report.save_png(out / "resposta_umidade_hv.png", inv["HV"][0], cmap="BrBG", vmin=-1, vmax=1,
+                        title="Valsa invisível: o quanto o HV acompanha a chuva (correlação r)")
     animate(out / "animacao_hv.gif", hv, dates)
     # série reduzida para clicar num ponto na interface (60 m, uint8)
-    st = 3
+    st = max(1, int(round(60 / grid.resolution)))
     small = hv[:, ::st, ::st]
     lo, hi = -30.0, 0.0
     q = np.where(np.isfinite(small), np.clip((small - lo) / (hi - lo) * 254 + 1, 1, 255), 0).astype("uint8")
@@ -247,10 +313,12 @@ def main():
     serie = {"datas": dates, "forma": list(q.shape), "escala_db": [lo, hi], "codificacao": "u8: 0=sem dado, 1..255 = lo..hi dB",
              "passo_pixels": st, "bbox": case["bbox"], "curva_cena_hv": res["curva_cena_hv"].tolist(), "curva_cena_hh": res["curva_cena_hh"].tolist(),
              "curvas_classes_hv_norm": {S.CLASSES[c]: [float(np.nanmedian(s[res["classe"] == c])) if (res["classe"] == c).any() else None
-                                                       for s in res["hv_norm"]] for c in range(1, 6)},
-             "chuva_mm": rain}
+                                                       for s in res["hv_norm"]] for c in (1, 2, 3, 4, 5, 7, 8)},
+             "chuva_antecedente_mm": api, "umidade_solo": gwet,
+             "clima": clima}
     (out / "serie.json").write_text(json.dumps(report._clean(serie), ensure_ascii=False), encoding="utf-8")
-    np.savez_compressed(out / "arrays.npz", classe=res["classe"], quebra=res["quebra_indice"], delta=res["delta_db"])
+    np.savez_compressed(out / "arrays.npz", classe=res["classe"], quebra=res["quebra_indice"], delta=res["delta_db"],
+                        tendencia=res["tendencia_db_mes"], **({"r_umidade_hh": inv["HH"][0], "r_umidade_hv": inv["HV"][0]} if inv else {}))
 
     fic = report.write_ficha(out, ficha)
     lines = [f"# {case['nome']}: a valsa", "", f"{len(dates)} passagens do NISAR (banda L, GCOV) de {dates[0]} a {dates[-1]}.", "",
@@ -263,6 +331,10 @@ def main():
               "na_cicatriz_quebra_no_intervalo_certo_pct"):
         if k in fic["resumo"]:
             lines.append(f"- {k.replace('_', ' ')}: {fic['resumo'][k]}")
+    if fic.get("valsa_invisivel"):
+        lines += ["", "## Valsa invisível", ""] + [f"- {k.replace('_', ' ')}: {v}" for k, v in fic["valsa_invisivel"].items()]
+    if fic.get("clima"):
+        lines += ["", f"Chuva total no período (NASA POWER): {fic['clima']['chuva_total_mm']} mm."]
     if fic.get("validacao_queda_no_evento"):
         m = fic["validacao_queda_no_evento"]
         lines += ["", f"Validação (queda no intervalo do evento contra a cicatriz Sentinel-2): precisão {m['precisao']}, "

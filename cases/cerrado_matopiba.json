@@ -1,0 +1,8 @@
+{
+  "nome": "Cerrado do MATOPIBA: sul do Maranhão e oeste do Piauí (Balsas e rio Parnaíba)",
+  "bbox": [-47.2, -9.8, -43.8, -6.4],
+  "resolucao_m": 200,
+  "nisar_quadro": {"pista": 16, "direcao": "A", "quadro": 174, "referencia": "NISAR_L2_PR_GCOV_025_016_A_174_2005_DHDH_A_20260709T083839_20260709T083913_P05023_N_F_J_001"},
+  "serie": {"inicio": "2026-01-20"},
+  "contexto": "Fronteira agrícola do Cerrado (soja, milho, algodão), cerrado nativo, veredas e a planície do rio Parnaíba. Chuvas de outubro a abril, seca e queimadas de maio a setembro."
+}
