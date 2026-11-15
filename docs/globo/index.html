@@ -446,7 +446,7 @@ async function showP(at) { sel = PCELL; view = ["P"]; draw(); stopV(); panel.cla
       <div class="pcl" id="pcl">${PCL.map(([k]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${layerName(k)}</button>`).join("")}</div>` : `<img src="pg/${x.img}" alt="${L2(x.t)}" loading="lazy">`}</div>
     <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p><p class="how">${L2(x.how)}</p>${x.gloss ? glossary() : ""}</section>`).join("")}</div>
   <div class="nav"><button type="button" class="arr" id="cprev" aria-label="${t("prevS")}">◀</button><div class="dots" id="cdots">${SL.map((_, i) => `<button type="button" data-s="${i}" aria-label="${t("goTo")} ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
-  <a class="btn" href="https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" target="_blank" rel="noopener" style="align-self:flex-start">${t("open")}</a>`;
+  <a class="btn" href="${location.hostname.endsWith("claude.ai") || location.hostname.includes("claudeusercontent") ? "https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" : "../app/"}" target="_blank" rel="noopener" style="align-self:flex-start">${t("open")}</a>`;
   panel.classList.add("on"); document.body.classList.add("paneled");
   const car = document.getElementById("car"); const go = (i, inst) => car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" });
   const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
