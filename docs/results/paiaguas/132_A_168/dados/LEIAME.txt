@@ -1,0 +1,12 @@
+Pacote de dados Delta L
+Grade: EPSG:32721, 20 m, 636 x 665 pixels. Datas: 2026-07-05, 2026-07-17, 2026-08-10, 2026-08-22, 2026-09-03, 2026-09-15, 2026-09-27, 2026-10-09, 2026-10-21
+
+hh_db_serie.tif / hv_db_serie.tif  retroespalhamento NISAR GCOV em dB, uma banda por data (descrição = AAAAMMDD)
+mapas.tif     bandas: classe, quebra_indice_data, quebra_delta_db, tendencia_db_mes, ritmo_residuo_db, r_umidade_hh, r_umidade_hv
+              classe: {"0": "sem dado", "1": "estável", "2": "ritmo forte (sazonal)", "3": "queda abrupta", "4": "subida abrupta", "5": "alagamento passageiro", "6": "água permanente", "7": "queda gradual", "8": "subida gradual"}
+              quebra_indice_data: índice da primeira data DEPOIS da mudança abrupta (1 = 2a data)
+              quebra_delta_db: tamanho do degrau no HV (dB, relativo à área); tendencia_db_mes: inclinação do HV
+              r_umidade_*: correlação do radar com a chuva antecedente (NASA POWER)
+cubo.nc       tudo acima num cubo NetCDF (tempo, y, x), para xarray / R / Panoply
+mudancas.geojson  polígonos das mudanças (EPSG:4326) com classe, área em ha, intensidade e entre quais datas
+serie_area.csv    mediana do HH e do HV da área em cada data

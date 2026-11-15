@@ -1,0 +1,114 @@
+{
+ "queda_abrupta": [
+  {
+   "vista_por": "010_D_098",
+   "confirmada_por": "031_A_169",
+   "pixels": 2885,
+   "confirmados_pct": 19.6
+  },
+  {
+   "vista_por": "010_D_098",
+   "confirmada_por": "111_D_098",
+   "pixels": 2885,
+   "confirmados_pct": 0.0
+  },
+  {
+   "vista_por": "010_D_098",
+   "confirmada_por": "132_A_168",
+   "pixels": 2885,
+   "confirmados_pct": 32.5
+  },
+  {
+   "vista_por": "031_A_169",
+   "confirmada_por": "010_D_098",
+   "pixels": 3168,
+   "confirmados_pct": 17.9
+  },
+  {
+   "vista_por": "031_A_169",
+   "confirmada_por": "111_D_098",
+   "pixels": 3168,
+   "confirmados_pct": 0.0
+  },
+  {
+   "vista_por": "031_A_169",
+   "confirmada_por": "132_A_168",
+   "pixels": 3168,
+   "confirmados_pct": 27.9
+  },
+  {
+   "vista_por": "132_A_168",
+   "confirmada_por": "010_D_098",
+   "pixels": 4960,
+   "confirmados_pct": 18.9
+  },
+  {
+   "vista_por": "132_A_168",
+   "confirmada_por": "031_A_169",
+   "pixels": 4960,
+   "confirmados_pct": 17.8
+  },
+  {
+   "vista_por": "132_A_168",
+   "confirmada_por": "111_D_098",
+   "pixels": 4960,
+   "confirmados_pct": 0.0
+  }
+ ],
+ "subida_abrupta": [
+  {
+   "vista_por": "010_D_098",
+   "confirmada_por": "031_A_169",
+   "pixels": 7934,
+   "confirmados_pct": 2.9
+  },
+  {
+   "vista_por": "010_D_098",
+   "confirmada_por": "111_D_098",
+   "pixels": 7934,
+   "confirmados_pct": 0.0
+  },
+  {
+   "vista_por": "010_D_098",
+   "confirmada_por": "132_A_168",
+   "pixels": 7934,
+   "confirmados_pct": 5.8
+  },
+  {
+   "vista_por": "031_A_169",
+   "confirmada_por": "010_D_098",
+   "pixels": 5162,
+   "confirmados_pct": 4.5
+  },
+  {
+   "vista_por": "031_A_169",
+   "confirmada_por": "111_D_098",
+   "pixels": 5162,
+   "confirmados_pct": 0.0
+  },
+  {
+   "vista_por": "031_A_169",
+   "confirmada_por": "132_A_168",
+   "pixels": 5162,
+   "confirmados_pct": 6.1
+  },
+  {
+   "vista_por": "132_A_168",
+   "confirmada_por": "010_D_098",
+   "pixels": 8127,
+   "confirmados_pct": 5.6
+  },
+  {
+   "vista_por": "132_A_168",
+   "confirmada_por": "031_A_169",
+   "pixels": 8127,
+   "confirmados_pct": 3.9
+  },
+  {
+   "vista_por": "132_A_168",
+   "confirmada_por": "111_D_098",
+   "pixels": 8127,
+   "confirmados_pct": 0.0
+  }
+ ]
+}

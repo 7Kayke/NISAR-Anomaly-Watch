@@ -1,0 +1,301 @@
+campo,valor
+nome,"Paiaguás, Pantanal (célula NISAR A031-169 x D111-098)"
+gerado_em,2026-11-15T03:49:58
+versao_pipeline,0.1.0
+area_bbox,"[-56.933, -18.338, -56.813, -18.218]"
+area_pedida,"[-56.933, -18.338, -56.813, -18.218]"
+quadro_nisar,"[10, ""D"", 98]"
+periodo,"[""2025-07-30"", ""2026-11-15""]"
+evento,
+grade.crs,EPSG:32721
+grade.resolucao_m,20
+grade.largura,636
+grade.altura,665
+metodo,"Série temporal do radar (""a valsa""): ritmo de cada pixel, quando ele quebrou e de que tipo foi a mudança.
+
+Entrada: pilhas (T, H, W) de HH e HV em dB, uma camada por passagem do NISAR na MESMA geometria.
+
+1. normalização por data: tira a mediana espacial da terra em cada data. O que sobra são os
+   desvios LOCAIS; o ritmo da paisagem inteira (estação, chuva, calibração) vai para a curva da cena.
+2. quebra: para cada pixel e cada corte t, diferença das médias depois-antes e o t de Welch
+   simplificado (desvio combinado). Fica o corte com maior |t|.
+3. ritmo: desvio-padrão dos resíduos depois de tirar a quebra (o que oscila sem ser um degrau).
+4. classes (prioridade de cima para baixo):
+     6 água permanente      HH mediana < água
+     3 queda abrupta        HV caiu >= queda_db com |t| >= t_min   (fogo, corte, colheita definitiva)
+     4 subida abrupta       HV subiu >= queda_db com |t| >= t_min  (rebrota forte, obra, água sob vegetação)
+     5 alagamento passageiro HH < água em alguma data, mas a mediana não é água
+     2 ritmo forte          resíduo >= ritmo_db                     (agricultura, áreas úmidas, sazonal)
+     1 estável
+     0 sem dado"
+parametros.queda_db,2.5
+parametros.t_min,4.0
+parametros.ritmo_db,1.5
+parametros.agua_db,-18.0
+parametros.min_lados,2
+parametros.min_validas,5
+parametros.gradual_db,2.0
+parametros.t_tendencia,4.0
+erros.NISAR_L2_PR_GCOV_024_010_D_098_2005_SHSH_M_20260626T215602_20260626T215636_P05023_N_F_J_001,KeyError: 'HVHV'
+erros.NISAR_L2_PR_GCOV_026_010_D_098_2005_SHSH_M_20260720T215600_20260720T215635_P05023_N_F_J_001,KeyError: 'HVHV'
+erros.NISAR_L2_PR_GCOV_028_010_D_098_2005_SHSH_M_20260813T215559_20260813T215634_P05023_N_F_J_001,KeyError: 'HVHV'
+erros.NISAR_L2_PR_GCOV_030_010_D_098_2005_SHSH_M_20260906T215559_20260906T215633_P05023_N_F_J_001,KeyError: 'HVHV'
+erros.NISAR_L2_PR_GCOV_032_010_D_098_2005_SHSH_M_20260930T215559_20260930T215633_P05023_N_F_J_001,KeyError: 'HVHV'
+erros.NISAR_L2_PR_GCOV_034_010_D_098_2005_SHSH_A_20261024T215559_20261024T215633_P05036_N_F_J_001,KeyError: 'HVHV'
+funil.fonte,"NISAR GCOV (banda L), série temporal"
+funil.colecao,NISAR_L2_GCOV_V1 + NISAR_L2_GCOV_PROVISIONAL_V1
+funil.etapas[0].etapa,catalogo
+funil.etapas[0].n,60
+funil.etapas[0].aproveitamento_pct,
+funil.etapas[0].nota,"2025-07-30 a 2026-11-15, coleções NISAR_L2_GCOV_V1, NISAR_L2_GCOV_PROVISIONAL_V1"
+funil.etapas[1].etapa,cobre_area
+funil.etapas[1].n,44
+funil.etapas[1].aproveitamento_pct,73.3
+funil.etapas[1].nota,cobre >= 90% da área
+funil.etapas[2].etapa,uma_por_passagem
+funil.etapas[2].n,44
+funil.etapas[2].aproveitamento_pct,100.0
+funil.etapas[2].nota,duplicatas da mesma passagem: fica a validada
+funil.etapas[3].etapa,mesma_geometria
+funil.etapas[3].n,11
+funil.etapas[3].aproveitamento_pct,25.0
+funil.etapas[3].nota,"geometria com mais passagens: pista/direção/quadro (10, 'D', 98)"
+funil.aproveitamento_total_pct,18.3
+geometrias_que_cobrem.010_D_098,11
+geometrias_que_cobrem.031_A_169,9
+geometrias_que_cobrem.111_D_097,2
+geometrias_que_cobrem.111_D_098,8
+geometrias_que_cobrem.031_A_168,5
+geometrias_que_cobrem.132_A_168,9
+passagens_usadas[0].data,2026-07-08
+passagens_usadas[0].arquivo,NISAR_L2_PR_GCOV_025_010_D_098_2005_DHDH_A_20260708T215601_20260708T215636_P05023_N_F_J_001
+passagens_usadas[0].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[0].crid,P05023
+passagens_usadas[0].ciclo,25
+passagens_usadas[0].identificacao.absoluteOrbitNumber,4953
+passagens_usadas[0].identificacao.boundingPolygon,"POLYGON ((-57.1077357368948 -17.7408147954338 104.069350196784,-57.1535116400091 -17.9552208156527 103.603332520619,-57.1992939532341 -18.1696202247001 104.134581607865,-57.2450992364608 -18.3840090920874 104.524170135719,-57.2909874103746 -18.5983763424194 100.549546624388,-57.3368672506158 -18.8127398744258 98.8287583776384,-57.3828103304305 -19.0270853481143 94.2955233346206,-57.4283910466628 -19.2414930378697 117.360696188668,-57.4744855287199 -19.4557993467723 105.640351386921,-57.5205485526107 -19.6701055082416 98.0786129751526,-57.5665675401879 -19.8844147953749 95.6262590629894,-57.2860227358281 -19.9368027230343 105.070754065058,-57.0150017745073 -19.9869573444297 297.911927496342,-56.7584469565824 -20.0340374830445 118.322417555631,-56.5080387352977 -20.0796022245029 117.499481281249,-56.2644407011592 -20.1235638263918 153.149368187817,-56.0276675615671 -20.1659519212989 136.653716946316,-55.7960590552295 -20.2070868620181 153.466475861332,-55.5681837366524 -20.2472388210784 294.233611985807,-55.3467567111033 -20.2859599123561 211.064894755699,-55.1280769303756 -20.323905800637 254.803588437564,-55.0854260665936 -20.1101758921392 306.715820452966,-55.0427526081251 -19.8964393354661 359.372740262262,-55.0003864669228 -19.6826386765076 374.208252419615,-54.9594801364371 -19.4685761749349 216.423797489498,-54.9167557656564 -19.2548143014092 268.416168213,-54.87302429946 -19.0412152138906 436.150390724273,-54.8314928759352 -18.8272248497697 343.8164370486,-54.7889377512315 -18.6134001336891 368.924834401502,-54.7465721793464 -18.3995307076064 369.152313232539,-54.7040859617894 -18.1856714244402 380.884217306492,-54.9210110009824 -18.1468335873226 174.107680483549,-55.1400268070689 -18.1073523838513 173.218887470709,-55.3633788096243 -18.066817332263 166.00286962314,-55.591549655172 -18.0251241028447 156.679931639629,-55.8251107414216 -17.9821492237721 149.96044915534,-56.0648809425911 -17.9377201823448 138.86474609525,-56.3117330292883 -17.8916492311005 127.699203722527,-56.5667811637891 -17.8436977081637 118.711732354342,-56.8314740041037 -17.7935562598154 111.761138956382,-57.1077357368948 -17.7408147954338 104.069350196784))"
+passagens_usadas[0].identificacao.compositeReleaseId,P05023
+passagens_usadas[0].identificacao.diagnosticModeFlag,0
+passagens_usadas[0].identificacao.frameNumber,98
+passagens_usadas[0].identificacao.granuleId,NISAR_L2_PR_GCOV_025_010_D_098_2005_DHDH_A_20260708T215601_20260708T215636_P05023_N_F_J_001
+passagens_usadas[0].identificacao.hasInputDataException,0
+passagens_usadas[0].identificacao.instrumentName,LSAR
+passagens_usadas[0].identificacao.isDithered,True
+passagens_usadas[0].identificacao.isFullFrame,True
+passagens_usadas[0].identificacao.isGeocoded,True
+passagens_usadas[0].identificacao.isJointObservation,False
+passagens_usadas[0].identificacao.isMixedMode,False
+passagens_usadas[0].identificacao.isUrgentObservation,False
+passagens_usadas[0].identificacao.listOfFrequencies,"[""A"", ""B""]"
+passagens_usadas[0].identificacao.listOfObservationModes,"[""(NOT SPECIFIED)""]"
+passagens_usadas[0].identificacao.lookDirection,Left
+passagens_usadas[0].identificacao.missionId,NISAR
+passagens_usadas[0].identificacao.orbitPassDirection,Descending
+passagens_usadas[0].identificacao.plannedDatatakeId,"[""dtid_2026189214932""]"
+passagens_usadas[0].identificacao.plannedObservationId,"[""oid_2026189215536""]"
+passagens_usadas[0].identificacao.platformName,NISAR
+passagens_usadas[0].identificacao.processingCenter,JPL
+passagens_usadas[0].identificacao.processingDateTime,2026-07-11T03:45:45
+passagens_usadas[0].identificacao.processingType,Nominal
+passagens_usadas[0].identificacao.productDoi,10.5067/NIL2GCOV-P1
+passagens_usadas[0].identificacao.productLevel,L2
+passagens_usadas[0].identificacao.productSpecificationVersion,1.5.0
+passagens_usadas[0].identificacao.productType,GCOV
+passagens_usadas[0].identificacao.productVersion,1.0.11
+passagens_usadas[0].identificacao.radarBand,L
+passagens_usadas[0].identificacao.staticLayersDataAccess,https://nisar-services.earthdata.nasa.gov/redirect/NISAR_L2_STATIC/NISAR_L2_PR_GCOV_025_010_D_098_2005_DHDH_A_20260708T215601_20260708T215636_P05023_N_F_J_001.h5
+passagens_usadas[0].identificacao.trackNumber,10
+passagens_usadas[0].identificacao.zeroDopplerEndTime,2026-07-08T21:56:36.999342105
+passagens_usadas[0].identificacao.zeroDopplerStartTime,2026-07-08T21:56:01.000000000
+passagens_usadas[0].identificacao.banda,L
+passagens_usadas[1].data,2026-08-25
+passagens_usadas[1].arquivo,NISAR_L2_PR_GCOV_029_010_D_098_2005_DHDH_A_20260825T215559_20260825T215634_P05023_N_F_J_001
+passagens_usadas[1].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[1].crid,P05023
+passagens_usadas[1].ciclo,29
+passagens_usadas[1].identificacao.absoluteOrbitNumber,5645
+passagens_usadas[1].identificacao.boundingPolygon,"POLYGON ((-57.1092557841722 -17.7519623074789 104.09369661968,-57.1549993300256 -17.9663742131445 105.67821445956,-57.2008087132454 -18.1807678300174 103.980712825798,-57.246629940373 -18.3951536902459 102.958656311029,-57.2924951370893 -18.6095248740901 100.360999564031,-57.3383614446043 -18.8238904236817 99.3376170603416,-57.384248545925 -19.038246462075 98.5399398028986,-57.4301486398568 -19.252593866244 98.5793385699674,-57.4760429081563 -19.4669372369744 100.871635059053,-57.5221169872088 -19.6812414277738 92.2841187000095,-57.5680293454726 -19.8955698468538 97.1414414284059,-57.2874792302399 -19.9479460745551 104.059280447013,-57.0161868474825 -19.9981376354346 315.690368652206,-56.759776558664 -20.0451793207878 121.698310973294,-56.5092839535544 -20.0907471099153 125.519073782442,-56.2658239426029 -20.1346722947698 145.348876736203,-56.0289096382215 -20.1770735898266 139.214372418296,-55.7973182798072 -20.2181938817336 151.076322727841,-55.5689743701905 -20.2584150641372 338.777587673586,-55.3479591359079 -20.2970536932676 207.91151459407,-55.1294749730218 -20.3349549897541 225.350463868621,-55.0867796305454 -20.121233574361 283.114533393444,-55.043498584312 -19.9076008857958 407.177644348355,-55.0017389262563 -19.6936973952429 352.118531490009,-54.9606948590454 -19.4796594814032 211.1381695147,-54.9182203880792 -19.2658547572623 234.636688230934,-54.8740657486365 -19.0523295687341 452.626708465018,-54.8329136278942 -18.8382742582967 316.573211671857,-54.7901932781773 -18.6244785448802 361.796967674182,-54.7472367872327 -18.4107133966845 432.322786073177,-54.7055590666737 -18.1967133377214 349.618773388449,-54.9222359728897 -18.157930270194 175.324735950734,-55.1412797115362 -18.118455365172 174.428375243547,-55.3646747972958 -18.077923915303 165.668869028011,-55.5928778198225 -18.0362362480397 156.085235830597,-55.8265091939479 -17.9932600300506 145.5414733596,-56.0662510835444 -17.9488476911282 140.079910276067,-56.3130973025063 -17.9027895556051 132.1431579609,-56.5682016572408 -17.8548395065755 121.031417889073,-56.8329526842757 -17.804699251389 112.141006413201,-57.1092557841722 -17.7519623074789 104.09369661968))"
+passagens_usadas[1].identificacao.compositeReleaseId,P05023
+passagens_usadas[1].identificacao.diagnosticModeFlag,0
+passagens_usadas[1].identificacao.frameNumber,98
+passagens_usadas[1].identificacao.granuleId,NISAR_L2_PR_GCOV_029_010_D_098_2005_DHDH_A_20260825T215559_20260825T215634_P05023_N_F_J_001
+passagens_usadas[1].identificacao.hasInputDataException,0
+passagens_usadas[1].identificacao.instrumentName,LSAR
+passagens_usadas[1].identificacao.isDithered,True
+passagens_usadas[1].identificacao.isFullFrame,True
+passagens_usadas[1].identificacao.isGeocoded,True
+passagens_usadas[1].identificacao.isJointObservation,False
+passagens_usadas[1].identificacao.isMixedMode,False
+passagens_usadas[1].identificacao.isUrgentObservation,False
+passagens_usadas[1].identificacao.listOfFrequencies,"[""A"", ""B""]"
+passagens_usadas[1].identificacao.listOfObservationModes,"[""(NOT SPECIFIED)""]"
+passagens_usadas[1].identificacao.lookDirection,Left
+passagens_usadas[1].identificacao.missionId,NISAR
+passagens_usadas[1].identificacao.orbitPassDirection,Descending
+passagens_usadas[1].identificacao.plannedDatatakeId,"[""dtid_2026237214932""]"
+passagens_usadas[1].identificacao.plannedObservationId,"[""oid_2026237215536""]"
+passagens_usadas[1].identificacao.platformName,NISAR
+passagens_usadas[1].identificacao.processingCenter,JPL
+passagens_usadas[1].identificacao.processingDateTime,2026-08-30T00:45:29
+passagens_usadas[1].identificacao.processingType,Nominal
+passagens_usadas[1].identificacao.productDoi,10.5067/NIL2GCOV-P1
+passagens_usadas[1].identificacao.productLevel,L2
+passagens_usadas[1].identificacao.productSpecificationVersion,1.5.0
+passagens_usadas[1].identificacao.productType,GCOV
+passagens_usadas[1].identificacao.productVersion,1.0.11
+passagens_usadas[1].identificacao.radarBand,L
+passagens_usadas[1].identificacao.staticLayersDataAccess,https://nisar-services.earthdata.nasa.gov/redirect/NISAR_L2_STATIC/NISAR_L2_PR_GCOV_029_010_D_098_2005_DHDH_A_20260825T215559_20260825T215634_P05023_N_F_J_001.h5
+passagens_usadas[1].identificacao.trackNumber,10
+passagens_usadas[1].identificacao.zeroDopplerEndTime,2026-08-25T21:56:34.999342105
+passagens_usadas[1].identificacao.zeroDopplerStartTime,2026-08-25T21:55:59.000000000
+passagens_usadas[1].identificacao.banda,L
+passagens_usadas[2].data,2026-09-18
+passagens_usadas[2].arquivo,NISAR_L2_PR_GCOV_031_010_D_098_2005_DHDH_A_20260918T215559_20260918T215633_P05023_F_F_J_001
+passagens_usadas[2].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[2].crid,P05023
+passagens_usadas[2].ciclo,31
+passagens_usadas[2].identificacao.absoluteOrbitNumber,5991
+passagens_usadas[2].identificacao.boundingPolygon,"POLYGON ((-57.1106891284941 -17.7560127837568 105.266586252422,-57.1551711761461 -17.9644669669527 106.448402987781,-57.199714252724 -18.1729040397016 104.614935689291,-57.2442812869304 -18.3813313698143 102.503661696404,-57.2888661524349 -18.5897493027142 100.602279626613,-57.3334689416806 -18.798158662589 98.9748844607009,-57.37805455493 -19.0065660566626 100.186660930564,-57.4226830853745 -19.2149594838885 99.9912646014324,-57.4670063587428 -19.4234048936038 123.240562255339,-57.512007650146 -19.6317186784881 100.037414418484,-57.5567509269816 -19.840074894277 97.0382759310256,-57.2762696348989 -19.8924740161476 107.248993295079,-57.0059510752494 -19.942523755623 249.108185476214,-56.7489269761964 -19.9897122505221 112.393203460517,-56.4985198541279 -20.035299834406 116.894424137255,-56.2551735876637 -20.0792398851814 134.573959858886,-56.0182562226453 -20.1216767156238 137.416915794825,-55.7867350098521 -20.162819708758 151.309143070021,-55.5593561232257 -20.2029095411096 244.796905687753,-55.3371601305634 -20.2417863735193 251.914214427163,-55.1182689322603 -20.2797913712623 328.148497973834,-55.0774489537098 -20.0718872996238 303.405242467674,-55.035955627939 -19.8640866975313 354.993745663925,-54.9946616510035 -19.6562417873715 381.458343504154,-54.9552099035444 -19.4480699491141 190.765655430908,-54.9129150669801 -19.2403752824291 329.765565402419,-54.8707376009866 -19.0326510516947 453.225280489631,-54.8304123843144 -18.8245958044129 357.368133785714,-54.7892944928252 -18.6166662480039 351.942259524395,-54.7474713784676 -18.4088492896419 427.001129150154,-54.7070916479003 -18.2007691484339 329.597900665954,-54.9235774793942 -18.1620179011122 178.49609309245,-55.142663910275 -18.1225336646117 173.578004200545,-55.3660712252454 -18.0819981392717 164.332015748437,-55.5942656766931 -18.0403100224938 156.430282672667,-55.8278790754457 -17.9973349838348 148.366698255238,-56.0676460200853 -17.9529158633008 141.259566940355,-56.3145774496978 -17.9068396139159 126.659889237242,-56.5696268722449 -17.8588971750521 121.163325538494,-56.8343631962623 -17.8087569615399 114.231583033879,-57.1106891284941 -17.7560127837568 105.266586252422))"
+passagens_usadas[2].identificacao.compositeReleaseId,P05023
+passagens_usadas[2].identificacao.diagnosticModeFlag,0
+passagens_usadas[2].identificacao.frameNumber,98
+passagens_usadas[2].identificacao.granuleId,NISAR_L2_PR_GCOV_031_010_D_098_2005_DHDH_A_20260918T215559_20260918T215633_P05023_F_F_J_001
+passagens_usadas[2].identificacao.hasInputDataException,0
+passagens_usadas[2].identificacao.instrumentName,LSAR
+passagens_usadas[2].identificacao.isDithered,True
+passagens_usadas[2].identificacao.isFullFrame,True
+passagens_usadas[2].identificacao.isGeocoded,True
+passagens_usadas[2].identificacao.isJointObservation,False
+passagens_usadas[2].identificacao.isMixedMode,False
+passagens_usadas[2].identificacao.isUrgentObservation,False
+passagens_usadas[2].identificacao.listOfFrequencies,"[""A"", ""B""]"
+passagens_usadas[2].identificacao.listOfObservationModes,"[""(NOT SPECIFIED)""]"
+passagens_usadas[2].identificacao.lookDirection,Left
+passagens_usadas[2].identificacao.missionId,NISAR
+passagens_usadas[2].identificacao.orbitPassDirection,Descending
+passagens_usadas[2].identificacao.plannedDatatakeId,"[""dtid_2026261214932""]"
+passagens_usadas[2].identificacao.plannedObservationId,"[""oid_2026261215536""]"
+passagens_usadas[2].identificacao.platformName,NISAR
+passagens_usadas[2].identificacao.processingCenter,JPL
+passagens_usadas[2].identificacao.processingDateTime,2026-09-20T16:57:14
+passagens_usadas[2].identificacao.processingType,Nominal
+passagens_usadas[2].identificacao.productDoi,10.5067/NIL2GCOV-P1
+passagens_usadas[2].identificacao.productLevel,L2
+passagens_usadas[2].identificacao.productSpecificationVersion,1.5.0
+passagens_usadas[2].identificacao.productType,GCOV
+passagens_usadas[2].identificacao.productVersion,1.0.11
+passagens_usadas[2].identificacao.radarBand,L
+passagens_usadas[2].identificacao.staticLayersDataAccess,https://nisar-services.earthdata.nasa.gov/redirect/NISAR_L2_STATIC/NISAR_L2_PR_GCOV_031_010_D_098_2005_DHDH_A_20260918T215559_20260918T215633_P05023_F_F_J_001.h5
+passagens_usadas[2].identificacao.trackNumber,10
+passagens_usadas[2].identificacao.zeroDopplerEndTime,2026-09-18T21:56:33.999342105
+passagens_usadas[2].identificacao.zeroDopplerStartTime,2026-09-18T21:55:59.000000000
+passagens_usadas[2].identificacao.banda,L
+passagens_usadas[3].data,2026-10-12
+passagens_usadas[3].arquivo,NISAR_L2_PR_GCOV_033_010_D_098_2005_DHDH_A_20261012T215559_20261012T215634_P05023_N_F_J_001
+passagens_usadas[3].colecao,NISAR_L2_GCOV_PROVISIONAL_V1
+passagens_usadas[3].crid,P05023
+passagens_usadas[3].ciclo,33
+passagens_usadas[3].identificacao.absoluteOrbitNumber,6337
+passagens_usadas[3].identificacao.boundingPolygon,"POLYGON ((-57.1075981195936 -17.7423620486972 104.061354235641,-57.1533347663627 -17.956775506596 106.109886790867,-57.1991469659833 -18.1711688390435 104.174522322496,-57.2449729489 -18.385553979582 102.772613559638,-57.2908315411028 -18.5999265876392 100.606833289697,-57.3367042871753 -18.8142911474073 99.0795973008729,-57.3826465816223 -19.0286370328594 94.2973632808125,-57.4282149807192 -19.2430466469712 117.926497836451,-57.4744033231689 -19.4573352927072 99.2192680890167,-57.5203775324088 -19.6716582294096 97.6701815304012,-57.5663905977101 -19.8859681750442 95.3247832690625,-57.2858736416022 -19.9383444476744 99.2896423400858,-57.0147874497276 -19.9885046588071 293.732727676586,-56.7581408176915 -20.0355952898369 118.476752777427,-56.5076987067494 -20.0811600077794 117.44776130732,-56.2640728599464 -20.125120557995 152.447922262697,-56.0272553114615 -20.1675105873249 137.011550884457,-55.7955867572969 -20.2086501679328 156.706939697067,-55.5676274719877 -20.2488107970504 303.272033357554,-55.3462435423344 -20.2875187448443 212.217422486547,-55.1275904974359 -20.3254544525531 249.426864790568,-55.0849442432648 -20.1117243706408 301.414398194792,-55.0418775225105 -19.8980548979705 400.449402578079,-54.9999467174802 -19.6841802894546 365.203400250005,-54.9589499817874 -19.4701338814592 218.570539565318,-54.9160135029551 -19.2564085216852 295.973540610507,-54.8724219858482 -19.0427858679707 447.987211331731,-54.8310918877985 -18.828761057205 332.65563964959,-54.7885191659883 -18.6149393954322 360.417768020775,-54.7459892193695 -18.4010993002595 380.5928411947,-54.7036975469215 -18.1872061470172 370.017089844066,-54.9205564847106 -18.1483854505612 174.45515452371,-55.1396139897337 -18.1089024272571 172.261428070962,-55.3629925184633 -18.0683682659078 165.512299270474,-55.591186814025 -18.0266765224926 157.018188184055,-55.8247854534201 -17.9837006217677 149.803314564157,-56.0645891922994 -17.9392713316989 138.740646281166,-56.3114963908663 -17.8931962052277 125.868225097643,-56.5665620722654 -17.8452475323414 118.60189830696,-56.8312749622254 -17.7951086260611 113.177933281279,-57.1075981195936 -17.7423620486972 104.061354235641))"
+passagens_usadas[3].identificacao.compositeReleaseId,P05023
+passagens_usadas[3].identificacao.diagnosticModeFlag,0
+passagens_usadas[3].identificacao.frameNumber,98
+passagens_usadas[3].identificacao.granuleId,NISAR_L2_PR_GCOV_033_010_D_098_2005_DHDH_A_20261012T215559_20261012T215634_P05023_N_F_J_001
+passagens_usadas[3].identificacao.hasInputDataException,0
+passagens_usadas[3].identificacao.instrumentName,LSAR
+passagens_usadas[3].identificacao.isDithered,True
+passagens_usadas[3].identificacao.isFullFrame,True
+passagens_usadas[3].identificacao.isGeocoded,True
+passagens_usadas[3].identificacao.isJointObservation,False
+passagens_usadas[3].identificacao.isMixedMode,False
+passagens_usadas[3].identificacao.isUrgentObservation,False
+passagens_usadas[3].identificacao.listOfFrequencies,"[""A"", ""B""]"
+passagens_usadas[3].identificacao.listOfObservationModes,"[""(NOT SPECIFIED)""]"
+passagens_usadas[3].identificacao.lookDirection,Left
+passagens_usadas[3].identificacao.missionId,NISAR
+passagens_usadas[3].identificacao.orbitPassDirection,Descending
+passagens_usadas[3].identificacao.plannedDatatakeId,"[""dtid_2026285214932""]"
+passagens_usadas[3].identificacao.plannedObservationId,"[""oid_2026285215536""]"
+passagens_usadas[3].identificacao.platformName,NISAR
+passagens_usadas[3].identificacao.processingCenter,JPL
+passagens_usadas[3].identificacao.processingDateTime,2026-10-14T17:44:46
+passagens_usadas[3].identificacao.processingType,Nominal
+passagens_usadas[3].identificacao.productDoi,10.5067/NIL2GCOV-P1
+passagens_usadas[3].identificacao.productLevel,L2
+passagens_usadas[3].identificacao.productSpecificationVersion,1.5.0
+passagens_usadas[3].identificacao.productType,GCOV
+passagens_usadas[3].identificacao.productVersion,1.0.11
+passagens_usadas[3].identificacao.radarBand,L
+passagens_usadas[3].identificacao.staticLayersDataAccess,https://nisar-services.earthdata.nasa.gov/redirect/NISAR_L2_STATIC/NISAR_L2_PR_GCOV_033_010_D_098_2005_DHDH_A_20261012T215559_20261012T215634_P05023_N_F_J_001.h5
+passagens_usadas[3].identificacao.trackNumber,10
+passagens_usadas[3].identificacao.zeroDopplerEndTime,2026-10-12T21:56:34.999342105
+passagens_usadas[3].identificacao.zeroDopplerStartTime,2026-10-12T21:55:59.000000000
+passagens_usadas[3].identificacao.banda,L
+passagens_usadas[4].data,2026-11-05
+passagens_usadas[4].arquivo,NISAR_L2_PR_GCOV_035_010_D_098_2005_DHDH_A_20261105T215600_20261105T215634_P05036_N_F_J_001
+passagens_usadas[4].colecao,NISAR_L2_GCOV_V1
+passagens_usadas[4].crid,P05036
+passagens_usadas[4].ciclo,35
+passagens_usadas[4].identificacao.absoluteOrbitNumber,6683
+passagens_usadas[4].identificacao.boundingPolygon,"POLYGON ((-57.1110894476169 -17.7587834459511 105.086249678594,-57.1556028803619 -17.9672319794666 103.952621456225,-57.20004427205 -18.1756889153738 109.374998882527,-57.2446743468743 -18.3841047142121 102.67998584043,-57.2892647590257 -18.5925220058723 100.326912331445,-57.3337890981966 -18.8009467220055 104.258338203605,-57.3784523017116 -19.0093398772598 99.8699405189273,-57.4230843176343 -19.2177331210172 99.3755264294412,-57.4674617916236 -19.4261690194979 118.721717835635,-57.5124044126872 -19.6344940266636 99.640692843446,-57.5571309303781 -19.8428538941397 97.7824483155109,-57.2766193836166 -19.8952555128248 108.238302835191,-57.0062233649871 -19.9453163053726 254.29235868042,-56.7491522939089 -19.992510208361 119.719238126849,-56.4988003501578 -20.0380848283722 117.439240762796,-56.255381656619 -20.08203475314 139.737976367264,-56.0185022727514 -20.1244618910073 136.76043697426,-55.7869510796934 -20.1656071782716 151.361374190499,-55.5596033784606 -20.2056886823019 239.084061282182,-55.3372287075275 -20.244593232937 263.481170108827,-55.1183195509002 -20.2825981781181 339.703551061775,-55.0779189812585 -20.0746224339562 266.410858095801,-55.036344553371 -19.8668354345039 327.569916126468,-54.9947122710766 -19.6590479432134 393.628570485493,-54.9553640710414 -19.4508581309589 191.036697480822,-54.9130253290904 -19.2431708936893 335.36883418297,-54.8709134637887 -19.0354348750695 451.34014905034,-54.8307062660561 -18.8273589520488 341.81860351637,-54.7896156403807 -18.6194243807774 333.355591361203,-54.7476076697156 -18.411639165521 430.328429117952,-54.7071903069128 -18.2035655921631 337.552642822442,-54.9237550832754 -18.1648033803062 179.586503184114,-55.1428802839783 -18.1253151227022 172.726333702137,-55.3662896876883 -18.0847820741688 165.567155256856,-55.594526553993 -18.0430891763273 155.566010862702,-55.8281569158326 -18.0001139066786 148.068635644009,-56.0679934287541 -17.9556848968992 136.716629130859,-56.3148955786299 -17.9096168837509 126.938086229918,-56.5700064407357 -17.861665908188 118.388786313873,-56.834769727775 -17.811523516303 111.502105739433,-57.1110894476169 -17.7587834459511 105.086249678594))"
+passagens_usadas[4].identificacao.compositeReleaseId,P05036
+passagens_usadas[4].identificacao.diagnosticModeFlag,0
+passagens_usadas[4].identificacao.frameNumber,98
+passagens_usadas[4].identificacao.granuleId,NISAR_L2_PR_GCOV_035_010_D_098_2005_DHDH_A_20261105T215600_20261105T215634_P05036_N_F_J_001
+passagens_usadas[4].identificacao.hasInputDataException,0
+passagens_usadas[4].identificacao.instrumentName,LSAR
+passagens_usadas[4].identificacao.isDithered,True
+passagens_usadas[4].identificacao.isFullFrame,True
+passagens_usadas[4].identificacao.isGeocoded,True
+passagens_usadas[4].identificacao.isJointObservation,False
+passagens_usadas[4].identificacao.isMixedMode,False
+passagens_usadas[4].identificacao.isUrgentObservation,False
+passagens_usadas[4].identificacao.listOfFrequencies,"[""A"", ""B""]"
+passagens_usadas[4].identificacao.listOfObservationModes,"[""(NOT SPECIFIED)""]"
+passagens_usadas[4].identificacao.lookDirection,Left
+passagens_usadas[4].identificacao.missionId,NISAR
+passagens_usadas[4].identificacao.orbitPassDirection,Descending
+passagens_usadas[4].identificacao.plannedDatatakeId,"[""dtid_2026309214932""]"
+passagens_usadas[4].identificacao.plannedObservationId,"[""oid_2026309215536""]"
+passagens_usadas[4].identificacao.platformName,NISAR
+passagens_usadas[4].identificacao.processingCenter,JPL
+passagens_usadas[4].identificacao.processingDateTime,2026-11-12T03:18:56
+passagens_usadas[4].identificacao.processingType,Nominal
+passagens_usadas[4].identificacao.productDoi,10.5067/NIL2GCOV-V1
+passagens_usadas[4].identificacao.productLevel,L2
+passagens_usadas[4].identificacao.productSpecificationVersion,1.6.0
+passagens_usadas[4].identificacao.productType,GCOV
+passagens_usadas[4].identificacao.productVersion,1.0.20
+passagens_usadas[4].identificacao.radarBand,L
+passagens_usadas[4].identificacao.staticLayersDataAccess,https://nisar-services.earthdata.nasa.gov/redirect/NISAR_L2_STATIC/NISAR_L2_PR_GCOV_035_010_D_098_2005_DHDH_A_20261105T215600_20261105T215634_P05036_N_F_J_001.h5
+passagens_usadas[4].identificacao.trackNumber,10
+passagens_usadas[4].identificacao.zeroDopplerEndTime,2026-11-05T21:56:34.999342105
+passagens_usadas[4].identificacao.zeroDopplerStartTime,2026-11-05T21:56:00.000000000
+passagens_usadas[4].identificacao.banda,L
+clima.chuva_total_mm,177.4
+clima.chuva_antecedente_por_passagem_mm.2026-07-08,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-08-25,0.0
+clima.chuva_antecedente_por_passagem_mm.2026-09-18,14.9
+clima.chuva_antecedente_por_passagem_mm.2026-10-12,14.2
+clima.chuva_antecedente_por_passagem_mm.2026-11-05,9.8
+clima.umidade_solo_superficie_por_passagem.2026-07-08,0.34
+clima.umidade_solo_superficie_por_passagem.2026-08-25,0.14
+clima.umidade_solo_superficie_por_passagem.2026-09-18,0.36
+clima.umidade_solo_superficie_por_passagem.2026-10-12,0.42
+clima.umidade_solo_superficie_por_passagem.2026-11-05,0.3
+clima.fonte,"NASA POWER diário (PRECTOTCORR, T2M, T2M_MAX, RH2M, GWETTOP, GWETROOT)"
+valsa_invisivel.correlacao_area_HH_vs_chuva_antecedente,-0.728
+valsa_invisivel.correlacao_area_HH_vs_umidade_solo,-0.766
+valsa_invisivel.pixels_que_respondem_a_chuva_pct,2.5
+valsa_invisivel.tendencia_mediana_db_mes,0.168
+resumo.classes_ha.estável,12642.0
+resumo.classes_ha.ritmo forte (sazonal),479.72
+resumo.classes_ha.queda abrupta,115.4
+resumo.classes_ha.subida abrupta,317.36
+resumo.classes_ha.alagamento passageiro,1353.24
+resumo.classes_ha.água permanente,1474.32
+resumo.classes_ha.queda gradual,146.04
+resumo.classes_ha.subida gradual,389.52
+resumo.datas,"[""2026-07-08"", ""2026-08-25"", ""2026-09-18"", ""2026-10-12"", ""2026-11-05""]"
+resumo.quedas_por_intervalo_ha.2026-08-25→2026-09-18,97.32
+resumo.quedas_por_intervalo_ha.2026-09-18→2026-10-12,18.08
