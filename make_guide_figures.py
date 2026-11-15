@@ -217,7 +217,7 @@ def calendar(folder, name, lang):
             ax.plot(d(r["inicio"]), i, "o", color=c, ms=7)
         ax.text(1.005, i, f"{len(rr)}", transform=ax.get_yaxis_transform(), va="center", color=INK, fontsize=11, fontweight="bold")
     ax.set_yticks(range(3)); ax.set_yticklabels(prods); ax.set_ylim(-0.6, 2.6); ax.grid(axis="x", alpha=.4); dfmt(ax, lang)
-    ax.set_title("Which NISAR products exist over the point, and when" if lang == "en" else "Quais produtos do NISAR existem sobre o ponto, e quando")
+    ax.set_title("Which NISAR products exist over the point, and when" if lang == "en" else "Quais produtos do NISAR existem sobre o ponto e quando")
     hand = [Patch(color="#7FE8FF", label="ascending" if lang == "en" else "ascendente"), Patch(color="#FF8A3D", label="descending" if lang == "en" else "descendente"),
             Patch(color="#8A94A8", label="BETA (before calibration)" if lang == "en" else "BETA (antes da calibração)")]
     ax.legend(handles=hand, ncol=3, fontsize=9.5, loc="upper center", bbox_to_anchor=(0.5, -0.18))
@@ -293,7 +293,7 @@ def main():
                       ("par_20260628_20260710_031A.png", "pair_jul", {"en": "Jun 28 → Jul 10, 2026 · track 31 ascending", "pt": "28/06 → 10/07/2026 · pista 31 ascendente"})]:
         src = R / "paiaguas" / "gunw" / f; W = Image.open(src).width
         retitle(src, f"paiaguas_{nm}", {l: [ti[l], ((10, "Displacement (cm, relative)" if l == "en" else "Deslocamento (cm, relativo)"), (W // 2 + 30, "Coherence (0 = changed, 1 = same)" if l == "en" else "Coerência (0 = mudou, 1 = igual)"))] for l in ("en", "pt")}, 30)
-    retitle(R / "norte_fire_funil" / "nisar_mudanca_hv.png", "norte_hv", {"en": "NISAR HV change (dB) · red = darkened", "pt": "Mudança no HV do NISAR (dB) · vermelho = escureceu"}, 34)
+    retitle(R / "norte_fire_funil" / "nisar_mudanca_hv.png", "norte_hv", {"en": "HV change (dB) · red = darkened", "pt": "Mudança no HV (dB) · vermelho = escureceu"}, 34)
     retitle(R / "norte_fire_funil" / "consenso.png", "norte_consensus", {"en": "Orange: radar + optical agree · white: Sentinel-2 scar", "pt": "Laranja: radar + óptico concordam · branco: cicatriz Sentinel-2"}, 34)
     prev = Path("docs/globo/pg/norte/previa_nisar.png"); pw = Image.open(prev).width
     retitle(prev, "norte_preview", {"en": [((20, "Oct 14 · 2 days before"), (584, "Oct 26 · 10 days after"), (1148, "Change in green (≈ HV)"))],
