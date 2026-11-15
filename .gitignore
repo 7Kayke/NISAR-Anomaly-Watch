@@ -5,7 +5,3 @@ __pycache__/
 *.h5
 .netrc
 .env
-.venv/
-venv/
-*.tgz
-*.zip

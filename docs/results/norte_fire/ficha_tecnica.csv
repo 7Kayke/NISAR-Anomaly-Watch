@@ -1,0 +1,79 @@
+campo,valor
+nome,"Incêndio Norte, San Clemente e San Juan Capistrano (Califórnia)"
+gerado_em,2026-11-14T23:39:48+00:00
+versao_pipeline,0.1.0
+area_bbox,"[-117.72, 33.42, -117.58, 33.53]"
+evento.data,2026-10-16
+evento.descricao,"Incêndio Norte (CAL FIRE): ~570 acres, Portico Del Norte e Eminencia Del Norte, San Clemente"
+evento.fonte,https://www.fire.ca.gov/incidents/2026/10/16/norte-fire/updates/620cae70-c20f-4b85-b7e3-553145c2f022
+grade.crs,EPSG:32611
+grade.resolucao_m,20
+grade.largura,655
+grade.altura,614
+parametros_deteccao.filter_size,5
+parametros_deteccao.z_k,2.5
+parametros_deteccao.veg_drop_db,-2.0
+parametros_deteccao.veg_margin_db,-1.0
+parametros_deteccao.water_drop_db,-3.0
+parametros_deteccao.water_dark_db,-18.0
+parametros_deteccao.coh_drop,0.3
+parametros_deteccao.min_area_m2,4000.0
+parametros_verdade.dnbr_min,0.27
+parametros_verdade.ndvi_pre_min,0.2
+parametros_verdade.min_area_m2,4000.0
+fontes.sentinel2.antes.data,2026-10-14
+fontes.sentinel2.antes.nuvem_na_area,0.0
+fontes.sentinel2.antes.offset,-1000.0
+fontes.sentinel2.antes.itens,"[""S2C_MSIL2A_20261014T183331_R027_T11SMT_20261014T215413"", ""S2C_MSIL2A_20261014T183331_R027_T11SMS_20261014T215413""]"
+fontes.sentinel2.antes.baseline,05.13
+fontes.sentinel2.depois.data,2026-10-19
+fontes.sentinel2.depois.nuvem_na_area,0.0
+fontes.sentinel2.depois.offset,-1000.0
+fontes.sentinel2.depois.itens,"[""S2B_MSIL2A_20261019T183359_R027_T11SMT_20261019T221439"", ""S2B_MSIL2A_20261019T183359_R027_T11SMS_20261019T221439""]"
+fontes.sentinel2.depois.baseline,05.13
+fontes.sentinel2.colecao,sentinel-2-l2a (Planetary Computer)
+fontes.sentinel1_rtc.antes.id,S1D_IW_GRDH_1SDV_20261014T014924_20261014T014949_005005_009747_rtc
+fontes.sentinel1_rtc.antes.data,2026-10-14T01:49:36.673012+00:00
+fontes.sentinel1_rtc.antes.orbita_relativa,64
+fontes.sentinel1_rtc.antes.direcao,ascending
+fontes.sentinel1_rtc.antes.plataforma,sentinel-1d
+fontes.sentinel1_rtc.depois.id,S1C_IW_GRDH_1SDV_20261020T014908_20261020T014933_009962_013DC7_rtc
+fontes.sentinel1_rtc.depois.data,2026-10-20T01:49:21.164216+00:00
+fontes.sentinel1_rtc.depois.orbita_relativa,64
+fontes.sentinel1_rtc.depois.direcao,ascending
+fontes.sentinel1_rtc.depois.plataforma,sentinel-1c
+fontes.sentinel1_rtc.colecao,sentinel-1-rtc (Planetary Computer)
+resultados.verdade_sentinel2.area_queimada_ha,120.56
+resultados.verdade_sentinel2.grupos,"[2176, 18, 12, 23, 492, 29, 50, 18, 21, 23, 121, 11, 20]"
+resultados.verdade_sentinel2.pixels_validos,321873
+resultados.sentinel1_rtc.stats.lr_co_mediana_db,-0.8382
+resultados.sentinel1_rtc.stats.lr_co_mad_db,0.99
+resultados.sentinel1_rtc.stats.lr_cross_mediana_db,-0.4334
+resultados.sentinel1_rtc.stats.lr_cross_mad_db,0.6226
+resultados.sentinel1_rtc.stats.vegetacao_area_ha,790.64
+resultados.sentinel1_rtc.stats.agua_area_ha,1993.16
+resultados.sentinel1_rtc.stats.vegetacao_grupos,"[17, 21, 54, 21, 26, 50, 29, 11, 12, 566, 29, 11, 32, 71, 14, 47, 12, 27, 17, 10, 22, 69, 13, 23, 58, 35, 32, 14, 127, 12, 183, 87, 10, 11, 16, 278, 24, 15, 19, 16, 46, 193, 345, 20, 96, 27, 12, 19, 15, 115, 10, 26, 21, 56, 272, 52, 12, 33, 279, 10, 32, 17, 55, 15, 76, 2769, 56, 24, 38, 1066, 41, 31, 14, 26, 25, 70, 11, 14, 23, 33, 193, 11, 33, 10, 486, 77, 29, 24, 48, 12, 5071, 62, 10, 15, 24, 30, 293, 18, 11, 11, 23, 18, 31, 18, 34, 166, 13, 13, 15, 27, 48, 51, 56, 37, 252, 77, 465, 15, 153, 15, 128, 20, 81, 44, 24, 13, 26, 30, 12, 23, 12, 255, 46, 16, 31, 53, 204, 19, 28, 71, 60, 17, 27, 32, 18, 25, 10, 27, 16, 10, 39, 113, 48, 24, 26, 14, 35, 11, 216, 34, 138, 59, 19, 271, 47, 32, 20, 524, 18, 27, 13, 47, 10, 63, 10, 39, 15, 22, 10, 23, 16, 19, 26, 48, 18, 28, 35]"
+resultados.sentinel1_rtc.stats.agua_grupos,"[47118, 31, 14, 76, 133, 14, 303, 11, 25, 32, 61, 12, 21, 71, 36, 159, 45, 17, 45, 130, 38, 20, 33, 16, 13, 35, 22, 210, 15, 35, 18, 22, 13, 15, 16, 19, 93, 28, 11, 16, 242, 144, 15, 12, 36, 14, 24, 13, 13, 40, 28, 25, 10, 17, 17, 14, 18, 44, 45, 16]"
+resultados.sentinel1_rtc.stats.pixels_validos,402170
+resultados.sentinel1_rtc.intervalo_dias,5
+resultados.sentinel1_rtc.orbita,"[64, ""ascending""]"
+resultados.sentinel1_rtc.metricas.VP,2525
+resultados.sentinel1_rtc.metricas.FP,17187
+resultados.sentinel1_rtc.metricas.FN,489
+resultados.sentinel1_rtc.metricas.VN,301672
+resultados.sentinel1_rtc.metricas.precisao,0.1281
+resultados.sentinel1_rtc.metricas.sensibilidade,0.8378
+resultados.sentinel1_rtc.metricas.f1,0.2222
+resultados.sentinel1_rtc.metricas.iou,0.125
+resultados.sentinel1_rtc.metricas.falso_alarme,0.0539
+resultados.sentinel1_rtc.metricas.area_detectada_ha,788.48
+resultados.sentinel1_rtc.metricas.area_real_ha,120.56
+contexto.chuva.total_mm,0.1
+contexto.chuva.diario_mm.20261014,0.0
+contexto.chuva.diario_mm.20261015,0.0
+contexto.chuva.diario_mm.20261016,0.0
+contexto.chuva.diario_mm.20261017,0.0
+contexto.chuva.diario_mm.20261018,0.0
+contexto.chuva.diario_mm.20261019,0.0
+contexto.chuva.diario_mm.20261020,0.13
+contexto.chuva.fonte,"NASA POWER, PRECTOTCORR (diário)"
