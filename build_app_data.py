@@ -149,11 +149,60 @@ def build_point(folder, region_id):
     return {"id": pid, "nome": f["nome"], "lat": f["ponto"]["lat"], "lon": f["ponto"]["lon"], "arquivo": f"{region_id}/ponto_{pid}.json"}
 
 
+def build_area(folder, region_id):
+    """Mapas de mudança da área: uma entrada por geometria (pista/direção/quadro), mais concordância e coerência."""
+    import numpy as np
+    folder = Path(folder)
+    dest = APP / region_id / "area"
+    dest.mkdir(parents=True, exist_ok=True)
+    geos = []
+    for sub in sorted(p for p in folder.iterdir() if (p / "app" / "app.json").exists()):
+        m = json.loads((sub / "app" / "app.json").read_text(encoding="utf-8"))
+        gd = dest / sub.name
+        gd.mkdir(exist_ok=True)
+        for fn in ("app.json", "hv_u8.bin", "hh_u8.bin", "mapas_u8.bin"):
+            shutil.copy(sub / "app" / fn, gd / fn)
+        f = json.loads((sub / "ficha_tecnica.json").read_text(encoding="utf-8")) if (sub / "ficha_tecnica.json").exists() else {}
+        res = f.get("resumo", {})
+        geos.append({"id": sub.name, "pasta": f"{region_id}/area/{sub.name}", "passagens": len(m["datas"]),
+                     "primeira": m["datas"][0], "ultima": m["datas"][-1], "forma": m["forma"],
+                     "classes_ha": res.get("classes_ha"), "quedas_por_intervalo_ha": res.get("quedas_por_intervalo_ha"),
+                     "valsa_invisivel": f.get("valsa_invisivel"), "relevo_mascarado_ha": f.get("relevo_mascarado_ha"),
+                     "clima": f.get("clima", {}).get("chuva_antecedente_por_passagem_mm")})
+    geos.sort(key=lambda g: -g["passagens"])
+    out = {"geometrias": geos}
+    if (folder / "assertividade.json").exists():
+        out["assertividade"] = json.loads((folder / "assertividade.json").read_text(encoding="utf-8"))
+    if (folder / "clima.json").exists():
+        c = json.loads((folder / "clima.json").read_text())
+        iso = lambda k: f"{k[:4]}-{k[4:6]}-{k[6:8]}"
+        out["clima"] = {"chuva_mm": {iso(k): v for k, v in c.get("PRECTOTCORR", {}).items()},
+                        "umidade_solo": {iso(k): v for k, v in c.get("GWETTOP", {}).items()}}
+    gw = folder / "gunw"
+    if (gw / "pares.json").exists():
+        out["gunw"] = [p for p in json.loads((gw / "pares.json").read_text(encoding="utf-8")) if "erro" not in p]
+        tif = gw / "coerencia_media.tif"
+        if tif.exists() and geos:
+            import rasterio
+            with rasterio.open(tif) as r:
+                c = r.read(1).astype("float64")
+            _, H, W = geos[0]["forma"]
+            st = max(1, c.shape[0] // H)
+            c = c[:H * st, :W * st].reshape(H, st, W, st)
+            with np.errstate(invalid="ignore"):
+                c = np.nanmean(c, axis=(1, 3))
+            np.where(np.isfinite(c), np.clip(c * 254 + 1, 1, 255), 0).astype("uint8").tofile(dest / "coerencia_u8.bin")
+            out["coerencia"] = f"{region_id}/area/coerencia_u8.bin"
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--id", required=True); ap.add_argument("--malha", help="pasta do run_scout.py (com malha.geojson); opcional")
     ap.add_argument("--nome", help="nome da região, se não houver malha")
     ap.add_argument("--ponto", action="append", default=[])
+    ap.add_argument("--caso", help="arquivo do caso (nome, contexto, ponto)")
+    ap.add_argument("--serie", help="pasta do run_series.py da área (mapas de mudança por geometria)")
     a = ap.parse_args()
     dest = APP / a.id
     dest.mkdir(parents=True, exist_ok=True)
@@ -162,10 +211,15 @@ def main():
         g = json.loads((Path(a.malha) / "malha.geojson").read_text(encoding="utf-8"))
         (dest / "malha.geojson").write_text(json.dumps(g, ensure_ascii=False), encoding="utf-8")
     pts = [build_point(p, a.id) for p in a.ponto]
+    area = build_area(a.serie, a.id) if a.serie else None
     idx_f = APP / "regioes.json"
     idx = json.loads(idx_f.read_text(encoding="utf-8")) if idx_f.exists() else []
-    idx = [r for r in idx if r["id"] != a.id] + [{"id": a.id, "nome": a.nome or g.get("regiao", a.id), "bbox": g.get("bbox"),
-                                                  "periodo": g.get("periodo"), "malha": f"{a.id}/malha.geojson" if g else None, "pontos": pts}]
+    caso = json.loads(Path(a.caso).read_text(encoding="utf-8")) if a.caso else {}
+    idx = [r for r in idx if r["id"] != a.id] + [{"id": a.id, "nome": a.nome or caso.get("nome") or g.get("regiao", a.id),
+                                                  "contexto_pt": caso.get("contexto"), "contexto_en": caso.get("contexto_en"),
+                                                  "area_ponto": caso.get("ponto"), "bbox": g.get("bbox"),
+                                                  "periodo": g.get("periodo"), "malha": f"{a.id}/malha.geojson" if g else None, "pontos": pts,
+                                                  "area": area}]
     idx_f.write_text(json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"ok: {a.id}, {len(pts)} ponto(s) -> {APP}")
 

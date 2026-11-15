@@ -405,6 +405,8 @@ def main():
         clima_all = climate_daily((w + e_) / 2, (s_ + n_) / 2, d0, end.replace("-", ""))
       except Exception as e:
         ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
+    if clima_all:
+        (out / "clima.json").write_text(json.dumps(clima_all), encoding="utf-8")
     index = ["# " + case["nome"], "", f"Área {grid.bbox}, {start} a {end}.", ""]
     results, extras = {}, {}
     for gk in geo_list:
