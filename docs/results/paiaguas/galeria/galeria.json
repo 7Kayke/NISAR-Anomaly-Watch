@@ -1,0 +1,92 @@
+[
+ {
+  "janela": "inicio",
+  "satelite": "Landsat 9",
+  "data": "2026-06-26",
+  "nuvem_area": 0.177,
+  "cenas": [
+   "LC09_L2SP_226073_20260626_02_T1"
+  ],
+  "imagens": [
+   "landsat_inicio_cor_natural.png",
+   "landsat_inicio_queimada.png",
+   "landsat_inicio_temperatura.png"
+  ],
+  "temperatura_mediana_c": 19.3,
+  "temperatura_na_queda_c": 20.1
+ },
+ {
+  "janela": "inicio",
+  "satelite": "Sentinel-2",
+  "data": "2026-06-29",
+  "nuvem_area": 0.001,
+  "cenas": [
+   "S2C_MSIL2A_20260629T135701_R067_T21KVV_20260629T181010",
+   "S2C_MSIL2A_20260629T135701_R067_T21KWV_20260629T181010"
+  ],
+  "imagens": [
+   "sentinel2_inicio_cor_natural.png",
+   "sentinel2_inicio_queimada.png"
+  ]
+ },
+ {
+  "janela": "antes",
+  "satelite": "Landsat 8",
+  "data": "2026-08-21",
+  "nuvem_area": 0.0,
+  "cenas": [
+   "LC08_L2SP_226073_20260821_02_T1"
+  ],
+  "imagens": [
+   "landsat_antes_cor_natural.png",
+   "landsat_antes_queimada.png",
+   "landsat_antes_temperatura.png"
+  ],
+  "temperatura_mediana_c": 24.4,
+  "temperatura_na_queda_c": 25.1
+ },
+ {
+  "janela": "antes",
+  "satelite": "Sentinel-2",
+  "data": "2026-08-28",
+  "nuvem_area": 0.119,
+  "cenas": [
+   "S2C_MSIL2A_20260828T135701_R067_T21KVV_20260828T180555",
+   "S2C_MSIL2A_20260828T135701_R067_T21KWV_20260828T180555"
+  ],
+  "imagens": [
+   "sentinel2_antes_cor_natural.png",
+   "sentinel2_antes_queimada.png"
+  ]
+ },
+ {
+  "janela": "depois",
+  "satelite": "Landsat 8",
+  "data": "2026-10-08",
+  "nuvem_area": 0.0,
+  "cenas": [
+   "LC08_L2SP_226073_20261008_02_T1"
+  ],
+  "imagens": [
+   "landsat_depois_cor_natural.png",
+   "landsat_depois_queimada.png",
+   "landsat_depois_temperatura.png"
+  ],
+  "temperatura_mediana_c": 32.7,
+  "temperatura_na_queda_c": 33.5
+ },
+ {
+  "janela": "depois",
+  "satelite": "Sentinel-2",
+  "data": "2026-10-22",
+  "nuvem_area": 0.122,
+  "cenas": [
+   "S2B_MSIL2A_20261022T135659_R067_T21KVV_20261022T191313",
+   "S2B_MSIL2A_20261022T135659_R067_T21KWV_20261022T191313"
+  ],
+  "imagens": [
+   "sentinel2_depois_cor_natural.png",
+   "sentinel2_depois_queimada.png"
+  ]
+ }
+]
