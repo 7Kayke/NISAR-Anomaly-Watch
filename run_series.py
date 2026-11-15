@@ -334,9 +334,10 @@ def analyze(case, a, grid, start, end, geometry, out, cache, ficha, clima_all):
     try:
         from deltal import export
         export.package(out, grid, dates, hh, hv, res, inv, S)
+        export.app_layers(out, grid, dates, hh, hv, res, inv, S, geometry)
     except Exception as e:
         log(f"  exportação falhou: {type(e).__name__}: {e}"); traceback.print_exc()
-    return fic, lines
+    return fic, lines, {"classe": res["classe"], "quebra": res["quebra_indice"], "datas": dates}
 
 
 def main():
@@ -405,14 +406,46 @@ def main():
       except Exception as e:
         ficha["erros"]["clima"] = f"{type(e).__name__}: {e}"
     index = ["# " + case["nome"], "", f"Área {grid.bbox}, {start} a {end}.", ""]
-    results = {}
+    results, extras = {}, {}
     for gk in geo_list:
         sub = out / f"{gk[0]:03d}_{gk[1]}_{gk[2]:03d}"
         log(f"=== geometria {gk} -> {sub}")
         r = analyze(case, a, grid, start, end, gk, sub, cache, ficha, clima_all)
         if r:
             results[f"{gk[0]:03d}_{gk[1]}_{gk[2]:03d}"] = r[0]
+            extras[f"{gk[0]:03d}_{gk[1]}_{gk[2]:03d}"] = r[2]
             index += [f"## Pista {gk[0]:03d}, {'ascendente' if gk[1] == 'A' else 'descendente'}, quadro {gk[2]:03d}", ""] + r[1][2:] + [""]
+    # assertividade sem outro satélite: quando uma geometria vê uma mudança abrupta, as outras veem
+    # a mesma coisa no mesmo pixel, perto da mesma data (±13 dias)? Cada geometria olha de outro ângulo e hora.
+    if len(extras) >= 2:
+        agree = {}
+        keys = sorted(extras)
+        for i in keys:
+            ei = extras[i]
+            for j in keys:
+                if i == j:
+                    continue
+                ej = extras[j]
+                for c, nm in ((3, "queda_abrupta"), (4, "subida_abrupta")):
+                    mi = ei["classe"] == c
+                    if mi.sum() < 20:
+                        continue
+                    di = np.where(mi & (ei["quebra"] > 0), ei["quebra"], 0)
+                    dj = np.where((ej["classe"] == c) & (ej["quebra"] > 0), ej["quebra"], 0)
+                    ti = np.array([datetime.fromisoformat(x).toordinal() for x in ei["datas"]])
+                    tj = np.array([datetime.fromisoformat(x).toordinal() for x in ej["datas"]])
+                    both = mi & (dj > 0)
+                    ok = np.zeros(mi.shape, bool)
+                    ok[both] = np.abs(ti[di[both]] - tj[dj[both]]) <= 13
+                    agree.setdefault(nm, []).append({"vista_por": i, "confirmada_por": j, "pixels": int(mi.sum()),
+                                                     "confirmados_pct": round(100 * float(ok.sum()) / float(mi.sum()), 1)})
+        if agree:
+            index += ["## Assertividade: as geometrias concordam?", ""]
+            for nm, rows in agree.items():
+                for r_ in rows:
+                    index.append(f"- {nm.replace('_', ' ')} vista por {r_['vista_por']} ({r_['pixels']} px): {r_['confirmados_pct']}% confirmada por {r_['confirmada_por']}")
+            index.append("")
+            (out / "assertividade.json").write_text(json.dumps(agree, ensure_ascii=False, indent=1), encoding="utf-8")
     if not a.sem_gunw:
       try:
         import run_gunw
