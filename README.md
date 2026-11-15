@@ -91,3 +91,18 @@ Local (computer A): `pip install -r requirements-api.txt && uvicorn api.app:app 
 | GET | `/v1/analyses/{id}/files/{name}` | figures, JSON, CSV |
 
 End users without a server read the same responses as static JSON from GitHub Pages: `docs/api/v1/collections.json` and `docs/api/v1/analyses/{id}.json`.
+
+## The waltz: full NISAR time series for a study area
+
+`run_series.py` takes every NISAR GCOV pass over a study area (same track, direction and frame), keeps the catalog
+metadata of **all** granules with the funnel stage where each one stopped (`metadados.csv`), and classifies the rhythm
+of every pixel: stable, strong seasonal rhythm, abrupt drop, abrupt rise, transient flooding, permanent water.
+Each date is normalized by the scene median, so the landscape's own rhythm (season, rain, calibration) is shown as a
+separate curve next to NASA POWER rainfall, and the maps show only local departures.
+
+Outputs: `classes.png`, `quando_mudou.png` (date of the abrupt change), `rgb_temporal.png` (3-period HV composite),
+`curvas.png`, `animacao_hv.gif`, `serie.json` + `serie_hv_u8.bin` (per-pixel series for the interactive view).
+
+```bash
+python run_series.py --case cases/norte_fire.json --out docs/results/norte_fire_serie
+```

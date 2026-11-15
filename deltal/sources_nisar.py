@@ -107,6 +107,88 @@ def funnel(grid, event_date, days=36,
     return fun, best
 
 
+def _umm_meta(sn, g):
+    """Metadados do catálogo (CMR/UMM) de um grânulo, achatados para a ficha."""
+    u = g["umm"]
+    name = u.get("GranuleUR", "")
+    meta = {"arquivo": name, "colecao_cmr": sn}
+    meta.update(parse_name(name))
+    te = u.get("TemporalExtent", {}).get("RangeDateTime", {})
+    meta["inicio_utc"], meta["fim_utc"] = te.get("BeginningDateTime"), te.get("EndingDateTime")
+    try:
+        meta["tamanho_mb"] = round(sum(f.get("Size", 0) * (1024 if f.get("SizeUnit") == "GB" else 1)
+                                       for f in u["DataGranule"]["ArchiveAndDistributionInformation"]), 1)
+    except (KeyError, TypeError):
+        pass
+    for a in u.get("AdditionalAttributes", []) or []:
+        v = a.get("Values", [])
+        meta["attr_" + a.get("Name", "?")] = v[0] if len(v) == 1 else v
+    meta["produzido_em"] = (u.get("DataGranule", {}) or {}).get("ProductionDateTime")
+    return meta
+
+
+MATURITY = {"NISAR_L2_GCOV_V1": 0, "NISAR_L2_GCOV_PROVISIONAL_V1": 1}
+
+
+def funnel_series(grid, start, end, short_names=("NISAR_L2_GCOV_V1", "NISAR_L2_GCOV_PROVISIONAL_V1")):
+    """Funil da SÉRIE: catálogo -> cobre a área -> uma versão por passagem -> mesma geometria.
+
+    Devolve (Funnel, escolhidos [(short_name, granulo)] em ordem de data, metadados de TODOS os
+    grânulos do catálogo com a etapa em que cada um parou e o porquê)."""
+    from .funnel import Funnel, coverage, MIN_COVER
+    fun = Funnel("NISAR GCOV (banda L), série temporal", " + ".join(short_names))
+    grans = [(sn, g) for sn in short_names for g in search(grid.bbox, start, end, short_name=sn)]
+    meta = {}
+    for sn, g in grans:
+        m = _umm_meta(sn, g)
+        geom = _umm_geometry(g)
+        m["cobertura_area"] = round(coverage(geom, grid.bbox), 3) if geom else None
+        m["etapa_final"], m["motivo"] = "catalogo", ""
+        meta[m["arquivo"]] = m
+    fun.add("catalogo", grans, f"{start} a {end}, coleções {', '.join(short_names)}")
+    cov = [(sn, g) for sn, g in grans if (meta[g["umm"]["GranuleUR"]]["cobertura_area"] or 0) >= MIN_COVER]
+    for sn, g in grans:
+        mm = meta[g["umm"]["GranuleUR"]]
+        if (sn, g) in cov:
+            mm["etapa_final"] = "cobre_area"
+        else:
+            mm["motivo"] = f"cobre só {mm['cobertura_area']} da área"
+    fun.add("cobre_area", cov, f"cobre >= {int(MIN_COVER * 100)}% da área")
+    # uma versão por passagem (ciclo, pista, direção, quadro): prefere a validada
+    best = {}
+    for sn, g in cov:
+        i = parse_name(g["umm"]["GranuleUR"])
+        key = (i["ciclo"], i["pista"], i["direcao"], i["quadro"])
+        cur = best.get(key)
+        if cur is None or (MATURITY.get(sn, 9), g["umm"]["GranuleUR"]) < (MATURITY.get(cur[0], 9), cur[1]["umm"]["GranuleUR"]):
+            best[key] = (sn, g)
+    uniq = list(best.values())
+    for sn, g in cov:
+        mm = meta[g["umm"]["GranuleUR"]]
+        if (sn, g) in uniq:
+            mm["etapa_final"] = "uma_por_passagem"
+        else:
+            mm["motivo"] = "mesma passagem já existe em versão preferida (validada > provisória)"
+    fun.add("uma_por_passagem", uniq, "duplicatas da mesma passagem: fica a validada")
+    groups = {}
+    for sn, g in uniq:
+        i = parse_name(g["umm"]["GranuleUR"])
+        groups.setdefault((i["pista"], i["direcao"], i["quadro"]), []).append((sn, g))
+    chosen, gkey = [], None
+    if groups:
+        gkey = max(groups, key=lambda k: (len(groups[k]), -k[0]))
+        chosen = sorted(groups[gkey], key=lambda x: parse_name(x[1]["umm"]["GranuleUR"])["inicio"])
+    for sn, g in uniq:
+        mm = meta[g["umm"]["GranuleUR"]]
+        if (sn, g) in chosen:
+            mm["etapa_final"] = "mesma_geometria"
+        else:
+            mm["motivo"] = f"outra geometria; a escolhida (pista, direção, quadro) = {gkey}, com mais passagens"
+    fun.add("mesma_geometria", chosen, f"geometria com mais passagens: pista/direção/quadro {gkey}")
+    others = {f"{k[0]:03d}_{k[1]}_{k[2]:03d}": len(v) for k, v in groups.items()}
+    return fun, chosen, sorted(meta.values(), key=lambda m: (m.get("inicio") or "", m["arquivo"])), others
+
+
 def _find(h5, wanted):
     hits = {}
     def visit(name, obj):
