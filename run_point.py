@@ -347,6 +347,8 @@ def main():
     except Exception as e:
         ficha["erros"]["animacao"] = str(e)
     ficha["serie"] = pts
+    if clima:
+        (out / "clima.json").write_text(json.dumps(clima), encoding="utf-8")
     fic = report.write_ficha(out, ficha)
     lines = [f"# {a.nome} ({lat}, {lon}): a história no NISAR", "", f"Período {a.inicio} a {a.fim}.", "",
              "| Produto | catálogo | contém o ponto | uma por passagem |", "|---|---|---|---|"]

@@ -151,6 +151,22 @@ def main():
     cands.sort(key=lambda r: -r["nota"]); grid.sort(key=lambda r: -r["nota"])
     fields = ["nota", "nome", "lat", "lon", "area_km2", "celula", "gcov", "gcov_dupla", "gcov_dupla_pos_beta", "geometrias_boas", "maior_buraco_dias",
               "gunw", "sme2", "primeira", "ultima", "geometrias", "por_que"]
+    # malha para o aplicativo: quadros e células como GeoJSON
+    from shapely.geometry import mapping
+    feats = [{"type": "Feature", "geometry": mapping(f.simplify(0.001)),
+              "properties": {"tipo": "quadro", "id": f"{k[1]}{k[0]:03d}-{k[2]:03d}", "pista": k[0], "direcao": k[1], "quadro": k[2]}}
+             for k, f in frames.items()]
+    for r, c in cells:
+        props = {k: r[k] for k in ("nome", "nota", "lat", "lon", "area_km2", "gcov", "gcov_dupla", "gcov_dupla_pos_beta",
+                                   "geometrias_boas", "maior_buraco_dias", "gunw", "sme2", "primeira", "ultima", "geometrias")}
+        feats.append({"type": "Feature", "geometry": mapping(c.simplify(0.001)), "properties": {"tipo": "celula", **props}})
+    for r in cands:
+        feats.append({"type": "Feature", "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]},
+                      "properties": {"tipo": "lugar", "nome": r["nome"], "por_que": r["por_que"], "nota": r["nota"],
+                                     "celula": r.get("celula"), "geometrias": r["geometrias"]}})
+    (out / "malha.geojson").write_text(json.dumps({"type": "FeatureCollection", "regiao": reg["nome"], "bbox": bbox,
+                                                   "periodo": [start, end], "colecoes": cols, "features": feats},
+                                                  ensure_ascii=False, default=str), encoding="utf-8")
     for nm, rows in (("candidatos.csv", cands), ("celulas.csv", grid)):
         with open(out / nm, "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore"); w.writeheader()

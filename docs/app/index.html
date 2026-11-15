@@ -1,0 +1,548 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NISAR Waltz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Fira+Sans:wght@400;500;700&family=Overpass:wght@600;800&display=swap">
+<style>
+/* Layout: mission-control page. Map + inspector side by side, the point's story below, data and glossary last. */
+:root {
+  --bg: #07173F;          /* Space Apps deep blue */
+  --panel: #0B2257;
+  --line: #1F3C7A;
+  --line-strong: #3A5A94;
+  --fg: #E8EEF7;
+  --muted: #A9BAD4;
+  --accent: #EAFE07;      /* neon yellow: only for highlights */
+  --asc: #2E96F5;         /* ascending passes, blue yonder */
+  --desc: #C77DFF;        /* descending passes */
+  --sm: #3BD18A;          /* soil moisture */
+  --rain: #6FA8DC;
+  --bad: #FF8A8A;
+  --display: "Overpass", "Fira Sans", system-ui, sans-serif;
+  --body: "Fira Sans", system-ui, sans-serif;
+  --mono: "Fira Code", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--body); font-size: 16px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+a { color: var(--asc); }
+a:hover { color: var(--accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 72px; display: flex; flex-direction: column; gap: 48px; }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+header.top .bar { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font-family: var(--display); font-weight: 800; font-size: 20px; letter-spacing: 0.02em; }
+.brand span { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+nav.steps { display: flex; flex-wrap: wrap; gap: 4px; }
+nav.steps a { text-decoration: none; color: var(--fg); font-size: 14px; padding: 10px 12px; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center; }
+nav.steps a:hover { background: var(--panel); color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 999px; overflow: hidden; }
+.seg button { background: transparent; color: var(--fg); border: 0; font: 500 14px var(--body); padding: 0 14px; min-height: 40px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.hero { padding-top: 36px; display: flex; flex-direction: column; gap: 12px; max-width: 820px; }
+.eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.06em; text-transform: uppercase; }
+h1 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 5vw, 54px); line-height: 1.04; margin: 0; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 800; font-size: clamp(24px, 3vw, 32px); margin: 0; text-wrap: balance; }
+h3 { font-family: var(--display); font-weight: 600; font-size: 19px; margin: 0; }
+.lead { font-size: 19px; color: #CBD7EA; margin: 0; max-width: 68ch; }
+.muted { color: var(--muted); }
+.mono { font-family: var(--mono); }
+section { display: flex; flex-direction: column; gap: 18px; scroll-margin-top: 80px; }
+.row { display: flex; flex-wrap: wrap; gap: 20px; align-items: stretch; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+/* map */
+.mapbox { flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.mapframe { position: relative; border-radius: 12px; overflow: hidden; background: #061235; border: 1px solid var(--line); touch-action: none; }
+.mapframe svg { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3.4; cursor: grab; }
+.mapframe svg.dragging { cursor: grabbing; }
+.mapctl { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.iconbtn { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line-strong); background: rgba(7,23,63,0.9); color: var(--fg); font: 700 20px var(--body); cursor: pointer; display: grid; place-items: center; }
+.iconbtn:hover { color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: transparent; color: var(--fg); border-radius: 999px; padding: 0 14px; min-height: 40px; font: 500 14px var(--body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--panel); border-color: var(--fg); }
+.chip[aria-pressed="false"] { opacity: 0.6; }
+.swatch { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.legend-scale { height: 10px; border-radius: 5px; background: linear-gradient(90deg, #12306E, #2E96F5 55%, #EAFE07); }
+.inspector { flex: 1 1 320px; display: flex; flex-direction: column; gap: 12px; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 15px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.score { font-family: var(--display); font-weight: 800; font-size: 44px; line-height: 1; color: var(--accent); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: #07173F; font: 700 15px var(--body); cursor: pointer; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
+.btn:hover { filter: brightness(1.08); }
+pre.cmd { margin: 0; white-space: pre-wrap; word-break: break-all; font: 13px/1.5 var(--mono); background: #061235; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+/* story */
+.controls { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.field input { background: #061235; color: var(--fg); border: 1px solid var(--line-strong); border-radius: 8px; min-height: 44px; padding: 0 10px; font: 15px var(--mono); }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 16px; }
+figure.chart { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+figure.chart figcaption { display: flex; flex-direction: column; gap: 2px; }
+.chartbox { position: relative; }
+.chartbox svg { display: block; width: 100%; height: auto; }
+.tip { position: absolute; pointer-events: none; background: #020A22; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px 10px; font: 13px/1.45 var(--mono); white-space: nowrap; z-index: 2; }
+details.table summary { cursor: pointer; color: var(--asc); font-size: 14px; min-height: 32px; }
+.tablewrap { overflow-x: auto; max-height: 280px; overflow-y: auto; }
+table { border-collapse: collapse; font: 13px var(--mono); font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 4px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 6px; }
+.card .val { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: 1.1; }
+.tag { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.t-visivel .tag, .t-visivel .val { color: var(--asc); }
+.t-invisivel .tag, .t-invisivel .val { color: var(--sm); }
+.t-chao .tag, .t-chao .val { color: var(--desc); }
+.t-lento .tag, .t-lento .val { color: var(--accent); }
+.t-qualidade .tag, .t-qualidade .val { color: var(--bad); }
+ul.lim { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: #CBD7EA; }
+.funnel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.bars { display: flex; flex-direction: column; gap: 6px; }
+.barrow { display: grid; grid-template-columns: 110px 1fr 40px; gap: 8px; align-items: center; font-size: 13px; }
+.barrow .b { height: 10px; border-radius: 5px; background: var(--asc); }
+.gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.gloss dt { font-family: var(--display); font-weight: 600; font-size: 17px; }
+.gloss dd { margin: 4px 0 0; color: #CBD7EA; font-size: 15px; }
+.empty { border: 1px dashed var(--line-strong); border-radius: 12px; padding: 20px; color: var(--muted); }
+footer { color: var(--muted); font-size: 14px; display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 18px; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+@media (max-width: 640px) { nav.steps { display: none; } }
+</style>
+
+<header class="top">
+  <div class="bar">
+    <div class="brand"><b>Delta L</b><span data-i18n="brandSub">NISAR surface-change waltz</span></div>
+    <nav class="steps" aria-label="Sections">
+      <a href="#map" data-i18n="navMap">Map</a>
+      <a href="#story" data-i18n="navStory">Point story</a>
+      <a href="#findings" data-i18n="navFindings">Findings</a>
+      <a href="#data" data-i18n="navData">Data</a>
+      <a href="#read" data-i18n="navRead">How to read</a>
+    </nav>
+    <div class="seg" role="group" aria-label="Language">
+      <button type="button" id="lang-en" aria-pressed="true">EN</button>
+      <button type="button" id="lang-pt" aria-pressed="false">PT</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div class="eyebrow" data-i18n="eyebrow">NASA–ISRO SAR · L-band radar</div>
+    <h1 data-i18n="title">The waltz of one place, seen by radar</h1>
+    <p class="lead" data-i18n="lead">Pick a cell of NISAR's own orbit grid, open a point and follow everything that changed there since launch: vegetation you could see, and water in the soil and ground stability that only the radar measures.</p>
+  </div>
+
+  <section id="map" aria-labelledby="map-h">
+    <div class="eyebrow" data-i18n="step1">Step 1 · NISAR grid</div>
+    <h2 id="map-h" data-i18n="mapTitle">Where NISAR looks from two sides</h2>
+    <p class="lead" style="font-size:17px" data-i18n="mapLead">Blue frames are dawn passes (ascending), purple frames are evening passes (descending). Where they cross, the ground is seen from two angles: each crossing is a cell, coloured by how much data it has.</p>
+    <div class="row">
+      <div class="mapbox">
+        <div class="field" style="max-width:360px">
+          <label for="region" data-i18n="region">Region</label>
+          <select id="region" style="background:#061235;color:var(--fg);border:1px solid var(--line-strong);border-radius:8px;min-height:44px;padding:0 10px;font:15px var(--body)"></select>
+        </div>
+        <div class="chips" role="group" aria-label="Map layers">
+          <button type="button" class="chip" data-layer="asc" aria-pressed="true"><span class="swatch" style="background:var(--asc)"></span><span data-i18n="lyAsc">Dawn frames (A)</span></button>
+          <button type="button" class="chip" data-layer="desc" aria-pressed="true"><span class="swatch" style="background:var(--desc)"></span><span data-i18n="lyDesc">Evening frames (D)</span></button>
+          <button type="button" class="chip" data-layer="cells" aria-pressed="true"><span class="swatch" style="background:linear-gradient(90deg,#12306E,#EAFE07)"></span><span data-i18n="lyCells">Crossing cells</span></button>
+          <button type="button" class="chip" data-layer="places" aria-pressed="true"><span class="swatch" style="background:#fff;border-radius:50%"></span><span data-i18n="lyPlaces">Known places</span></button>
+        </div>
+        <div class="mapframe">
+          <svg id="mapsvg" role="img" aria-label="Map of NISAR frames and crossing cells"></svg>
+          <div class="mapctl">
+            <button type="button" class="iconbtn" id="zin" aria-label="Zoom in">+</button>
+            <button type="button" class="iconbtn" id="zout" aria-label="Zoom out">−</button>
+            <button type="button" class="iconbtn" id="zreset" aria-label="Reset view">⟲</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px" class="muted">
+          <span data-i18n="scoreLow">less data</span><span class="legend-scale" style="width:160px" aria-hidden="true"></span><span data-i18n="scoreHigh">more data (score 0–100)</span>
+          <span style="margin-left:auto" data-i18n="mapHint">Drag to pan, scroll or use + / − to zoom, click a cell.</span>
+        </div>
+      </div>
+      <aside class="panel inspector" id="inspector" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section id="story" aria-labelledby="story-h">
+    <div class="eyebrow" data-i18n="step2">Step 2 · The point's story</div>
+    <h2 id="story-h"><span data-i18n="storyTitle">The point over time</span>: <span id="pt-name" class="muted"></span></h2>
+    <div class="panel controls" id="controls">
+      <div class="field"><label for="from" data-i18n="from">From</label><input type="date" id="from"></div>
+      <div class="field"><label for="to" data-i18n="to">To</label><input type="date" id="to"></div>
+      <div class="chips" role="group" aria-label="Period presets" id="presets"></div>
+      <div class="chips" role="group" aria-label="Layers" id="storylayers">
+        <button type="button" class="chip" data-sl="visible" aria-pressed="true"><span class="swatch" style="background:var(--asc)"></span><span data-i18n="slVisible">Visible waltz</span></button>
+        <button type="button" class="chip" data-sl="invisible" aria-pressed="true"><span class="swatch" style="background:var(--sm)"></span><span data-i18n="slInvisible">Invisible waltz</span></button>
+        <button type="button" class="chip" data-sl="ground" aria-pressed="true"><span class="swatch" style="background:var(--desc)"></span><span data-i18n="slGround">Ground</span></button>
+      </div>
+      <div class="chips" role="group" aria-label="Passes" id="geoms"></div>
+    </div>
+    <div id="charts" class="charts"></div>
+  </section>
+
+  <section id="findings" aria-labelledby="find-h">
+    <div class="eyebrow" data-i18n="step3">Step 3 · Findings</div>
+    <h2 id="find-h" data-i18n="findTitle">What the point told us</h2>
+    <div class="cards" id="cards"></div>
+    <div class="panel"><h3 data-i18n="limTitle">Limits we declare</h3><ul class="lim" id="lims"></ul></div>
+  </section>
+
+  <section id="data" aria-labelledby="data-h">
+    <div class="eyebrow" data-i18n="step4">Step 4 · Data</div>
+    <h2 id="data-h" data-i18n="dataTitle">Only NISAR, four filters</h2>
+    <p class="lead" style="font-size:17px" data-i18n="dataLead">Every file comes from NASA's catalog. We keep GCOV (radar brightness), GUNW (interferometry) and SME2 (soil moisture), with four filters: period since launch, the file really covers the point, one version per pass (validated over provisional), and the product's own masks.</p>
+    <div class="funnel" id="funnel"></div>
+    <div class="chips">
+      <a class="btn" id="dl-json" href="#" target="_blank" rel="noopener" data-i18n="dlJson">Open point data (JSON)</a>
+      <a class="btn ghost" id="dl-mesh" href="#" target="_blank" rel="noopener" data-i18n="dlMesh">Open grid (GeoJSON)</a>
+      <button type="button" class="btn ghost" id="copy-csv" data-i18n="copyCsv">Copy series as CSV</button>
+      <span id="copy-msg" class="muted" role="status"></span>
+    </div>
+  </section>
+
+  <section id="read" aria-labelledby="read-h">
+    <div class="eyebrow" data-i18n="step5">How to read</div>
+    <h2 id="read-h" data-i18n="readTitle">Radar in plain words</h2>
+    <dl class="gloss" id="gloss"></dl>
+  </section>
+
+  <footer>
+    <div data-i18n="foot1">Data: NISAR L2 GCOV, L2 GUNW and L3 SME2 (NASA/JPL, ASF DAAC); daily rain and soil wetness context from NASA POWER.</div>
+    <div data-i18n="foot2">Built by team Delta L for NASA Space Apps 2026. Parts of the code were written with help from an AI assistant (Claude) and reviewed by the team. Provisional NISAR data may change.</div>
+  </footer>
+</main>
+
+<script>
+(() => {
+const T = {
+  en: {
+    brandSub: "NISAR surface-change waltz", navMap: "Map", navStory: "Point story", navFindings: "Findings", navData: "Data", navRead: "How to read",
+    eyebrow: "NASA–ISRO SAR · L-band radar", title: "The waltz of one place, seen by radar",
+    lead: "Pick a cell of NISAR's own orbit grid, open a point and follow everything that changed there since launch: vegetation you could see, and water in the soil and ground stability that only the radar measures.",
+    step1: "Step 1 · NISAR grid", mapTitle: "Where NISAR looks from two sides",
+    mapLead: "Blue frames are dawn passes (ascending), purple frames are evening passes (descending). Where they cross, the ground is seen from two angles: each crossing is a cell, coloured by how much data it has.",
+    region: "Region", lyAsc: "Dawn frames (A)", lyDesc: "Evening frames (D)", lyCells: "Crossing cells", lyPlaces: "Known places",
+    scoreLow: "less data", scoreHigh: "more data (score 0–100)", mapHint: "Drag to pan, scroll or use + / − to zoom, click a cell.",
+    step2: "Step 2 · The point's story", storyTitle: "The point over time", from: "From", to: "To",
+    slVisible: "Visible waltz", slInvisible: "Invisible waltz", slGround: "Ground",
+    step3: "Step 3 · Findings", findTitle: "What the point told us", limTitle: "Limits we declare",
+    step4: "Step 4 · Data", dataTitle: "Only NISAR, four filters",
+    dataLead: "Every file comes from NASA's catalog. We keep GCOV (radar brightness), GUNW (interferometry) and SME2 (soil moisture), with four filters: period since launch, the file really covers the point, one version per pass (validated over provisional), and the product's own masks.",
+    dlJson: "Open point data (JSON)", dlMesh: "Open grid (GeoJSON)", copyCsv: "Copy series as CSV", copied: "Copied. Paste it into a spreadsheet.", copyFail: "Could not copy here. Open the JSON instead.",
+    step5: "How to read", readTitle: "Radar in plain words",
+    foot1: "Data: NISAR L2 GCOV, L2 GUNW and L3 SME2 (NASA/JPL, ASF DAAC); daily rain and soil wetness context from NASA POWER.",
+    foot2: "Built by team Delta L for NASA Space Apps 2026. Parts of the code were written with help from an AI assistant (Claude) and reviewed by the team. Provisional NISAR data may change.",
+    pickCell: "Click a cell on the map to see what NISAR has there.", cell: "Cell", score: "data score", area: "Area", dual: "HH+HV passes", geoms: "Pass directions with 4+", gap: "Longest gap", gunw: "GUNW pairs", sme2: "SME2 files", first: "First pass", last: "Last pass",
+    days: "days", ptsHere: "Points with a story here", open: "Open story", noStory: "No story here yet. Run on the team computer:", place: "Place", why: "Why it matters", inCell: "In cell",
+    presetAll: "All", presetDry: "Dry season (Jun–Sep)", presetFire: "Fire season (Aug–Oct)", presetRain: "Rains back (Oct–Nov)",
+    chVeg: "HV: vegetation structure", chVegSub: "Visible waltz. Higher = more branches and leaves in the way of the radar.",
+    chWater: "HH: water in the soil", chWaterSub: "Invisible waltz. HH rises when the ground gets wet; diamonds are NISAR's own soil moisture.",
+    chGround: "Coherence between two dates", chGroundSub: "Ground. Each bar is a pair of passes: 1 = nothing moved, 0 = the surface changed.",
+    noPasses: "no passes", discarded: "discarded pass", table: "Show the numbers", noData: "No passes in this period.",
+    asc: "dawn", desc: "evening", rain: "rain", sm: "soil moisture", coh: "coherence", disp: "movement",
+    funnelTitle: "files", catalog: "catalog", covers: "covers the point", kept: "kept",
+    noMesh: "The NISAR grid for this region is still being collected.",
+    noPoint: "No point story is loaded for this region yet. It appears here as soon as the team computer finishes the run.",
+    gloss: [["dB (decibel)", "How much radar energy comes back, on a log scale. +3 dB is twice as much; −3 dB is half."],
+            ["HH", "Radar sent and received horizontally. Very sensitive to water: wet soil is brighter, open water is very dark."],
+            ["HV", "Sent horizontally, received vertically. It only comes back after bouncing around in branches and leaves, so it measures vegetation structure."],
+            ["Coherence", "How similar the fine pattern of the ground is between two passes, from 0 to 1. Fire, ploughing or flooding make it drop."],
+            ["SME2", "NISAR's soil moisture product, in cubic metres of water per cubic metre of soil, at 200 m."],
+            ["Dawn / evening passes", "NISAR crosses every place twice in its 12-day cycle: going north at about 6 am and south at about 6 pm, looking from opposite sides."],
+            ["Discarded pass", "When the whole surrounding area jumps at once, the problem is the acquisition, not the ground. We mark it and leave it out."],
+            ["L-band", "NISAR's 24 cm wavelength goes through clouds, smoke and part of the canopy, day and night."]]
+  },
+  pt: {
+    brandSub: "a valsa das mudanças no NISAR", navMap: "Mapa", navStory: "História do ponto", navFindings: "Achados", navData: "Dados", navRead: "Como ler",
+    eyebrow: "NASA–ISRO SAR · radar banda L", title: "A valsa de um lugar, vista pelo radar",
+    lead: "Escolha uma célula da própria malha de órbitas do NISAR, abra um ponto e acompanhe tudo o que mudou ali desde o lançamento: a vegetação que daria para ver, e a água no solo e a estabilidade do chão que só o radar mede.",
+    step1: "Etapa 1 · Malha do NISAR", mapTitle: "Onde o NISAR olha dos dois lados",
+    mapLead: "Os quadros azuis são passagens de madrugada (ascendentes); os roxos, de noite (descendentes). Onde eles se cruzam, o chão é visto de dois ângulos: cada cruzamento é uma célula, colorida pela quantidade de dados.",
+    region: "Região", lyAsc: "Quadros da madrugada (A)", lyDesc: "Quadros da noite (D)", lyCells: "Células de cruzamento", lyPlaces: "Lugares conhecidos",
+    scoreLow: "menos dados", scoreHigh: "mais dados (nota 0–100)", mapHint: "Arraste para mover, role ou use + / − para aproximar, clique numa célula.",
+    step2: "Etapa 2 · A história do ponto", storyTitle: "O ponto ao longo do tempo", from: "De", to: "Até",
+    slVisible: "Valsa visível", slInvisible: "Valsa invisível", slGround: "Chão",
+    step3: "Etapa 3 · Achados", findTitle: "O que o ponto contou", limTitle: "Limitações que declaramos",
+    step4: "Etapa 4 · Dados", dataTitle: "Só NISAR, quatro filtros",
+    dataLead: "Todo arquivo vem do catálogo da NASA. Ficamos com GCOV (brilho do radar), GUNW (interferometria) e SME2 (umidade do solo), com quatro filtros: período desde o lançamento, o arquivo cobre de fato o ponto, uma versão por passagem (validada antes da provisória) e as máscaras do próprio produto.",
+    dlJson: "Abrir dados do ponto (JSON)", dlMesh: "Abrir malha (GeoJSON)", copyCsv: "Copiar série em CSV", copied: "Copiado. Cole numa planilha.", copyFail: "Não deu para copiar aqui. Abra o JSON.",
+    step5: "Como ler", readTitle: "Radar em palavras simples",
+    foot1: "Dados: NISAR L2 GCOV, L2 GUNW e L3 SME2 (NASA/JPL, ASF DAAC); chuva diária e umidade do solo do NASA POWER como contexto.",
+    foot2: "Feito pela equipe Delta L para o NASA Space Apps 2026. Parte do código teve ajuda de um assistente de IA (Claude) e foi revisada pela equipe. Dados provisórios do NISAR podem mudar.",
+    pickCell: "Clique numa célula do mapa para ver o que o NISAR tem ali.", cell: "Célula", score: "nota de dados", area: "Área", dual: "Passagens HH+HV", geoms: "Direções com 4+", gap: "Maior buraco", gunw: "Pares GUNW", sme2: "Arquivos SME2", first: "Primeira passagem", last: "Última passagem",
+    days: "dias", ptsHere: "Pontos com história aqui", open: "Abrir história", noStory: "Ainda sem história aqui. Rode no computador da equipe:", place: "Lugar", why: "Por que importa", inCell: "Na célula",
+    presetAll: "Tudo", presetDry: "Seca (jun–set)", presetFire: "Fogo (ago–out)", presetRain: "Volta da chuva (out–nov)",
+    chVeg: "HV: estrutura da vegetação", chVegSub: "Valsa visível. Mais alto = mais galhos e folhas no caminho do radar.",
+    chWater: "HH: água no solo", chWaterSub: "Valsa invisível. O HH sobe quando o chão molha; os losangos são a umidade do solo do próprio NISAR.",
+    chGround: "Coerência entre duas datas", chGroundSub: "Chão. Cada barra é um par de passagens: 1 = nada mexeu, 0 = a superfície mudou.",
+    noPasses: "sem passagens", discarded: "passagem descartada", table: "Ver os números", noData: "Nenhuma passagem neste período.",
+    asc: "madrugada", desc: "noite", rain: "chuva", sm: "umidade do solo", coh: "coerência", disp: "movimento",
+    funnelTitle: "arquivos", catalog: "catálogo", covers: "cobre o ponto", kept: "mantidos",
+    noMesh: "A malha do NISAR desta região ainda está sendo coletada.",
+    noPoint: "Ainda não há história de ponto para esta região. Ela aparece aqui assim que o computador da equipe terminar a rodada.",
+    gloss: [["dB (decibel)", "Quanta energia do radar volta, em escala logarítmica. +3 dB é o dobro; −3 dB é a metade."],
+            ["HH", "Radar enviado e recebido na horizontal. Muito sensível à água: solo molhado fica mais claro, água aberta fica muito escura."],
+            ["HV", "Enviado na horizontal, recebido na vertical. Só volta depois de quicar em galhos e folhas, então mede a estrutura da vegetação."],
+            ["Coerência", "O quanto o padrão fino do chão se parece entre duas passagens, de 0 a 1. Fogo, arado ou alagamento fazem cair."],
+            ["SME2", "Produto de umidade do solo do NISAR, em metros cúbicos de água por metro cúbico de solo, a 200 m."],
+            ["Passagens de madrugada / noite", "O NISAR cruza cada lugar duas vezes no ciclo de 12 dias: indo para o norte por volta das 6h e para o sul por volta das 18h, olhando de lados opostos."],
+            ["Passagem descartada", "Quando todo o entorno salta de uma vez, o problema é a aquisição, não o chão. Marcamos e deixamos de fora."],
+            ["Banda L", "O comprimento de onda de 24 cm do NISAR atravessa nuvem, fumaça e parte da copa, de dia e de noite."]]
+  }
+};
+let lang = "en";
+try { lang = localStorage.getItem("dl-lang") || ((navigator.language || "").toLowerCase().startsWith("pt") ? "pt" : "en"); } catch (e) {}
+const t = (k) => (T[lang][k] ?? T.en[k] ?? k);
+
+const S = { regions: [], region: null, mesh: null, point: null, layers: { asc: true, desc: true, cells: true, places: true },
+            story: { visible: true, invisible: true, ground: true }, geoms: {}, from: null, to: null, sel: null, view: null };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (v, n = 1) => v == null || Number.isNaN(v) ? "–" : (lang === "pt" ? v.toFixed(n).replace(".", ",") : v.toFixed(n));
+const fdate = (iso) => { if (!iso) return "–"; const s = String(iso); const d = s.length === 8 ? `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}` : s.slice(0,10);
+  const [y, m, dd] = d.split("-"); return lang === "pt" ? `${dd}/${m}/${y}` : d; };
+const geoLabel = (g) => { const [tr, dir] = g.split("_"); return `${dir === "A" ? t("asc") : t("desc")} ${dir}${tr}`; };
+
+// ---------- i18n ----------
+function applyLang() {
+  document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+  document.querySelectorAll("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  $("lang-en").setAttribute("aria-pressed", String(lang === "en"));
+  $("lang-pt").setAttribute("aria-pressed", String(lang === "pt"));
+  $("gloss").innerHTML = T[lang].gloss.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join("");
+  renderPresets(); renderInspector(); renderStory(); renderFindings(); renderFunnel();
+}
+["en", "pt"].forEach((l) => $("lang-" + l).addEventListener("click", () => { lang = l; try { localStorage.setItem("dl-lang", l); } catch (e) {} applyLang(); }));
+
+// ---------- map ----------
+const W = 1000, H = 850;
+function proj(bbox) {
+  const [w, s, e, n] = bbox; const k = Math.cos(((s + n) / 2) * Math.PI / 180);
+  const sx = W / ((e - w) * k), sy = H / (n - s), sc = Math.min(sx, sy);
+  const ox = (W - (e - w) * k * sc) / 2, oy = (H - (n - s) * sc) / 2;
+  return ([lon, lat]) => [ox + (lon - w) * k * sc, oy + (n - lat) * sc];
+}
+const ramp = (v) => { const x = Math.max(0, Math.min(1, v / 100));
+  const stops = [[0, [18, 48, 110]], [0.55, [46, 150, 245]], [1, [234, 254, 7]]];
+  for (let i = 1; i < stops.length; i++) if (x <= stops[i][0]) { const [a, ca] = stops[i - 1], [b, cb] = stops[i]; const u = (x - a) / (b - a);
+    return `rgb(${ca.map((c, j) => Math.round(c + (cb[j] - c) * u)).join(",")})`; } return "rgb(234,254,7)"; };
+function ringPath(rings, P) { return rings.map((r) => "M" + r.map((c) => P(c).map((v) => v.toFixed(1)).join(" ")).join("L") + "Z").join(""); }
+function geomPath(g, P) { if (g.type === "Polygon") return ringPath(g.coordinates, P); if (g.type === "MultiPolygon") return g.coordinates.map((p) => ringPath(p, P)).join(""); return ""; }
+
+function renderMap() {
+  const svg = $("mapsvg");
+  if (!S.mesh) { svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = `<text x="500" y="425" fill="#A9BAD4" text-anchor="middle" font-size="22">${esc(t("noMesh"))}</text>`; return; }
+  const P = proj(S.mesh.bbox); const f = S.mesh.features;
+  const frames = f.filter((x) => x.properties.tipo === "quadro"), cells = f.filter((x) => x.properties.tipo === "celula"), places = f.filter((x) => x.properties.tipo === "lugar");
+  const pts = (S.region?.pontos || []);
+  let h = `<g id="vp">`;
+  if (S.layers.cells) h += cells.map((c, i) => `<path class="cell" data-i="${i}" d="${geomPath(c.geometry, P)}" fill="${ramp(c.properties.nota)}" fill-opacity="${S.sel?.kind === "cell" && S.sel.i === i ? 0.95 : 0.62}" stroke="${S.sel?.kind === "cell" && S.sel.i === i ? "#EAFE07" : "#07173F"}" stroke-width="${S.sel?.kind === "cell" && S.sel.i === i ? 4 : 1}" tabindex="0" role="button" aria-label="${esc(t("cell"))} ${esc(c.properties.nome)}, ${esc(t("score"))} ${c.properties.nota}" style="cursor:pointer"><title>${esc(c.properties.nome)} · ${c.properties.nota}</title></path>`).join("");
+  frames.forEach((fr) => { const d = fr.properties.direcao; if ((d === "A" && !S.layers.asc) || (d === "D" && !S.layers.desc)) return;
+    const col = d === "A" ? "#2E96F5" : "#C77DFF"; const [cx, cy] = P(centroid(fr.geometry));
+    h += `<path d="${geomPath(fr.geometry, P)}" fill="none" stroke="${col}" stroke-width="1.6" stroke-opacity="0.85" pointer-events="none"></path>`;
+    h += `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" fill="${col}" font-family="Fira Code, monospace" font-size="13" text-anchor="middle" pointer-events="none">${esc(fr.properties.id)}</text>`; });
+  if (S.layers.places) places.forEach((p, i) => { const [x, y] = P(p.geometry.coordinates);
+    h += `<g class="place" data-i="${i}" tabindex="0" role="button" aria-label="${esc(p.properties.nome)}" style="cursor:pointer"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="#fff" stroke="#07173F" stroke-width="2"></circle><text x="${(x + 11).toFixed(1)}" y="${(y + 5).toFixed(1)}" fill="#fff" font-size="15" font-family="Fira Sans, sans-serif" paint-order="stroke" stroke="#07173F" stroke-width="4">${esc(p.properties.nome)}</text></g>`; });
+  pts.forEach((p, i) => { const [x, y] = P([p.lon, p.lat]);
+    h += `<g class="pt" data-i="${i}" tabindex="0" role="button" aria-label="${esc(t("open"))}: ${esc(p.nome)}" style="cursor:pointer"><path d="M${x} ${y - 12} L${x + 12} ${y} L${x} ${y + 12} L${x - 12} ${y} Z" fill="#EAFE07" stroke="#07173F" stroke-width="2.5"></path></g>`; });
+  h += `</g>`;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = h;
+  applyView();
+  svg.querySelectorAll(".cell").forEach((el) => { const go = () => { S.sel = { kind: "cell", i: +el.dataset.i }; renderMap(); renderInspector(); };
+    el.addEventListener("click", go); el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+  svg.querySelectorAll(".place").forEach((el) => { const go = () => { S.sel = { kind: "place", i: +el.dataset.i }; renderInspector(); };
+    el.addEventListener("click", go); el.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); });
+  svg.querySelectorAll(".pt").forEach((el) => { const go = () => openPoint(+el.dataset.i);
+    el.addEventListener("click", go); el.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); }); });
+}
+function centroid(g) { const r = g.type === "Polygon" ? g.coordinates[0] : g.coordinates[0][0]; let x = 0, y = 0; r.forEach((c) => { x += c[0]; y += c[1]; }); return [x / r.length, y / r.length]; }
+function applyView() { const vp = $("vp"); if (!vp) return; const v = S.view || { x: 0, y: 0, k: 1 }; vp.setAttribute("transform", `translate(${v.x} ${v.y}) scale(${v.k})`); }
+function zoom(f, cx = W / 2, cy = H / 2) { const v = S.view || { x: 0, y: 0, k: 1 }; const k = Math.max(1, Math.min(12, v.k * f));
+  S.view = { k, x: cx - (cx - v.x) * (k / v.k), y: cy - (cy - v.y) * (k / v.k) }; applyView(); }
+(() => { const svg = $("mapsvg"); let drag = null;
+  const toSvg = (e) => { const r = svg.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
+  svg.addEventListener("wheel", (e) => { e.preventDefault(); const [x, y] = toSvg(e); zoom(e.deltaY < 0 ? 1.25 : 0.8, x, y); }, { passive: false });
+  svg.addEventListener("pointerdown", (e) => { if (e.button !== 0) return; drag = { p: toSvg(e), v: { ...(S.view || { x: 0, y: 0, k: 1 }) }, moved: false }; });
+  svg.addEventListener("pointermove", (e) => { if (!drag) return; const [x, y] = toSvg(e); const dx = x - drag.p[0], dy = y - drag.p[1];
+    if (Math.hypot(dx, dy) > 4) { drag.moved = true; svg.classList.add("dragging"); svg.setPointerCapture(e.pointerId); }
+    if (drag.moved) { S.view = { ...drag.v, x: drag.v.x + dx, y: drag.v.y + dy }; applyView(); } });
+  const end = () => { drag = null; svg.classList.remove("dragging"); };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+  $("zin").addEventListener("click", () => zoom(1.4)); $("zout").addEventListener("click", () => zoom(1 / 1.4));
+  $("zreset").addEventListener("click", () => { S.view = null; applyView(); });
+  document.querySelectorAll("[data-layer]").forEach((b) => b.addEventListener("click", () => { const k = b.dataset.layer; S.layers[k] = !S.layers[k]; b.setAttribute("aria-pressed", String(S.layers[k])); renderMap(); }));
+})();
+
+function cmdFor(lat, lon) { return `python run_point.py --lat ${lat.toFixed(4)} --lon ${lon.toFixed(4)} --nome "${t("cell")} ${lat.toFixed(2)},${lon.toFixed(2)}" --out docs/results/ponto_${Math.abs(lat).toFixed(2).replace(".", "")}_${Math.abs(lon).toFixed(2).replace(".", "")}`; }
+function inCell(c, p) { const g = c.geometry; const rings = g.type === "Polygon" ? [g.coordinates[0]] : g.coordinates.map((x) => x[0]);
+  return rings.some((r) => { let ins = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const [xi, yi] = r[i], [xj, yj] = r[j];
+    if ((yi > p[1]) !== (yj > p[1]) && p[0] < (xj - xi) * (p[1] - yi) / (yj - yi) + xi) ins = !ins; } return ins; }); }
+function renderInspector() {
+  const el = $("inspector"); if (!S.mesh) { el.innerHTML = `<p class="muted">${esc(t("pickCell"))}</p>`; return; }
+  if (!S.sel) { const best = S.mesh.features.filter((x) => x.properties.tipo === "celula").sort((a, b) => b.properties.nota - a.properties.nota)[0];
+    el.innerHTML = `<p>${esc(t("pickCell"))}</p>` + (best ? `<p class="muted mono">${esc(t("cell"))} ${esc(best.properties.nome)} · ${best.properties.nota}</p>` : ""); return; }
+  if (S.sel.kind === "place") { const p = S.mesh.features.filter((x) => x.properties.tipo === "lugar")[S.sel.i].properties;
+    el.innerHTML = `<div class="tag muted">${esc(t("place"))}</div><h3>${esc(p.nome)}</h3><dl class="kv"><dt>${esc(t("why"))}</dt><dd style="font-family:var(--body)">${esc(p.por_que)}</dd><dt>${esc(t("inCell"))}</dt><dd>${esc(p.celula)}</dd><dt>${esc(t("score"))}</dt><dd>${p.nota}</dd></dl>`; return; }
+  const c = S.mesh.features.filter((x) => x.properties.tipo === "celula")[S.sel.i]; const p = c.properties;
+  const here = (S.region?.pontos || []).map((x, i) => ({ ...x, i })).filter((x) => inCell(c, [x.lon, x.lat]));
+  let geo = p.geometrias; try { if (typeof geo === "string") geo = JSON.parse(geo); } catch (e) { geo = {}; }
+  el.innerHTML = `<div class="tag muted">${esc(t("cell"))}</div><h3 class="mono">${esc(p.nome)}</h3>
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="score">${p.nota}</span><span class="muted">${esc(t("score"))}</span></div>
+    <dl class="kv"><dt>${esc(t("area"))}</dt><dd>${p.area_km2} km²</dd><dt>${esc(t("dual"))}</dt><dd>${p.gcov_dupla_pos_beta}</dd>
+    <dt>${esc(t("geoms"))}</dt><dd>${p.geometrias_boas}</dd><dt>${esc(t("gap"))}</dt><dd>${p.maior_buraco_dias} ${esc(t("days"))}</dd>
+    <dt>${esc(t("gunw"))}</dt><dd>${p.gunw}</dd><dt>${esc(t("sme2"))}</dt><dd>${p.sme2}</dd><dt>${esc(t("first"))}</dt><dd>${fdate(p.primeira)}</dd><dt>${esc(t("last"))}</dt><dd>${fdate(p.ultima)}</dd></dl>
+    <div class="bars">${Object.entries(geo || {}).sort((a, b) => b[1] - a[1]).map(([g, n]) => `<div class="barrow"><span class="mono">${esc(g)}</span><span class="b" style="width:${Math.min(100, n * 8)}%;background:${g.includes("_A_") ? "var(--asc)" : "var(--desc)"}"></span><span class="mono">${n}</span></div>`).join("")}</div>
+    ${here.length ? `<div><div class="muted" style="margin-bottom:6px">${esc(t("ptsHere"))}</div>${here.map((x) => `<button type="button" class="btn" data-open="${x.i}">${esc(t("open"))}: ${esc(x.nome)}</button>`).join(" ")}</div>`
+      : `<div class="muted">${esc(t("noStory"))}</div><pre class="cmd">${esc(cmdFor(p.lat, p.lon))}</pre>`}`;
+  el.querySelectorAll("[data-open]").forEach((b) => b.addEventListener("click", () => openPoint(+b.dataset.open)));
+}
+
+// ---------- story ----------
+const PRESETS = [["presetAll", null, null], ["presetDry", "06-01", "09-30"], ["presetFire", "08-01", "10-31"], ["presetRain", "10-01", "11-30"]];
+function renderPresets() {
+  const box = $("presets"); if (!S.point) { box.innerHTML = ""; return; }
+  const y = (S.point.serie.at(-1)?.d || "2026").slice(0, 4);
+  box.innerHTML = PRESETS.map(([k, a, b], i) => `<button type="button" class="chip" data-p="${i}" aria-pressed="false">${esc(t(k))}</button>`).join("");
+  box.querySelectorAll("[data-p]").forEach((btn) => btn.addEventListener("click", () => { const [, a, b] = PRESETS[+btn.dataset.p];
+    const ds = S.point.serie.map((s) => s.d).sort(); S.from = a ? `${y}-${a}` : ds[0]; S.to = b ? `${y}-${b}` : ds.at(-1);
+    $("from").value = S.from; $("to").value = S.to; renderStory(); }));
+}
+["from", "to"].forEach((id) => $(id).addEventListener("change", () => { S[id] = $(id).value; renderStory(); }));
+document.querySelectorAll("[data-sl]").forEach((b) => b.addEventListener("click", () => { const k = b.dataset.sl; S.story[k] = !S.story[k]; b.setAttribute("aria-pressed", String(S.story[k])); renderStory(); }));
+
+const COLORS = ["#2E96F5", "#C77DFF", "#6FD3FF", "#FFB86B", "#8AA8FF", "#E28AE0"];
+function geomColor(g) { const keys = Object.keys(S.geoms).sort(); const asc = keys.filter((k) => k.includes("_A_")), des = keys.filter((k) => k.includes("_D_"));
+  const pal = g.includes("_A_") ? ["#2E96F5", "#6FD3FF", "#8AA8FF"] : ["#C77DFF", "#E28AE0", "#FFB86B"]; const arr = g.includes("_A_") ? asc : des; return pal[arr.indexOf(g) % pal.length]; }
+
+function chartSVG(opts) {
+  // opts: {id, x0, x1, y0, y1, yTicks, yLabel, y2, lines:[{name,color,pts:[[t,v]],dash}], marks:[{t,v,color,shape}], bars:[{t0,t1,v,color}], gaps:[[t0,t1]], vlines:[{t,color,label}], rainBars}
+  const Wc = 640, Hc = 300, L = 54, R = opts.y2 ? 54 : 18, Tp = 16, B = 36;
+  const X = (tt) => L + (tt - opts.x0) / (opts.x1 - opts.x0) * (Wc - L - R);
+  const Y = (v) => Tp + (1 - (v - opts.y0) / (opts.y1 - opts.y0)) * (Hc - Tp - B);
+  const Y2 = opts.y2 ? (v) => Tp + (1 - (v - opts.y2.y0) / (opts.y2.y1 - opts.y2.y0)) * (Hc - Tp - B) : null;
+  let s = `<svg viewBox="0 0 ${Wc} ${Hc}" role="img" aria-label="${esc(opts.aria)}">`;
+  s += `<rect x="0" y="0" width="${Wc}" height="${Hc}" fill="#0B2257"></rect>`;
+  (opts.gaps || []).forEach(([a, b]) => { const xa = Math.max(L, X(a)), xb = Math.min(Wc - R, X(b)); if (xb - xa > 2) {
+    s += `<rect x="${xa}" y="${Tp}" width="${xb - xa}" height="${Hc - Tp - B}" fill="#FFFFFF" fill-opacity="0.06"></rect>`;
+    if (xb - xa > 70) s += `<text x="${(xa + xb) / 2}" y="${Tp + 16}" fill="#A9BAD4" font-size="12" text-anchor="middle">${esc(t("noPasses"))}</text>`; } });
+  opts.yTicks.forEach((v) => { s += `<line x1="${L}" x2="${Wc - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#1F3C7A"></line><text x="${L - 6}" y="${Y(v) + 4}" fill="#A9BAD4" font-size="12" text-anchor="end" font-family="Fira Code, monospace">${fmt(v, Math.abs(v) < 1 && v !== 0 ? 1 : 0)}</text>`; });
+  s += `<text x="12" y="${Tp + 4}" fill="#A9BAD4" font-size="12" font-family="Fira Code, monospace">${esc(opts.yLabel)}</text>`;
+  if (opts.y2) { opts.y2.ticks.forEach((v) => { s += `<text x="${Wc - R + 6}" y="${Y2(v) + 4}" fill="${opts.y2.color}" font-size="12" font-family="Fira Code, monospace">${fmt(v, 2)}</text>`; }); }
+  // months
+  const d0 = new Date(opts.x0), d1 = new Date(opts.x1); let m = new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() + 1, 1)); const step = (opts.x1 - opts.x0) / 864e5 > 200 ? 2 : 1;
+  const MN = lang === "pt" ? ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  while (m <= d1) { const x = X(m.getTime()); s += `<line x1="${x}" x2="${x}" y1="${Hc - B}" y2="${Hc - B + 5}" stroke="#3A5A94"></line><text x="${x}" y="${Hc - B + 20}" fill="#A9BAD4" font-size="12" text-anchor="middle" font-family="Fira Code, monospace">${MN[m.getUTCMonth()]}${m.getUTCMonth() === 0 ? " " + String(m.getUTCFullYear()).slice(2) : ""}</text>`; m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + step, 1)); }
+  (opts.rain || []).forEach(([tt, v]) => { if (v <= 0) return; const x = X(tt); const hgt = Math.min(1, v / 40) * (Hc - Tp - B) * 0.35; s += `<rect x="${x - 1}" y="${Hc - B - hgt}" width="2" height="${hgt}" fill="#6FA8DC" fill-opacity="0.7"></rect>`; });
+  (opts.bars || []).forEach((b) => { const xa = X(b.t0), xb = X(b.t1); s += `<line x1="${xa}" x2="${xb}" y1="${Y(b.v)}" y2="${Y(b.v)}" stroke="${b.color}" stroke-width="6" stroke-linecap="round"></line>`; });
+  (opts.lines || []).forEach((l) => { const pts = l.pts.filter((p) => p[1] != null); if (!pts.length) return;
+    let d = ""; let prev = null; pts.forEach((p) => { const gap = prev && (p[0] - prev[0]) > 40 * 864e5; d += `${!prev || gap ? "M" : "L"}${X(p[0]).toFixed(1)} ${Y(p[1]).toFixed(1)} `; prev = p; });
+    s += `<path d="${d}" fill="none" stroke="${l.color}" stroke-width="2.4" ${l.dash ? 'stroke-dasharray="5 4"' : ""}></path>`;
+    pts.forEach((p) => { s += `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3.6" fill="${l.color}"></circle>`; }); });
+  (opts.marks || []).forEach((mk) => { const x = X(mk.t), y = (mk.axis2 ? Y2 : Y)(mk.v); s += `<path d="M${x} ${y - 6} L${x + 6} ${y} L${x} ${y + 6} L${x - 6} ${y} Z" fill="${mk.color}" stroke="#07173F" stroke-width="1.5"></path>`; });
+  (opts.vlines || []).forEach((v) => { const x = X(v.t); s += `<line x1="${x}" x2="${x}" y1="${Tp}" y2="${Hc - B}" stroke="${v.color}" stroke-dasharray="4 4"></line><text x="${x - 4}" y="${Hc - B - 6}" fill="${v.color}" font-size="11" text-anchor="end">${esc(v.label)}</text>`; });
+  s += `<rect class="hit" x="${L}" y="${Tp}" width="${Wc - L - R}" height="${Hc - Tp - B}" fill="transparent"></rect></svg>`;
+  return { svg: s, X, Wc, L, R };
+}
+function attachTip(box, geom, rows) {
+  const svg = box.querySelector("svg"); const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
+  svg.addEventListener("pointermove", (e) => { const r = svg.getBoundingClientRect(); const x = (e.clientX - r.left) * geom.Wc / r.width;
+    let best = null; rows.forEach((row) => { const dx = Math.abs(geom.X(row.t) - x); if (!best || dx < best.dx) best = { dx, row }; });
+    if (!best || best.dx > 18) { tip.hidden = true; return; }
+    tip.innerHTML = best.row.html; tip.hidden = false; const bx = box.getBoundingClientRect();
+    let left = e.clientX - bx.left + 14; if (left + 240 > bx.width) left = e.clientX - bx.left - 250; tip.style.left = Math.max(0, left) + "px"; tip.style.top = (e.clientY - bx.top - 10) + "px"; });
+  svg.addEventListener("pointerleave", () => { tip.hidden = true; });
+}
+function renderStory() {
+  const box = $("charts");
+  if (!S.point) { $("pt-name").textContent = ""; box.innerHTML = `<div class="empty">${esc(t("noPoint"))}</div>`; $("geoms").innerHTML = ""; return; }
+  const P = S.point; $("pt-name").textContent = `${P.nome} (${fmt(P.lat, 3)}, ${fmt(P.lon, 3)})`;
+  const gk = Object.keys(S.geoms).sort();
+  $("geoms").innerHTML = gk.map((g) => `<button type="button" class="chip" data-g="${esc(g)}" aria-pressed="${S.geoms[g]}"><span class="swatch" style="background:${geomColor(g)}"></span>${esc(geoLabel(g))}</button>`).join("");
+  $("geoms").querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", () => { S.geoms[b.dataset.g] = !S.geoms[b.dataset.g]; renderStory(); }));
+  const ts = (d) => Date.parse(d + "T12:00:00Z");
+  const x0 = ts(S.from), x1 = ts(S.to) + 864e5; const inR = (d) => { const v = ts(d); return v >= x0 && v <= x1; };
+  const ser = P.serie.filter((s) => inR(s.d) && S.geoms[s.g]);
+  const all = P.serie.filter((s) => inR(s.d)).map((s) => ts(s.d)).sort((a, b) => a - b);
+  const gaps = []; for (let i = 1; i < all.length; i++) if (all[i] - all[i - 1] > 24 * 864e5) gaps.push([all[i - 1] + 864e5, all[i] - 864e5]);
+  const anoms = P.serie.filter((s) => s.anom && inR(s.d) && S.geoms[s.g]).map((s) => ({ t: ts(s.d), color: "#FF8A8A", label: t("discarded") }));
+  if (!ser.length) { box.innerHTML = `<div class="empty">${esc(t("noData"))}</div>`; return; }
+  const good = ser.filter((s) => !s.anom); let html = "", tips = [];
+  const ext = (vals, pad, minSpan) => { let lo = Math.min(...vals), hi = Math.max(...vals); if (hi - lo < minSpan) { const c = (hi + lo) / 2; lo = c - minSpan / 2; hi = c + minSpan / 2; } return [Math.floor(lo - pad), Math.ceil(hi + pad)]; };
+  const ticks = (a, b) => { const out = []; const st = (b - a) > 6 ? 2 : 1; for (let v = a; v <= b; v += st) out.push(v); return out; };
+  const byG = (key) => gk.filter((g) => S.geoms[g]).map((g) => ({ name: g, color: geomColor(g), pts: good.filter((s) => s.g === g && s[key] != null).map((s) => [ts(s.d), s[key]]) }));
+  const tableOf = (cols, rows) => `<details class="table"><summary>${esc(t("table"))}</summary><div class="tablewrap"><table><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+  if (S.story.visible) { const v = good.filter((s) => s.hv != null).map((s) => s.hv);
+    if (v.length) { const [y0, y1] = ext(v, 0.5, 2);
+      const g = chartSVG({ x0, x1, y0, y1, yTicks: ticks(y0, y1), yLabel: "HV dB", lines: byG("hv"), gaps, vlines: anoms, aria: `${t("chVeg")}: ${v.length} passes` });
+      html += `<figure class="chart panel" id="c-veg"><figcaption><h3>${esc(t("chVeg"))}</h3><span class="muted">${esc(t("chVegSub"))}</span></figcaption><div class="chartbox">${g.svg}</div>${tableOf(["date", "pass", "HV dB"], good.filter((s) => s.hv != null).map((s) => [fdate(s.d), s.g, fmt(s.hv, 2)]))}</figure>`;
+      tips.push(["c-veg", g, good.filter((s) => s.hv != null).map((s) => ({ t: ts(s.d), html: `${fdate(s.d)} · ${esc(geoLabel(s.g))}<br>HV ${fmt(s.hv, 2)} dB` }))]); } }
+  if (S.story.invisible) { const v = good.filter((s) => s.hh != null).map((s) => s.hh);
+    if (v.length) { const [y0, y1] = ext(v, 0.5, 2); const rain = Object.entries(P.clima?.chuva_mm || {}).filter(([d]) => inR(d)).map(([d, mm]) => [ts(d), mm]);
+      const sm = (P.sme2 || []).filter((x) => inR(x.d) && S.geoms[x.g]); const smMax = Math.max(0.35, ...sm.map((x) => x.v));
+      const g = chartSVG({ x0, x1, y0, y1, yTicks: ticks(y0, y1), yLabel: "HH dB", lines: byG("hh"), gaps, vlines: anoms, rain,
+        y2: { y0: 0, y1: smMax, ticks: [0, smMax / 2, smMax].map((x) => +x.toFixed(2)), color: "#3BD18A" },
+        marks: sm.map((x) => ({ t: ts(x.d), v: x.v, color: "#3BD18A", axis2: true })), aria: `${t("chWater")}` });
+      html += `<figure class="chart panel" id="c-water"><figcaption><h3>${esc(t("chWater"))}</h3><span class="muted">${esc(t("chWaterSub"))}</span></figcaption><div class="chartbox">${g.svg}</div>
+        <div class="chips muted" style="font-size:13px"><span><span class="swatch" style="background:#6FA8DC"></span> ${esc(t("rain"))} (NASA POWER)</span><span><span class="swatch" style="background:#3BD18A;transform:rotate(45deg)"></span> ${esc(t("sm"))} (NISAR SME2, m³/m³)</span></div>
+        ${tableOf(["date", "pass", "HH dB", "rain 7d mm", "SME2"], good.filter((s) => s.hh != null).map((s) => [fdate(s.d), s.g, fmt(s.hh, 2), fmt(s.chuva7, 1), s.sme2 == null ? "–" : fmt(s.sme2, 3)]))}</figure>`;
+      tips.push(["c-water", g, good.filter((s) => s.hh != null).map((s) => ({ t: ts(s.d), html: `${fdate(s.d)} · ${esc(geoLabel(s.g))}<br>HH ${fmt(s.hh, 2)} dB<br>${esc(t("rain"))} 7d ${fmt(s.chuva7, 1)} mm${s.sme2 != null ? `<br>${esc(t("sm"))} ${fmt(s.sme2, 3)}` : ""}` }))]); } }
+  if (S.story.ground) { const gp = (P.gunw || []).filter((x) => S.geoms[x.g] && x.coh != null && (inR(x.d1) || inR(x.d2)));
+    if (gp.length) { const g = chartSVG({ x0, x1, y0: 0, y1: 1, yTicks: [0, 0.5, 1], yLabel: t("coh"), gaps,
+        bars: gp.map((x) => ({ t0: ts(x.d1), t1: ts(x.d2), v: x.coh, color: x.coh < 0.3 ? "#FF8A8A" : geomColor(x.g) })), aria: t("chGround") });
+      html += `<figure class="chart panel" id="c-ground"><figcaption><h3>${esc(t("chGround"))}</h3><span class="muted">${esc(t("chGroundSub"))}</span></figcaption><div class="chartbox">${g.svg}</div>
+        ${tableOf(["pair", "pass", t("coh"), t("disp") + " cm"], gp.map((x) => [`${fdate(x.d1)} → ${fdate(x.d2)}`, x.g, fmt(x.coh, 2), fmt(x.desl, 2)]))}</figure>`;
+      tips.push(["c-ground", g, gp.map((x) => ({ t: (ts(x.d1) + ts(x.d2)) / 2, html: `${fdate(x.d1)} → ${fdate(x.d2)} · ${esc(geoLabel(x.g))}<br>${esc(t("coh"))} ${fmt(x.coh, 2)}<br>${esc(t("disp"))} ${fmt(x.desl, 2)} cm` }))]); } }
+  box.innerHTML = html || `<div class="empty">${esc(t("noData"))}</div>`;
+  tips.forEach(([id, g, rows]) => attachTip(document.querySelector(`#${id} .chartbox`), g, rows));
+}
+function renderFindings() {
+  const P = S.point;
+  $("cards").innerHTML = P ? P.achados.map((a) => `<article class="card t-${esc(a.tipo)}"><span class="tag">${esc({ visivel: lang === "pt" ? "valsa visível" : "visible waltz", invisivel: lang === "pt" ? "valsa invisível" : "invisible waltz", chao: lang === "pt" ? "chão" : "ground", lento: lang === "pt" ? "mudança lenta" : "slow change", qualidade: lang === "pt" ? "qualidade" : "quality check" }[a.tipo] || a.tipo)}</span><span class="val">${esc(typeof a.valor === "object" ? (a.valor[lang] || a.valor.en) : a.valor)}</span><p style="margin:0;color:#CBD7EA">${esc(a[lang] || a.en)}</p></article>`).join("") : `<div class="empty">${esc(t("noPoint"))}</div>`;
+  $("lims").innerHTML = P ? P.limitacoes.map((l) => `<li>${esc(l[lang] || l.en)}</li>`).join("") : "";
+}
+function renderFunnel() {
+  const P = S.point; if (!P || !P.funil) { $("funnel").innerHTML = ""; return; }
+  $("funnel").innerHTML = Object.entries(P.funil).map(([prod, v]) => `<div class="panel"><h3 class="mono">${esc(prod)}</h3><div class="bars" style="margin-top:8px">
+    ${[["catalog", v.catalogo], ["covers", v.contem_ponto], ["kept", v.uma_por_passagem]].map(([k, n]) => `<div class="barrow"><span>${esc(t(k))}</span><span class="b" style="width:${Math.round(100 * n / Math.max(1, v.catalogo))}%"></span><span class="mono">${n}</span></div>`).join("")}</div></div>`).join("");
+}
+$("copy-csv").addEventListener("click", async () => {
+  if (!S.point) return; const rows = [["date", "utc", "pass", "version", "pol", "hh_db", "hv_db", "hh_minus_surroundings_db", "discarded", "rain_7d_mm", "soil_wetness_power", "sme2"]]
+    .concat(S.point.serie.map((s) => [s.d, s.h, s.g, s.m, s.pol, s.hh, s.hv, s.hhc, s.anom, s.chuva7, s.umid, s.sme2]));
+  const csv = rows.map((r) => r.map((v) => v == null ? "" : String(v)).join(",")).join("\n");
+  try { await navigator.clipboard.writeText(csv); $("copy-msg").textContent = t("copied"); } catch (e) { $("copy-msg").textContent = t("copyFail"); }
+});
+
+// ---------- loading ----------
+async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error(url + " " + r.status); return r.json(); }
+async function openPoint(i, scroll = true) {
+  const p = S.region.pontos[i]; S.point = await getJSON("data/" + p.arquivo);
+  S.geoms = {}; S.point.serie.forEach((s) => { S.geoms[s.g] = true; });
+  const ds = S.point.serie.map((s) => s.d).sort(); S.from = ds[0]; S.to = ds.at(-1); $("from").value = S.from; $("to").value = S.to;
+  $("dl-json").href = "data/" + p.arquivo;
+  renderPresets(); renderStory(); renderFindings(); renderFunnel();
+  if (scroll) document.getElementById("story").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+async function loadRegion(id) {
+  S.region = S.regions.find((r) => r.id === id); S.sel = null; S.view = null; S.mesh = null;
+  if (S.region.malha) { try { S.mesh = await getJSON("data/" + S.region.malha); } catch (e) { S.mesh = null; } }
+  $("dl-mesh").href = S.region.malha ? "data/" + S.region.malha : "#"; $("dl-mesh").hidden = !S.region.malha;
+  renderMap(); renderInspector();
+  if (S.region.pontos?.length) await openPoint(0, false); else { S.point = null; renderPresets(); renderStory(); renderFindings(); renderFunnel(); }
+}
+(async () => {
+  applyLang();
+  try { S.regions = await getJSON("data/regioes.json"); } catch (e) { S.regions = []; }
+  $("region").innerHTML = S.regions.map((r) => `<option value="${esc(r.id)}">${esc(r.nome)}</option>`).join("");
+  $("region").addEventListener("change", (e) => loadRegion(e.target.value));
+  if (S.regions.length) await loadRegion(S.regions[0].id); else { renderMap(); renderInspector(); renderStory(); }
+})();
+})();
+</script>
