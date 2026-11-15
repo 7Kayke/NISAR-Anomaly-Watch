@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """API REST do Delta L (FastAPI). Rodar no computador A:  uvicorn api.app:app --port 8000
 
 GET  /v1/collections                     fontes do funil e o que cada uma mede

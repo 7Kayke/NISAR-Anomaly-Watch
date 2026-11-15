@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Testes sintéticos do funil, do relevo e do consenso (sem rede)."""
 from datetime import datetime
 

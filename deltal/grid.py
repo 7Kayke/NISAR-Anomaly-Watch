@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Grade comum: todas as fontes são reamostradas para a mesma grade UTM."""
 from dataclasses import dataclass
 

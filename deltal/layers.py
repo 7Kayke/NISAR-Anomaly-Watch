@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """As três camadas de mudança, calculadas sempre juntas.
 
   vegetacao : HV (ou VH) cai forte e cai mais que HH (ou VV)  -> fogo, desmatamento

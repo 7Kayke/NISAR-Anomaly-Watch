@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Busca unificada em funil + consenso multissensor + validação.
 
 Uso:

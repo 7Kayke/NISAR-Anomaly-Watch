@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Saídas: figura de antes/depois/mudança, ficha técnica (JSON e CSV) e texto do resultado."""
 import csv
 import json

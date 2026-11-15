@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Contas da detecção de mudança (ver Apostila de cálculo, contas 6 a 12)."""
 import numpy as np
 from scipy import ndimage

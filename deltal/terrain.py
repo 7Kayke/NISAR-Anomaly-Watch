@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Relevo: declividade, sombra e layover a partir do DEM (Apostila de cálculo, contas 8 e 9).
 
 A geometria de visada muda por sensor:

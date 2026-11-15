@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Consenso multissensor por pixel.
 
 Cada evidência é uma máscara booleana (detectou) mais uma máscara de disponibilidade (podia ver:

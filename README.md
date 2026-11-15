@@ -41,8 +41,14 @@ Run workflow. Results are committed to `docs/results/<case>/`.
 
 ## AI use
 
-Parts of the code and text were written with help from an AI assistant (Claude)
-and reviewed by the team. The project idea and all decisions are the team's.
+| What | Who |
+|---|---|
+| Project idea, study area, choice of sensors and data sources, collection funnel concept, review of every result | Team Delta L |
+| Much of the Python code, its comments and docs drafts | Written with an AI assistant (Claude, Anthropic), reviewed and run by the team |
+| Numbers, maps and metrics | Computed by the pipeline from real NASA / ESA / USGS data, never written by AI |
+
+Every Python file starts with an `# AI-assisted` note, and commits made with the assistant carry a `Co-Authored-By: Claude` line.
+No AI-generated images or video are used; if any are added to the demo they will carry a visible "AI-generated" label.
 
 ## References
 

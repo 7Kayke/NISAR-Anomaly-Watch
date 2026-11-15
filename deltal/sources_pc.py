@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Microsoft Planetary Computer: Sentinel-2 L2A, Sentinel-1 RTC e Copernicus DEM.
 
 O catálogo STAC é público; as URLs dos arquivos são assinadas pelo pacote

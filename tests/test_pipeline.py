@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Testes com dados sintéticos: o detector precisa achar o que foi plantado e nada além."""
 import json
 

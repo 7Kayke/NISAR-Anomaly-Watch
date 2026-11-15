@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """NISAR: busca no catálogo da NASA (CMR, via earthaccess), leitura SÓ do recorte e reprojeção.
 
 Login: variáveis de ambiente EARTHDATA_USERNAME e EARTHDATA_PASSWORD (Secrets no GitHub)

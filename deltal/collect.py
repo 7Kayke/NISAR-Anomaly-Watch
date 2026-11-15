@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Coleta unificada no Microsoft Planetary Computer, passando pelo funil de cada fonte.
 
 Fontes: sentinel-2-l2a, landsat-c2-l2 (óptico + térmico), sentinel-1-rtc, naip, aster-l1t,

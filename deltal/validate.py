@@ -1,3 +1,4 @@
+# AI-assisted: parts of this file were written with help from Claude (Anthropic). Reviewed and run by team Delta L.
 """Validação: matriz de confusão e métricas (conta 20)."""
 import numpy as np
 
