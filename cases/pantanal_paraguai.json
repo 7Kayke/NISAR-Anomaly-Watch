@@ -1,0 +1,12 @@
+{
+  "nome": "Pantanal: planície do rio Paraguai em Corumbá/Ladário (áreas úmidas, fogo e seca)",
+  "bbox": [-57.9, -19.4, -56.9, -18.4],
+  "resolucao_m": 200,
+  "serie": {"inicio": "2026-01-20"},
+  "somente_nisar": true,
+  "clima_nasa_power": true,
+  "todas_geometrias": true,
+  "referencia_em_solo": {"tipo": "régua do rio Paraguai em Ladário", "fonte": "SGB/SACE e Marinha (CHN-6)",
+                          "uso": "validar a área alagada do NISAR contra o nível do rio, data a data"},
+  "contexto": "Pulso de inundação do Pantanal. Cheia de 2026 abaixo da média histórica (Ladário ~1,95 m em abril, ~1,2 m abaixo da mediana). Água sob a vegetação (só a banda L enxerga), campos que secam, fogo na seca, avanço de pastagens."
+}
