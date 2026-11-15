@@ -15,7 +15,7 @@ html, body { margin: 0; height: 100%; background: var(--space); color: var(--ink
 nav { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); background: linear-gradient(#02060Fee, #02060F00); pointer-events: none; }
 nav > * { pointer-events: auto; }
-.brand { font-weight: 800; color: var(--cyan); letter-spacing: .5px; }
+.brand { font-weight: 800; color: #FFFFFF; letter-spacing: .5px; }
 .brand small { display: block; font: 500 11px var(--mono); color: var(--ink2); letter-spacing: 2px; }
 .ctrl { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .seg { display: inline-flex; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; background: var(--panel); }
@@ -28,6 +28,8 @@ nav > * { pointer-events: auto; }
 .hero h1 { line-height: 1.12; } .hero p { max-width: 560px; margin: 8px auto 0; font-size: 15px; }
 .introbar { margin-top: 14px; display: flex; gap: 12px; justify-content: center; align-items: center; }
 .pips { display: inline-flex; gap: 5px; } .pips i { width: 18px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.25); } .pips i.on { background: var(--neon); }
+.ib { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--edge); background: var(--panel); color: #fff; font-size: 12px; cursor: pointer; }
+.ib:hover { border-color: var(--neon); }
 #skip { background: none; border: 0; color: var(--ink2); font: 600 12px var(--display); cursor: pointer; min-height: 32px; text-decoration: underline; }
 .stories { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
 .stories button { font: 600 13px var(--display); min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--edge); background: var(--panel); color: var(--ink); cursor: pointer; }
@@ -36,10 +38,10 @@ nav > * { pointer-events: auto; }
 .replay { position: fixed; left: max(16px, env(safe-area-inset-left)); top: 64px; min-height: 32px !important; font-size: 12px !important; padding: 0 12px !important; background: var(--panel) !important; }
 .hero.gone { opacity: 0; transform: translate(-50%, -12px); }
 .hero { position: fixed; left: 50%; top: 68px; transform: translateX(-50%); text-align: center; pointer-events: none; width: min(92vw, 720px); }
-.hero h1 { margin: 0; font-size: clamp(22px, 3.4vw, 40px); font-weight: 800; color: #9FF0FF; text-shadow: 0 2px 18px #000; }
+.hero h1 { margin: 0; font-size: clamp(22px, 3.4vw, 40px); font-weight: 800; color: #FFFFFF; text-shadow: 0 2px 18px #000; }
 .hero p { margin: 4px 0 0; color: var(--ink2); font-size: 14px; text-shadow: 0 1px 8px #000; }
 .stats { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 28px; pointer-events: none; text-align: center; }
-.stats b { display: block; font-size: 26px; color: var(--cyan); font-weight: 800; } .stats span { font-size: 12px; color: var(--ink2); }
+.stats b { display: block; font-size: 26px; color: #FFFFFF; font-weight: 800; text-shadow: 0 2px 10px #000; } .stats span { font-size: 12px; color: var(--ink2); }
 .badge { position: fixed; padding: 10px 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--panel); cursor: pointer; color: var(--ink); font: inherit; text-align: left; display: flex; gap: 10px; align-items: center; }
 .badge:hover { border-color: var(--cyan); }
 .badge .tag { font: 600 12px var(--mono); color: var(--ink2); }
@@ -49,12 +51,12 @@ nav > * { pointer-events: auto; }
 #panel { position: fixed; right: max(16px, env(safe-area-inset-right)); top: 76px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 100px); overflow: auto;
   background: var(--panel); border: 1px solid var(--edge); border-radius: 14px; padding: 16px; display: none; flex-direction: column; gap: 10px; backdrop-filter: blur(6px); }
 #panel.on { display: flex; }
-#panel.wide { width: min(600px, calc(100vw - 32px)); }
+#panel.wide { width: min(700px, calc(100vw - 32px)); }
 .car { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 0; border-radius: 10px; }
 .car::-webkit-scrollbar { display: none; }
 .slide { flex: 0 0 100%; scroll-snap-align: start; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .slide .media { position: relative; background: #000; border-radius: 10px; overflow: hidden; }
-.slide .media img, .slide .media canvas { display: block; width: 100%; height: auto; max-height: 46vh; object-fit: contain; background: #fff; image-rendering: auto; }
+.slide .media img, .slide .media canvas { display: block; width: 100%; height: auto; max-height: 46vh; object-fit: contain; background: #050E26; image-rendering: auto; }
 .slide .media canvas { background: #000; image-rendering: pixelated; }
 .slide h3 { margin: 0; font-size: 16px; }
 .slide .what { font-size: 14px; line-height: 1.5; margin: 0; }
@@ -93,6 +95,30 @@ nav > * { pointer-events: auto; }
 .thumb .cap { position: absolute; left: 4px; bottom: 4px; right: 4px; font: 600 10px var(--mono); background: rgba(2,6,15,.85); color: var(--ink); padding: 3px 6px; border-radius: 5px; text-align: left; line-height: 1.35; }
 .sum { background: #0A1A40; border-left: 3px solid var(--cyan); border-radius: 8px; padding: 8px 12px; font-size: 13px; line-height: 1.5; }
 .sum p { margin: 4px 0; } .sum b { color: var(--cyan); font-weight: 600; }
+.pnav { position: sticky; top: -16px; z-index: 3; margin: 0 -16px; padding: 10px 16px; background: rgba(10, 22, 52, 0.97); border-bottom: 1px solid var(--edge); display: flex; align-items: center; gap: 10px; }
+.pnav .arr { flex: none; width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
+.pcount { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; justify-content: center; }
+.pnum { font: 600 13px var(--mono); color: var(--ink2); white-space: nowrap; } .pnum b { color: var(--neon); font-size: 18px; }
+.ptitle { font-weight: 700; font-size: 14px; color: #FFFFFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nums { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 4px; } .nums::-webkit-scrollbar { display: none; }
+.nums button { flex: 0 0 auto; min-width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--edge); background: transparent; color: var(--ink2); font: 600 12px var(--mono); cursor: pointer; }
+.nums button[aria-current="true"] { background: var(--neon); color: #02122E; border-color: var(--neon); }
+.car { transition: height .25s ease; align-items: flex-start; }
+.slide { gap: 10px; padding: 2px 1px; }
+.slide h3 { text-align: center; font-size: 17px; margin: 4px 0 0; color: #FFFFFF; }
+.slide .what { font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+.slide .how { font-size: 13px; line-height: 1.6; }
+.slide .media { text-align: center; } .slide .media > div[id$=chart] { width: 100%; box-sizing: border-box; } .slide .media svg { display: block; width: 100%; height: auto; }
+.slide .media img.zoomable { cursor: zoom-in; max-height: 52vh; width: 100%; object-fit: contain; }
+.slide .media:has(img.zoomable)::after, .slide .media:has(svg)::after { content: "⤢"; position: absolute; right: 8px; top: 8px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 6px; background: rgba(2,6,15,.75); color: #fff; font-size: 15px; pointer-events: none; }
+#cchart svg, #rchart svg, #mchart svg { cursor: zoom-in; }
+#lb { position: fixed; inset: 0; z-index: 50; background: rgba(2,6,15,.92); display: grid; place-items: center; padding: 56px 16px 16px; }
+#lb[hidden] { display: none; }
+#lbc { max-width: min(1400px, 96vw); max-height: calc(100vh - 80px); overflow: auto; } #lbc img { display: block; max-width: 100%; max-height: calc(100vh - 90px); margin: auto; border-radius: 8px; }
+#lbx { position: fixed; top: 12px; right: 16px; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--edge); background: var(--panel); color: #fff; font-size: 24px; cursor: pointer; }
+.zoomctl { position: fixed; left: max(16px, env(safe-area-inset-left)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 4; }
+.zoomctl button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--edge); background: var(--panel); color: #fff; font: 700 20px var(--display); cursor: pointer; }
+.zoomctl button:hover { border-color: var(--cyan); }
 .step { font: 600 11px var(--mono); color: var(--neon); letter-spacing: 1.5px; }
 body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display: none; }
 #panel h2 { margin: 0; font-size: 18px; } .k { font: 500 11px var(--mono); color: var(--ink2); letter-spacing: 1.5px; }
@@ -118,6 +144,8 @@ body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display
   .hero { top: 92px; } .hero h1 { font-size: 22px; } .hero p { font-size: 13px; } .replay { top: 96px; } .stories button { font-size: 12px; min-height: 36px; }
   .stats, .badge, .legend { display: none; } .demo { left: 10px; right: 10px; bottom: 10px; max-width: none; font-size: 10px; }
   #panel, #panel.wide { left: 0; right: 0; bottom: 0; top: auto; width: 100%; max-height: 64vh; border-radius: 16px 16px 0 0; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); }
+  .zoomctl { top: auto; bottom: 64px; transform: none; } .zoomctl button { width: 38px; height: 38px; font-size: 17px; } body.paneled .zoomctl { bottom: calc(64vh + 10px); }
+  .pnav { top: -14px; margin: 0 -14px; padding: 8px 14px; } .ptitle { font-size: 13px; }
   #panel::before { content: ""; display: block; width: 44px; height: 5px; border-radius: 3px; background: var(--edge); margin: -4px auto 4px; }
   body.paneled .demo { display: none; }
   .slide .media img, .slide .media canvas { max-height: 38vh; }
@@ -138,7 +166,7 @@ body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display
 <div class="hero" id="intro" aria-live="polite">
   <div class="beat" id="beat"><span class="kicker" id="beatK"></span><h1 id="beatT"></h1><p id="beatS"></p></div>
   <div class="stories" id="stories" hidden></div>
-  <div class="introbar"><span class="pips" id="pips"></span><button type="button" id="skip"></button></div>
+  <div class="introbar"><button type="button" class="ib" id="ibPrev" aria-label="Previous">◀</button><button type="button" class="ib" id="ibPlay" aria-label="Pause">❚❚</button><button type="button" class="ib" id="ibNext" aria-label="Next">▶</button><span class="pips" id="pips"></span><button type="button" id="skip"></button></div>
 </div>
 <button type="button" class="btn replay" id="replay" hidden></button>
 
@@ -146,6 +174,8 @@ body.paneled .badge[data-go], body.paneled .hero, body.paneled .replay { display
 <div class="legend"><b style="color:var(--ink)" data-i="lgT"></b><div class="ramp"></div><div style="display:flex;justify-content:space-between"><span data-i="lgFew"></span><span data-i="lgMany"></span></div><span><span style="color:var(--neon)">■</span> <span data-i="lgFull"></span></span><span><span style="color:var(--cyan)">■</span> <span data-i="lgHL"></span></span></div>
 <div class="demo" id="demo"></div>
 
+<div class="zoomctl" role="group" aria-label="Zoom"><button type="button" id="zin" aria-label="Zoom in">+</button><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zhome" aria-label="Reset view">⌂</button></div>
+<div id="lb" hidden role="dialog" aria-modal="true"><button type="button" id="lbx" aria-label="Close">×</button><div id="lbc"></div></div>
 <aside id="panel" aria-live="polite"><button class="x" id="close" aria-label="Close">×</button><div id="pbody"></div></aside>
 
 <script src="d3.min.js"></script>
@@ -189,7 +219,7 @@ const T = {
     pathrow: "path/row", tile: "tile", cloud: "cloud", of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next", hlKick: "HIGHLIGHT", hlNote: "Highlight areas use real NISAR results with a lighter analysis than Paiaguás.", hasHL: (n) => `This frame has a highlight: ${n}`, lgHL: "Highlight areas",
     cohKeep: ["track 31 · ascending", "track 132 · ascending", "track 10 · descending", "track 111 · unreliable"],
     cohAxis: "height = % of the area that lost coherence (changed) between the two passes", cohNorm: "normal band: under 10% (ground did not move)",
-    cohTip: "without coherence", months: ["Jul", "Aug", "Sep", "Oct"], jun: "Jun", nov: "Nov",
+    cohTip: "without coherence", months: ["Jul", "Aug", "Sep", "Oct"], jun: "Jun", nov: "Nov", mon: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     mS: ["NDVI (Sentinel-2)", "Burn/drying % (Sentinel-2)", "Temperature °C (Landsat)", "VH dB (Sentinel-1)"], mLoss: "NISAR loses coherence" },
   pt: { tag: "A VALSA DA SUPERFÍCIE, QUADRO A QUADRO", dAll: "Todos", dAsc: "Ascendente", dDesc: "Descendente", go: "Ir", search: "Buscar lugar ou lat, lon",
     h1: "Cada quadro do NISAR, no planeta inteiro.", skip: "Pular introdução", replay: "▶ Introdução", storiesT: "Clique em qualquer quadro do globo, ou siga uma história:",
@@ -224,7 +254,7 @@ const T = {
     pathrow: "órbita/linha", tile: "quadrícula", cloud: "nuvem", of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo", hlKick: "DESTAQUE", hlNote: "As áreas em destaque usam resultados reais do NISAR, com uma análise mais leve que a do Paiaguás.", hasHL: (n) => `Este quadro tem um destaque: ${n}`, lgHL: "Áreas em destaque",
     cohKeep: ["pista 31 · ascendente", "pista 132 · ascendente", "pista 10 · descendente", "pista 111 · não confiável"],
     cohAxis: "altura = % da área que perdeu a coerência (mudou) entre as duas passagens", cohNorm: "faixa normal: menos de 10% (chão parado)",
-    cohTip: "sem coerência", months: ["jul", "ago", "set", "out"], jun: "jun", nov: "nov",
+    cohTip: "sem coerência", months: ["jul", "ago", "set", "out"], jun: "jun", nov: "nov", mon: ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"],
     mS: ["NDVI (Sentinel-2)", "Queima/secagem % (Sentinel-2)", "Temperatura °C (Landsat)", "VH dB (Sentinel-1)"], mLoss: "NISAR perde coerência" } };
 const t = (k) => T[lang][k];
 const L2 = (o) => (o && typeof o === "object" ? o[lang] : o);
@@ -283,6 +313,10 @@ const PLACES = [[{ en: "Pantanal", pt: "Pantanal" }, -57.2, -18.0, 3.5, "bio"], 
 const STY = { // colours tuned for a dark satellite basemap: warm for countries, cool for water, green for biomes, white for towns
   country: { c: "rgba(255,226,160,0.95)", w: 700, sp: 1.2 }, ocean: { c: "rgba(140,200,255,0.75)", w: 400, sp: 2, it: true },
   bio: { c: "#A8F0B8", w: 700, sp: 2.2 }, rio: { c: "#8FD3FF", w: 500, sp: 0.4, it: true }, cap: { c: "#FFFFFF", w: 700, sp: 0.2 }, city: { c: "#EEF3FF", w: 500, sp: 0.2 } };
+function pill(txt, x, y, c, size, align) { ctx.save(); ctx.font = `700 ${size}px "Fira Sans", system-ui, sans-serif`; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  const w = ctx.measureText(txt).width + 16, h = size + 10; const maxX = document.body.classList.contains("paneled") && W > 760 ? W - panel.offsetWidth - 28 : W; let x0 = align === "center" ? x - w / 2 : align === "right" ? x - w : x; x0 = Math.max(70, Math.min(maxX - w - 6, x0)); const y0 = Math.max(60, Math.min(H - h - 6, y - h / 2));
+  ctx.fillStyle = "rgba(2,6,15,0.86)"; ctx.strokeStyle = c; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.roundRect(x0, y0, w, h, h / 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = c; ctx.fillText(txt, x0 + 8, y0 + h / 2 + 0.5); ctx.restore(); return [x0, y0, w, h]; }
 function label(txt, x, y, c, size, align, weight, sp, it) { ctx.save(); ctx.font = `${it ? "italic " : ""}${weight || 600} ${size}px "Fira Sans", system-ui, sans-serif`; ctx.textAlign = align || "center"; ctx.textBaseline = "middle";
   if ("letterSpacing" in ctx) ctx.letterSpacing = `${sp || 0}px`; ctx.lineJoin = "round";
   ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 4; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(4,10,24,0.78)"; ctx.strokeText(txt, x, y); ctx.shadowBlur = 0; ctx.fillStyle = c; ctx.fillText(txt, x, y); ctx.restore(); }
@@ -300,18 +334,22 @@ function drawLabels(k, fast) { const [cx, cy] = proj.translate(), ctr = proj.inv
     .forEach((c) => put(L2(c.n).toUpperCase(), c.c[0], c.c[1], STY.country, Math.max(10.5, Math.min(15, 8.5 + k))));
   if (k < 3) OCEANS.forEach(([n, lo, la]) => put(L2(n), lo, la, STY.ocean, 12.5)); }
 function studyFrames() { return REAL ? frames.filter((f) => PG.includes(f.properties.id)) : frames.filter((f) => d3.geoContains(f, [P.lon, P.lat])); }
-function drawStudy() { const S = studyFrames(); if (!S.length) return;
-  S.forEach((f) => { ctx.beginPath(); path(f); ctx.fillStyle = "rgba(234,254,7,0.10)"; ctx.fill(); });
-  S.forEach((f) => { ctx.beginPath(); path(f); ctx.setLineDash([9, 6]); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.stroke(); ctx.lineDashOffset = 7; ctx.lineWidth = 2; ctx.strokeStyle = "#EAFE07"; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; });
-  let top = null; S.forEach((f) => f.geometry.coordinates[0].forEach((c) => { const q = proj(c); if (q && (!top || q[1] < top[1])) top = q; }));
-  if (top) { const txt = W < 760 ? (lang === "pt" ? `Região estudada · ${S.length} quadros NISAR` : `Study region · ${S.length} NISAR frames`) : t("study")(S.length); const tw = textW(txt, 14, 700, 0.3); label(txt, Math.max(tw / 2 + 8, Math.min(W - tw / 2 - 8, top[0])), Math.max(W < 760 ? 120 : 70, top[1] - 12), "#EAFE07", 14, "center", 700, 0.3); }
-  const c = proj([P.lon, P.lat]); if (!c) return; const r = Math.max(14, 0.06 * proj.scale() * RAD);
-  ctx.beginPath(); ctx.arc(c[0], c[1], r, 0, 7); ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke(); ctx.setLineDash([]);
-  ctx.beginPath(); path(PCELL); ctx.fillStyle = "rgba(255,107,0,0.55)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FF6B00"; ctx.stroke();
-  const side = c[0] - r - 32 - textW(t("cropB"), 11.5, 500) < 8 ? 1 : -1; const ex = c[0] + side * (r + 28), ey = c[1] + r + 28;
-  ctx.beginPath(); ctx.moveTo(c[0] + side * r * 0.7, c[1] + r * 0.7); ctx.lineTo(ex, ey); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FFFFFF"; ctx.stroke();
-  label(t("crop"), ex + side * 4, ey + 4, "#FFFFFF", 13, side > 0 ? "left" : "right", 700);
-  label(t("cropB"), ex + side * 4, ey + 20, "#FFD27A", 11.5, side > 0 ? "left" : "right", 500); }
+const TRK = { "031": "#EAFE07", "132": "#7FE8FF", "010": "#FF8A3D", "111": "#A0A8BA" };
+function drawStudy() { const S = studyFrames(); if (!S.length) return; const pt = lang === "pt";
+  S.forEach((f) => { ctx.beginPath(); path(f); ctx.fillStyle = "rgba(234,254,7,0.06)"; ctx.fill(); });
+  S.forEach((f) => { const id = f.properties.id || ""; const c = TRK[id.slice(0, 3)] || "#EAFE07"; ctx.beginPath(); path(f); ctx.setLineDash([10, 6]); ctx.lineWidth = 3.2; ctx.strokeStyle = "rgba(0,0,0,0.65)"; ctx.stroke(); ctx.lineDashOffset = 8; ctx.lineWidth = 2.2; ctx.strokeStyle = c; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; });
+  const c0 = proj([P.lon, P.lat]); if (!c0) return;
+  S.forEach((f) => { const id = f.properties.id || ""; if (!id) return; const c = TRK[id.slice(0, 3)] || "#EAFE07";   // label at the frame corner farthest from the crop
+    let far = null, dm = -1; f.geometry.coordinates[0].forEach((q) => { const z = proj(q); if (!z) return; const dd = Math.hypot(z[0] - c0[0], z[1] - c0[1]); if (dd > dm) { dm = dd; far = z; } });
+    if (!far || W < 760) return; const tr = +id.slice(0, 3), up = id[4] === "A"; const txt = `${pt ? "Pista" : "Track"} ${tr} ${up ? "↑" : "↓"} ${up ? (pt ? "madrugada" : "dawn") : (pt ? "fim de tarde" : "dusk")}${id.startsWith("111") ? (pt ? " · fora" : " · excluded") : ""}`;
+    const mx = c0[0] + (far[0] - c0[0]) * 0.82, my = c0[1] + (far[1] - c0[1]) * 0.82; pill(txt, mx, my, c, 12, mx < c0[0] ? "right" : "left"); });
+  let top = null; S.forEach((f) => f.geometry.coordinates[0].forEach((q) => { const z = proj(q); if (z && (!top || z[1] < top[1])) top = z; }));
+  if (top) pill(W < 760 ? (pt ? `Região estudada · ${S.length} quadros NISAR` : `Study region · ${S.length} NISAR frames`) : t("study")(S.length), top[0], top[1] - 22, "#EAFE07", 14, "center");
+  const r = Math.max(14, 0.06 * proj.scale() * RAD);
+  ctx.beginPath(); ctx.arc(c0[0], c0[1], r, 0, 7); ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); path(PCELL); ctx.fillStyle = "rgba(255,107,0,0.6)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FF6B00"; ctx.stroke();
+  const ex = c0[0], ey = c0[1] + r + 34; ctx.beginPath(); ctx.moveTo(c0[0], c0[1] + r); ctx.lineTo(ex, ey - 10); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FFFFFF"; ctx.stroke();
+  if (W >= 760) pill(`${t("crop")} · ${t("cropB")}`, ex, ey, "#FFFFFF", 12, "center"); }
 function draw(fast) {
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
   stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
@@ -344,6 +382,9 @@ cv.addEventListener("pointermove", (e) => { if (touches.has(e.pointerId)) touche
   const s = 75 / proj.scale(); proj.rotate([drag.r[0] + dx * s, Math.max(-90, Math.min(90, drag.r[1] - dy * s))]); draw(true); });
 cv.addEventListener("pointerup", (e) => { touches.delete(e.pointerId); if (pinch) { if (touches.size < 2) { pinch = null; draw(); } return; } cv.classList.remove("drag"); const was = drag; drag = null; if (!moved && was) pick(e.clientX, e.clientY); else draw(); });
 cv.addEventListener("wheel", (e) => { e.preventDefault(); proj._k = Math.max(0.8, Math.min(60, proj._k * Math.exp(-e.deltaY * 0.0015))); proj.scale(base * proj._k); draw(true); clearTimeout(cv._t); cv._t = setTimeout(() => draw(), 120); }, { passive: false });
+function zoomBy(f) { const k0 = proj._k, k1 = Math.max(0.8, Math.min(60, k0 * f)); const t0 = performance.now();
+  const tick = (now) => { const tt = Math.min(1, (now - t0) / 350); proj._k = k0 + (k1 - k0) * d3.easeCubicOut(tt); proj.scale(base * proj._k); draw(tt < 1); if (tt < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
+function home() { if (typeof spin !== "undefined" && spin) stopSpin(); fly(-58, -8, 1.05); }
 function fly(lon, lat, k) { const r0 = proj.rotate(), k0 = proj._k; const ri = d3.interpolate(r0, [-lon, -lat]), ki = d3.interpolateNumber(k0, k);
   const t0 = performance.now(); const tick = (now) => { const tt = Math.min(1, (now - t0) / 1100), e = d3.easeCubicInOut(tt); proj.rotate(ri(e)); proj._k = ki(e); proj.scale(base * proj._k); draw(tt < 1); if (tt < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
 const gid = (p) => `${String(p.t).padStart(3, "0")}_${p.d}_${String(p.f).padStart(3, "0")}`;
@@ -509,39 +550,39 @@ const SL = [
             pt: "De julho a outubro, o Sentinel-2 vê o verde cair (NDVI de 0,64 para 0,39) e a área marcada como queima ou secagem chegar a 16% em 22/10. O Landsat mede a superfície até 13 °C mais quente, e o Sentinel-1 (banda C) escurece em setembro, junto com a perda de coerência do NISAR." },
     how: { en: "<b>How we measured:</b> NDVI and dNBR (drop of the burn index since the first clear scene, threshold 0.27) on Sentinel-2 cloud-free pixels; temperature from Landsat's thermal band; median Sentinel-1 VH. Drying in the photos is gradual and partly seasonal; NISAR flags September as the jump. No sharp fire scar shows in the images.",
            pt: "<b>Como medimos:</b> NDVI e dNBR (queda do índice de queima desde a primeira cena limpa, limiar 0,27) nos pixels sem nuvem do Sentinel-2; temperatura da banda térmica do Landsat; mediana do VH do Sentinel-1. A secagem na foto é gradual e parte dela é da estação seca; o NISAR marca setembro como o salto. Não aparece cicatriz nítida de fogo nas imagens." } },
-  { t: { en: "September: the ground changed", pt: "Setembro: o chão mudou" }, img: "gunw_par_20260908_20260920_031A.png",
+  { t: { en: "September: the ground changed", pt: "Setembro: o chão mudou" }, img: "fig:paiaguas_pair_sep",
     what: { en: "Between Sep 8 and Sep 20, 41% of the area lost coherence. In the same window, tracks 132 (Sep 3→15) and 10 (Sep 6→18) saw 24 to 25%. Outside September it stays near 4%.",
             pt: "Entre 08/09 e 20/09, 41% da área perdeu a coerência. No mesmo intervalo, as pistas 132 (03→15/09) e 10 (06→18/09) viram 24 a 25%. Fora de setembro, fica perto de 4%." },
     how: { en: "<b>How we saw it:</b> in the GUNW product, NISAR compares the phase of two passes 12 days apart. If the surface changes (fire, water, trampling, clearing), the phase stops matching and coherence drops below 0.3. Three independent tracks, from different sides and times of day, confirm the same.",
            pt: "<b>Como vimos:</b> no produto GUNW, o NISAR compara a fase de duas passagens separadas por 12 dias. Se a superfície muda (fogo, água, pisoteio, corte), a fase deixa de bater e a coerência cai abaixo de 0,3. Três trilhos independentes, de lados e horários diferentes, confirmam o mesmo." } },
-  { t: { en: "The control: a calm period", pt: "O controle: um período calmo" }, img: "gunw_par_20260628_20260710_031A.png",
+  { t: { en: "The control: a calm period", pt: "O controle: um período calmo" }, img: "fig:paiaguas_pair_jul",
     what: { en: "Same place, same track, Jun 28 to Jul 10: only 2% of the area without coherence. The ground stayed still.", pt: "Mesmo lugar e mesmo trilho, de 28/06 a 10/07: só 2% da área sem coerência. O chão ficou parado." },
     how: { en: "<b>Why it matters:</b> it proves the September dip is not instrument noise. Same method; only the surface changed.", pt: "<b>Por que importa:</b> é a prova de que o vale de setembro não é ruído do instrumento. O método é o mesmo; só a superfície mudou." } },
   { t: { en: "How to read coherence through the year", pt: "Como ler a coerência ao longo do ano" }, coh: true,
-    what: { en: "Each bar compares two passes of the same satellite, 12 days apart: it starts on the first date and ends on the second. The higher the bar, the larger the share of the area that changed in those 12 days. Until August the bars hug the floor (under 10%). In September, three different tracks rise together to 24–41%.",
-            pt: "Cada barra é uma comparação entre duas passagens do mesmo satélite, com 12 dias de intervalo: ela começa na primeira data e termina na segunda. Quanto mais alta a barra, maior a parte da área que mudou nesses 12 dias. Até agosto, as barras ficam rente ao chão (abaixo de 10%). Em setembro, três pistas diferentes sobem juntas para 24 a 41%." },
-    how: { en: "<b>Why three colours count as proof:</b> each colour is a different pass direction (different side and time). If it were a fault in one pass, only one colour would rise. Track 111 (dashed grey) is left out: it shows loss even in June, when nothing changed, so it is not reliable here.",
-           pt: "<b>Por que três cores contam como prova:</b> cada cor é uma direção de passagem diferente (lado e horário diferentes). Se fosse defeito de uma passagem, só uma cor subiria. A pista 111 (cinza tracejado) fica de fora: ela marca perda até em junho, quando nada mudou, então não é confiável aqui." } },
+    what: { en: "One row per pass direction. Each box is one comparison between two passes 12 days apart: it starts on the first date and ends on the second, and the number inside is the share of the area that changed. Green means the ground stayed still (under 10%). In September, three different rows turn orange and red at the same time: 24%, 25% and 41%.",
+            pt: "Uma linha por direção de passagem. Cada caixa é uma comparação entre duas passagens com 12 dias de intervalo: começa na primeira data, termina na segunda, e o número dentro é a parte da área que mudou. Verde quer dizer chão parado (menos de 10%). Em setembro, três linhas diferentes ficam laranja e vermelhas ao mesmo tempo: 24%, 25% e 41%." },
+    how: { en: "<b>Why three colours count as proof:</b> each colour is a different pass direction (different side and time). If it were a fault in one pass, only one colour would rise. The faded row, track 111, is left out: it shows loss even in June, when nothing changed, so it is not reliable here.",
+           pt: "<b>Por que três cores contam como prova:</b> cada cor é uma direção de passagem diferente (lado e horário diferentes). Se fosse defeito de uma passagem, só uma cor subiria. A linha apagada, pista 111, fica de fora: ela marca perda até em junho, quando nada mudou, então não é confiável aqui." } },
   { t: { en: "Why it happened: the first rains after a dry winter", pt: "Por que aconteceu: as primeiras chuvas depois de um inverno seco" }, rain: true,
     what: { en: "July and August brought only 31 mm of rain and the topsoil dried to 0.14 m³/m³. Between Sep 5 and Sep 13, about 41 mm fell, and soil moisture jumped to 0.53 m³/m³. Every NISAR pair that spans Sep 13 lost coherence (24–41% of the area); the pairs that missed it stayed near 5%. The rain on Sep 30 shows up again, weaker, in the next pair (15%).",
             pt: "Julho e agosto tiveram só 31 mm de chuva, e a superfície do solo secou até 0,14 m³/m³. Entre 05/09 e 13/09 caíram cerca de 41 mm, e a umidade saltou para 0,53 m³/m³. Todo par do NISAR que atravessa o dia 13/09 perdeu coerência (24 a 41% da área); os pares que não pegaram essa chuva ficaram perto de 5%. A chuva de 30/09 aparece de novo, mais fraca, no par seguinte (15%)." },
     how: { en: "<b>Our hypotheses, tested against the data:</b> (1) <b>first rains of the wet season</b> abruptly changing soil moisture: the timing matches pair by pair, so this is our main explanation; (2) <b>dry-season fire and pasture management</b> (a cattle-ranching region): consistent with the Sentinel-2 drying and burn signal, but gradual, not a single jump; (3) <b>flooding</b>: ruled out for now, because HH did not fall to open-water levels. Rain and soil moisture come from NASA POWER.",
            pt: "<b>Nossas hipóteses, testadas contra os dados:</b> (1) <b>primeiras chuvas da estação</b> mudando de repente a umidade do solo: o momento bate par a par, então é a explicação principal; (2) <b>fogo e manejo de pasto na seca</b> (região de pecuária): combina com a secagem e a marca de queima do Sentinel-2, mas é gradual, não um salto; (3) <b>alagamento</b>: descartado por enquanto, porque o HH não caiu ao nível de água aberta. Chuva e umidade do solo vêm do NASA POWER." } },
-  { t: { en: "What changed, pixel by pixel", pt: "O que mudou, pixel a pixel" }, img: "031_A_169_classes.png",
+  { t: { en: "What changed, pixel by pixel", pt: "O que mudou, pixel a pixel" }, img: "fig:paiaguas_classes",
     what: { en: "About 710 ha of short-lived flooding, 496 ha of permanent water, 127 ha of abrupt vegetation loss and 684 ha of slow gain.", pt: "Cerca de 710 ha de alagamento passageiro, 496 ha de água permanente, 127 ha de queda abrupta da vegetação e 684 ha de ganho lento." },
     how: { en: "<b>How we classified:</b> we normalise each date by the area median (removes instrument effects) and, in each pixel, look for a step in HV between before and after (t-test). Anything without a step becomes seasonal rhythm or a slow trend.",
            pt: "<b>Como classificamos:</b> normalizamos cada data pela mediana da área (tira o efeito do instrumento) e, em cada pixel, procuramos o degrau no HV entre antes e depois (teste t). O que não tem degrau vira ritmo sazonal ou tendência lenta." } },
-  { t: { en: "When it changed", pt: "Quando mudou" }, img: "031_A_169_quando_mudou.png",
-    what: { en: "Most abrupt drops happen in September and October, together with the coherence dip.", pt: "A maior parte das quedas abruptas acontece em setembro e outubro, junto com o vale de coerência." },
-    how: { en: "<b>How to read it:</b> each pixel's colour is the date of the detected step. Two different measurements (brightness and coherence) point to the same month.", pt: "<b>Como lemos:</b> a cor de cada pixel é a data do degrau detectado. Duas medidas diferentes (brilho e coerência) apontam para o mesmo mês." } },
-  { t: { en: "Three moments in one image", pt: "Três tempos numa imagem" }, img: "031_A_169_rgb_temporal.png",
+  { t: { en: "When it changed", pt: "Quando mudou" }, img: "fig:paiaguas_when",
+    what: { en: "About half of the abrupt changes (176 of 331 ha) fall between Sep 8 and Oct 14, together with the coherence dip; another 102 ha happened earlier, between Jul 10 and Aug 15.", pt: "Cerca de metade das mudanças abruptas (176 de 331 ha) cai entre 08/09 e 14/10, junto com o vale de coerência; outros 102 ha aconteceram antes, entre 10/07 e 15/08." },
+    how: { en: "<b>How to read it:</b> each pixel's colour is the 12-day interval in which its step was detected (legend below the map, with hectares).", pt: "<b>Como lemos:</b> a cor de cada pixel é o intervalo de 12 dias em que o degrau foi detectado (legenda abaixo do mapa, com os hectares)." } },
+  { t: { en: "Three moments in one image", pt: "Três tempos numa imagem" }, img: "fig:paiaguas_rgb",
     what: { en: "Grey is what stayed the same. Colour is what changed, and the colour tells you when.", pt: "Cinza é o que ficou igual. Cor é o que mudou, e a cor diz em que período." },
     how: { en: "<b>How we built it:</b> red = HV at the start, green = middle, blue = end of the period. A classic radar trick to see change at a glance.", pt: "<b>Como montamos:</b> vermelho = HV no início, verde = no meio, azul = no fim do período. Um truque clássico de radar para ver a mudança de uma vez só." } },
-  { t: { en: "The area's rhythm with the rain", pt: "O ritmo da área com a chuva" }, img: "031_A_169_curvas.png",
+  { t: { en: "The area's rhythm with the rain", pt: "O ritmo da área com a chuva" }, img: "fig:paiaguas_rhythm",
     what: { en: "HH rises and falls with soil moisture: correlation of 0.59 to 0.81 with SME2, NISAR's own soil-moisture product.", pt: "O HH sobe e desce com a umidade do solo: correlação de 0,59 a 0,81 com o SME2, o produto de umidade do próprio NISAR." },
     how: { en: "<b>How we checked:</b> we compared the radar curve with daily rain, NASA POWER soil moisture and SME2. This is the invisible waltz: the soil breathes with the rain before any change shows up in a photo.",
            pt: "<b>Como conferimos:</b> comparamos a curva do radar com a chuva diária, a umidade do NASA POWER e o SME2. É a valsa invisível: o solo respira com a chuva antes de qualquer mudança aparecer na foto." } },
-  { t: { en: "The story of the point", pt: "A história do ponto" }, img: "ponto_historia.png",
+  { t: { en: "The story of the point", pt: "A história do ponto" }, img: "fig:paiaguas_point",
     what: { en: "At the tracked point, HV drops about 0.7 dB between Sep 8 and Sep 27, seen by tracks 31 and 132.", pt: "No ponto acompanhado, o HV cai cerca de 0,7 dB entre 08/09 e 27/09, visto pelas pistas 31 e 132." },
     how: { en: "<b>How to read it:</b> every pass direction over the same pixel since the first file, with rain and the coherence of each pair.", pt: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, desde o primeiro arquivo, com a chuva e a coerência de cada par." } },
   { t: { en: "What NISAR makes possible next", pt: "O que o NISAR torna possível daqui pra frente" }, next: true,
@@ -590,23 +631,6 @@ function frame(i) { const vc = document.getElementById("vcv"); if (!vc || !V.fra
   if (s && s.imagens && s.imagens[Ly[2]]) { img.src = "pg/carrossel/" + s.imagens[Ly[2]]; img.style.filter = Ly[0] === "nat" ? "brightness(1.8) contrast(1.1)" : ""; img.hidden = false; ph.hidden = true;
     document.getElementById("vr").textContent = `${s.satelite} · ${fd(s.data)} · ${s.dias ? "±" + s.dias + " d" : t("sameDay")}`; }
   else { img.hidden = true; ph.hidden = false; ph.textContent = V.car ? t("noScene")(layerName(V.layer)) : t("waitPC"); document.getElementById("vr").textContent = "Planetary Computer"; } }
-async function drawCoh() { const el = document.getElementById("cchart"); if (!el) return; let Pp; try { Pp = await (await fetch("pg/gunw.json")).json(); } catch (e) { return; }
-  const names = t("cohKeep"); const keep = { "031_A_169": ["#EAFE07", names[0]], "132_A_168": ["#7FE8FF", names[1]], "010_D_098": ["#FF8A3D", names[2]], "111_D_098": ["#8A94A8", names[3]] };
-  Pp = Pp.filter((p) => keep[p.geometria]); const Wc = 560, Hc = 250, Lc = 40, B = 34, Tc = 14, R = 10;
-  const t0 = Date.parse("2026-06-18"), t1 = Date.parse("2026-10-06"); const X = (d) => Lc + (Date.parse(d) - t0) / (t1 - t0) * (Wc - Lc - R), Y = (v) => Tc + (1 - v / 100) * (Hc - Tc - B);
-  const months = ["2026-07-01", "2026-08-01", "2026-09-01", "2026-10-01"].map((d, i) => [d, t("months")[i]]);
-  let g = `<svg viewBox="0 0 ${Wc} ${Hc + 62}" width="100%" role="img" aria-label="${t("cohAxis")}">`;
-  g += `<rect x="${Lc}" y="${Y(10)}" width="${Wc - Lc - R}" height="${Y(0) - Y(10)}" fill="#2E7D4F" opacity=".25"/>`;
-  g += `<rect x="${X("2026-09-01")}" y="${Tc}" width="${X("2026-09-22") - X("2026-09-01")}" height="${Hc - Tc - B}" fill="#EAFE07" opacity=".08"/>`;
-  [0, 25, 50, 75, 100].forEach((v) => { g += `<line x1="${Lc}" x2="${Wc - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ffffff" opacity=".08"/><text x="${Lc - 6}" y="${Y(v) + 4}" text-anchor="end" fill="#A9BCE0" font-size="10" font-family="Fira Code">${v}%</text>`; });
-  months.forEach(([d, n]) => { g += `<text x="${X(d)}" y="${Hc - B + 16}" fill="#A9BCE0" font-size="11" font-family="Fira Sans">${n}</text>`; });
-  g += `<text x="${Lc}" y="${Hc - 4}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">${t("cohAxis")}</text>`;
-  Pp.forEach((p) => { const [c] = keep[p.geometria], bad = p.geometria.startsWith("111"); const x1 = X(p.data1), x2 = X(p.data2), y = Y(p.area_coerencia_baixa_pct);
-    g += `<line x1="${x1}" x2="${x2}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${bad ? 2 : 4}" stroke-linecap="round" ${bad ? 'stroke-dasharray="4 4" opacity=".7"' : ""}><title>${fd(p.data1)} → ${fd(p.data2)} · ${keep[p.geometria][1]} · ${p.area_coerencia_baixa_pct.toFixed(0)}% ${t("cohTip")}</title></line>`;
-    const lx = p.geometria.startsWith("132") ? [x1 - 6, "end"] : p.geometria.startsWith("010") ? [x2 + 6, "start"] : [(x1 + x2) / 2, "middle"];
-    if (!bad && p.area_coerencia_baixa_pct > 20) g += `<text x="${lx[0]}" y="${p.geometria.startsWith("031") ? y - 7 : y + 4}" text-anchor="${lx[1]}" fill="${c}" font-size="11" font-weight="700" font-family="Fira Code">${p.area_coerencia_baixa_pct.toFixed(0)}%</text>`; });
-  g += `<g transform="translate(${Lc},${Hc + 10})">` + Object.values(keep).map(([c, n], i) => `<g transform="translate(${(i % 2) * 250},${Math.floor(i / 2) * 16})"><line x1="0" x2="18" y1="0" y2="0" stroke="${c}" stroke-width="4" ${i === 3 ? 'stroke-dasharray="4 4"' : ""}/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${n}</text></g>`).join("") + `<g transform="translate(0,32)"><rect x="0" y="-6" width="18" height="10" fill="#2E7D4F" opacity=".6"/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${t("cohNorm")}</text></g>` + "</g></svg>";
-  el.innerHTML = g; }
 const NEXTS = [
   ["🔥", { en: "Fire early warning", pt: "Alerta de fogo" }, { en: "Coherence drops and HV loss flag burns even under smoke, days before a clear optical image.", pt: "Queda de coerência e de HV marcam queimadas até sob fumaça, dias antes de uma foto limpa." }],
   ["🌊", { en: "Flood and wetland pulse", pt: "Pulso das cheias" }, { en: "HH separates open water from flooded forest: the Pantanal's flood pulse, mapped every 12 days.", pt: "O HH separa água aberta de mata alagada: o pulso de cheia do Pantanal, mapeado a cada 12 dias." }],
@@ -614,60 +638,106 @@ const NEXTS = [
   ["🌳", { en: "Deforestation under clouds", pt: "Desmate sob nuvens" }, { en: "HV is the gauge of standing vegetation: clearing shows up in the rainy season too.", pt: "O HV é o termômetro da vegetação em pé: o corte aparece também na estação chuvosa." }],
   ["🏗️", { en: "Ground motion", pt: "Movimento do chão" }, { en: "GUNW measures centimetres of subsidence, landslides and earthquakes for cities and infrastructure.", pt: "O GUNW mede centímetros de afundamento, deslizamentos e terremotos em cidades e obras." }]];
 const nextCards = () => `<div class="nexts">${NEXTS.map(([i, a, b]) => `<div><span aria-hidden="true">${i}</span><b>${L2(a)}</b><small>${L2(b)}</small></div>`).join("")}</div>`;
+const LANE = [["031_A_169", "#EAFE07", 31, "A"], ["132_A_168", "#7FE8FF", 132, "A"], ["010_D_098", "#FF8A3D", 10, "D"], ["111_D_098", "#A0A8BA", 111, "D"]];
+const laneName = (tr, dr) => `${lang === "pt" ? "Pista" : "Track"} ${tr} ${dr === "A" ? "↑" : "↓"}`;
+const lossCol = (v) => v >= 30 ? "#FF3B3B" : v >= 20 ? "#FF8A3D" : v >= 10 ? "#EAC54F" : "#2E7D4F";
+function lanesSVG(Pp, X, y0, lh, W2, opts) { let g = ""; const pt = lang === "pt";
+  LANE.forEach(([id, c, tr, dr], li) => { if (opts.skip && opts.skip.includes(id)) return; const y = y0 + li * lh; const bad = id.startsWith("111");
+    g += `<text x="6" y="${y + lh / 2 + 4}" fill="${c}" font-size="12.5" font-weight="700" font-family="Fira Sans, system-ui, sans-serif">${laneName(tr, dr)}</text>`;
+    if (bad) g += `<text x="6" y="${y + lh / 2 + 17}" fill="#A0A8BA" font-size="10" font-family="Fira Sans, system-ui, sans-serif">${pt ? "não confiável" : "unreliable"}</text>`;
+    g += `<line x1="${X.lo}" x2="${W2}" y1="${y + lh / 2}" y2="${y + lh / 2}" stroke="#ffffff" opacity=".06"/>`;
+    Pp.filter((p) => p.geometria === id).forEach((p) => { const x1 = X(p.data1) + 1, x2 = X(p.data2) - 1; if (x2 < X.lo || x1 > W2) return; const v = p.area_coerencia_baixa_pct;
+      g += `<rect x="${Math.max(X.lo, x1)}" y="${y + 4}" width="${Math.max(2, Math.min(W2, x2) - Math.max(X.lo, x1))}" height="${lh - 8}" rx="5" fill="${lossCol(v)}" opacity="${bad ? 0.35 : 0.95}"><title>${fd(p.data1)} → ${fd(p.data2)} · ${laneName(tr, dr)} · ${v.toFixed(0)}% ${t("cohTip")}</title></rect>`;
+      if (x2 - x1 > 26) g += `<text x="${(Math.max(X.lo, x1) + Math.min(W2, x2)) / 2}" y="${y + lh / 2 + 4}" text-anchor="middle" fill="${v >= 10 && v < 20 ? "#02122E" : "#FFFFFF"}" font-size="11.5" font-weight="700" font-family="Fira Code, ui-monospace, monospace" opacity="${bad ? 0.7 : 1}">${v.toFixed(0)}%</text>`; }); });
+  return g; }
+function lossLegend(x, y) { const pt = lang === "pt"; const it = [["#2E7D4F", pt ? "< 10%: chão parado" : "< 10%: ground still"], ["#EAC54F", "10–20%"], ["#FF8A3D", "20–30%"], ["#FF3B3B", pt ? "≥ 30%: mudou" : "≥ 30%: changed"]];
+  let g = "", xx = x; it.forEach(([c, n]) => { g += `<rect x="${xx}" y="${y - 9}" width="14" height="12" rx="3" fill="${c}"/><text x="${xx + 19}" y="${y + 1}" fill="#E8F0FF" font-size="11.5" font-family="Fira Sans, system-ui, sans-serif">${n}</text>`; xx += 30 + n.length * 6.4; }); return g; }
+async function drawCoh() { const el = document.getElementById("cchart"); if (!el) return; let Pp; try { Pp = await (await fetch("pg/gunw.json")).json(); } catch (e) { return; }
+  const pt = lang === "pt"; const Wc = 640, L0 = 92, R0 = 12, lh = 40, y0 = 34; const t0 = Date.parse("2026-06-20"), t1 = Date.parse("2026-10-04");
+  const X = (d) => L0 + (Date.parse(d) - t0) / (t1 - t0) * (Wc - L0 - R0); X.lo = L0; const Hc = y0 + LANE.length * lh;
+  let g = `<svg viewBox="0 0 ${Wc} ${Hc + 58}" width="100%" role="img" aria-label="${t("cohAxis")}">`;
+  g += `<text x="6" y="16" fill="#FFFFFF" font-size="13" font-weight="700" font-family="Fira Sans, system-ui, sans-serif">${pt ? "% da área que mudou em cada par de 12 dias" : "% of the area that changed in each 12-day pair"}</text>`;
+  g += `<rect x="${X("2026-09-01")}" y="${y0 - 6}" width="${X("2026-09-22") - X("2026-09-01")}" height="${LANE.length * lh + 8}" fill="#EAFE07" opacity=".07" rx="6"/>`;
+  [["2026-07-01", 6], ["2026-08-01", 7], ["2026-09-01", 8], ["2026-10-01", 9]].forEach(([d, m]) => { g += `<line x1="${X(d)}" x2="${X(d)}" y1="${y0 - 4}" y2="${Hc + 2}" stroke="#fff" opacity=".1"/><text x="${X(d) + 3}" y="${Hc + 16}" fill="#A9BCE0" font-size="11.5" font-family="Fira Sans, system-ui, sans-serif">${t("mon")[m]}</text>`; });
+  g += lanesSVG(Pp, X, y0, lh, Wc - R0, {});
+  g += lossLegend(L0, Hc + 44) + "</svg>"; el.innerHTML = g; }
 async function drawRain() { const el = document.getElementById("rchart"); if (!el) return; let C, Pp; try { [C, Pp] = await Promise.all(["pg/clima.json", "pg/gunw.json"].map((u) => fetch(u).then((r) => r.json()))); } catch (e) { return; }
-  const d0 = "2026-08-10", d1 = "2026-10-12", Wc = 560, Hc = 250, Lc = 40, R = 40, Tc = 30, B = 30;
-  const t0 = Date.parse(d0), t1 = Date.parse(d1), X = (d) => Lc + (Date.parse(d) - t0) / (t1 - t0) * (Wc - Lc - R);
-  const days = Object.keys(C.chuva_mm).filter((d) => d >= d0 && d <= d1).sort(); const bw = (Wc - Lc - R) / days.length;
-  const Yr = (v) => Hc - B - Math.min(v, 30) / 30 * (Hc - B - Tc - 10), Ym = (v) => Hc - B - v / 0.6 * (Hc - B - Tc - 10);
-  let g = `<svg viewBox="0 0 ${Wc} ${Hc + 40}" width="100%" role="img" aria-label="${lang === "pt" ? "Chuva diária, umidade do solo e pares do NISAR" : "Daily rain, soil moisture and NISAR pairs"}">`;
-  const keep = { "031_A_169": "#EAFE07", "132_A_168": "#7FE8FF", "010_D_098": "#FF8A3D" };
-  Pp.filter((p) => keep[p.geometria] && p.data2 > d0 && p.data1 < d1).forEach((p, i) => { const lost = p.area_coerencia_baixa_pct >= 20;
-    const lane = Object.keys(keep).indexOf(p.geometria); g += `<rect x="${X(p.data1)}" y="${Tc - 12 + lane * 7}" width="${X(p.data2) - X(p.data1) - 2}" height="5" rx="2.5" fill="${keep[p.geometria]}" opacity="${lost ? 1 : 0.3}"><title>${fd(p.data1)} → ${fd(p.data2)} · ${p.area_coerencia_baixa_pct.toFixed(0)}%</title></rect>`; });
-  [0, 10, 20, 30].forEach((v) => { g += `<text x="${Lc - 6}" y="${Yr(v) + 4}" text-anchor="end" fill="#8FD3FF" font-size="10" font-family="Fira Code">${v}</text><line x1="${Lc}" x2="${Wc - R}" y1="${Yr(v)}" y2="${Yr(v)}" stroke="#fff" opacity=".07"/>`; });
-  [0, 0.2, 0.4, 0.6].forEach((v) => { g += `<text x="${Wc - R + 6}" y="${Ym(v) + 4}" fill="#B9F5C8" font-size="10" font-family="Fira Code">${nf(v, 1)}</text>`; });
-  days.forEach((d) => { const v = C.chuva_mm[d]; if (v > 0.2) g += `<rect x="${X(d)}" y="${Yr(v)}" width="${Math.max(1.5, bw - 1)}" height="${Hc - B - Yr(v)}" fill="#3FA9F5"><title>${fd(d)} · ${nf(v, 1)} mm</title></rect>`; });
-  g += `<path d="${days.filter((d) => C.umidade_solo[d] != null).map((d, i) => `${i ? "L" : "M"}${(X(d) + bw / 2).toFixed(1)},${Ym(C.umidade_solo[d]).toFixed(1)}`).join("")}" fill="none" stroke="#7CFC8A" stroke-width="2.2"/>`;
-  const x13 = X("2026-09-13") + bw / 2; g += `<line x1="${x13}" x2="${x13}" y1="${Tc + 18}" y2="${Hc - B}" stroke="#FFFFFF" stroke-dasharray="3 3" opacity=".6"/><text x="${x13 + 4}" y="${Tc + 32}" fill="#FFFFFF" font-size="11" font-weight="700" font-family="Fira Sans">${lang === "pt" ? "13/09: 21 mm" : "Sep 13: 21 mm"}</text>`;
-  ["2026-08-15", "2026-09-01", "2026-09-15", "2026-10-01"].forEach((d) => { g += `<text x="${X(d)}" y="${Hc - B + 16}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">${fd(d).replace(", 2026", "").replace("/2026", "")}</text>`; });
-  const lg = lang === "pt" ? [["#3FA9F5", "chuva diária (mm, eixo da esquerda)"], ["#7CFC8A", "umidade do solo (m³/m³, eixo da direita)"], ["#EAFE07", "pares do NISAR: cheio = perdeu coerência"]]
-    : [["#3FA9F5", "daily rain (mm, left axis)"], ["#7CFC8A", "soil moisture (m³/m³, right axis)"], ["#EAFE07", "NISAR pairs: solid = lost coherence"]];
-  g += lg.map(([c, n], i) => `<g transform="translate(${Lc + (i === 2 ? 0 : i * 250)},${Hc + 8 + (i === 2 ? 16 : 0)})"><rect x="0" y="-5" width="16" height="8" rx="2" fill="${c}"/><text x="22" y="3" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${n}</text></g>`).join("") + "</svg>";
-  el.innerHTML = g; }
+  const pt = lang === "pt"; const d0 = "2026-08-12", d1 = "2026-10-10", Wc = 640, L0 = 92, R0 = 44, lh = 30, y0 = 34;
+  const t0 = Date.parse(d0), t1 = Date.parse(d1), X = (d) => L0 + (Date.parse(d) - t0) / (t1 - t0) * (Wc - L0 - R0); X.lo = L0;
+  const lanesH = 3 * lh, cy0 = y0 + lanesH + 26, ch = 150, base = cy0 + ch;
+  const days = Object.keys(C.chuva_mm).filter((d) => d >= d0 && d <= d1).sort(); const bw = (Wc - L0 - R0) / days.length;
+  const Yr = (v) => base - Math.min(v, 30) / 30 * ch, Ym = (v) => base - v / 0.6 * ch;
+  let g = `<svg viewBox="0 0 ${Wc} ${base + 62}" width="100%" role="img" aria-label="${pt ? "Pares do NISAR, chuva e umidade do solo" : "NISAR pairs, rain and soil moisture"}">`;
+  g += `<text x="6" y="16" fill="#FFFFFF" font-size="13" font-weight="700" font-family="Fira Sans, system-ui, sans-serif">${pt ? "1 · Pares do NISAR: % da área que mudou" : "1 · NISAR pairs: % of the area that changed"}</text>`;
+  g += lanesSVG(Pp, X, y0, lh, Wc - R0, { skip: ["111_D_098"] });
+  g += `<text x="6" y="${cy0 - 8}" fill="#FFFFFF" font-size="13" font-weight="700" font-family="Fira Sans, system-ui, sans-serif">${pt ? "2 · Chuva diária (barras, mm) e umidade do solo (linha)" : "2 · Daily rain (bars, mm) and soil moisture (line)"}</text>`;
+  [0, 10, 20, 30].forEach((v) => { g += `<text x="${L0 - 8}" y="${Yr(v) + 4}" text-anchor="end" fill="#8FD3FF" font-size="11" font-family="Fira Code, ui-monospace, monospace">${v}</text><line x1="${L0}" x2="${Wc - R0}" y1="${Yr(v)}" y2="${Yr(v)}" stroke="#fff" opacity=".07"/>`; });
+  [0, 0.3, 0.6].forEach((v) => { g += `<text x="${Wc - R0 + 6}" y="${Ym(v) + 4}" fill="#B9F5C8" font-size="11" font-family="Fira Code, ui-monospace, monospace">${nf(v, 1)}</text>`; });
+  days.forEach((d) => { const v = C.chuva_mm[d]; if (v > 0.2) g += `<rect x="${X(d)}" y="${Yr(v)}" width="${Math.max(2, bw - 1.5)}" height="${base - Yr(v)}" rx="1.5" fill="#3FA9F5"><title>${fd(d)} · ${nf(v, 1)} mm</title></rect>`; });
+  g += `<path d="${days.filter((d) => C.umidade_solo[d] != null).map((d, i) => `${i ? "L" : "M"}${(X(d) + bw / 2).toFixed(1)},${Ym(C.umidade_solo[d]).toFixed(1)}`).join("")}" fill="none" stroke="#7CFC8A" stroke-width="2.4"/>`;
+  const x13 = X("2026-09-13") + bw / 2; g += `<line x1="${x13}" x2="${x13}" y1="${y0 - 4}" y2="${base}" stroke="#FFFFFF" stroke-dasharray="4 4" opacity=".75"/>`;
+  g += `<text x="${x13 + 6}" y="${cy0 + 14}" fill="#FFFFFF" font-size="12" font-weight="700" font-family="Fira Sans, system-ui, sans-serif">${pt ? "13/09: 21 mm" : "Sep 13: 21 mm"}</text>`;
+  ["2026-08-15", "2026-09-01", "2026-09-15", "2026-10-01"].forEach((d) => { g += `<text x="${X(d)}" y="${base + 16}" fill="#A9BCE0" font-size="11.5" font-family="Fira Sans, system-ui, sans-serif">${fd(d).replace(", 2026", "").replace("/2026", "")}</text>`; });
+  g += `<g transform="translate(${L0},${base + 40})"><rect x="0" y="-9" width="14" height="12" rx="3" fill="#3FA9F5"/><text x="19" y="1" fill="#E8F0FF" font-size="11.5" font-family="Fira Sans, system-ui, sans-serif">${pt ? "chuva (mm)" : "rain (mm)"}</text>
+    <line x1="110" x2="128" y1="-3" y2="-3" stroke="#7CFC8A" stroke-width="3"/><text x="133" y="1" fill="#E8F0FF" font-size="11.5" font-family="Fira Sans, system-ui, sans-serif">${pt ? "umidade do solo (m³/m³)" : "soil moisture (m³/m³)"}</text></g>`;
+  g += lossLegend(L0, base + 62) + "</svg>"; el.innerHTML = g.replace(`viewBox="0 0 ${Wc} ${base + 62}"`, `viewBox="0 0 ${Wc} ${base + 72}"`); }
 function drawChart() { const el = document.getElementById("mchart"); if (!el || !V.car) return;
   const rows = V.car.datas; const nm = t("mS"); const S = [[nm[0], (r) => r.s2?.ndvi_mediana, "#7CFC8A", 2], [nm[1], (r) => r.s2?.queimada_pct, "#FF8A3D", 1], [nm[2], (r) => r.landsat?.temperatura_mediana_c, "#FFD27A", 1], [nm[3], (r) => r.s1?.vh_mediana_db, "#9FC8FF", 1]];
   const Wc = 540, h = 52, t0 = Date.parse(rows[0].data_nisar), t1 = Date.parse(rows.at(-1).data_nisar), X = (d) => 8 + (Date.parse(d) - t0) / (t1 - t0) * (Wc - 110);
   const sx = X("2026-09-03"), ex = X("2026-09-20");
   el.innerHTML = `<svg viewBox="0 0 ${Wc} ${S.length * h + 22}" width="100%" role="img" aria-label="Planetary Computer">` +
-    `<rect x="${sx}" y="0" width="${ex - sx}" height="${S.length * h}" fill="#EAFE07" opacity=".14"/><text x="${sx + 2}" y="${S.length * h + 14}" fill="#EAFE07" font-size="10" font-family="Fira Code">${t("mLoss")}</text>` +
+    `<rect x="${sx}" y="0" width="${ex - sx}" height="${S.length * h}" fill="#EAFE07" opacity=".14"/><text x="${sx + 2}" y="${S.length * h + 14}" fill="#EAFE07" font-size="10" font-family="Fira Code, ui-monospace, monospace">${t("mLoss")}</text>` +
     S.map(([n, f, c, dg], i) => { const pts = rows.map((r) => [r.data_nisar, f(r)]).filter((p) => p[1] != null); const vs = pts.map((p) => p[1]); const lo = Math.min(...vs), hi = Math.max(...vs);
       const Y = (v) => i * h + 8 + (1 - (v - lo) / (hi - lo || 1)) * (h - 22); const dpath = pts.map((p, j) => `${j ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
       const last = pts.at(-1), first = pts[0];
-      return `<text x="8" y="${i * h + 8}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">${n}</text><path d="${dpath}" fill="none" stroke="${c}" stroke-width="2"/>` +
-        `<text x="${Wc - 96}" y="${Y(last[1]) + 4}" fill="${c}" font-size="11" font-family="Fira Code">${nf(first[1], dg)} → ${nf(last[1], dg)}</text>`; }).join("") +
-    `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">${t("jun")}</text><text x="${Wc - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">${t("nov")}</text></svg>`; }
+      return `<text x="8" y="${i * h + 8}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans, system-ui, sans-serif">${n}</text><path d="${dpath}" fill="none" stroke="${c}" stroke-width="2"/>` +
+        `<text x="${Wc - 96}" y="${Y(last[1]) + 4}" fill="${c}" font-size="11" font-family="Fira Code, ui-monospace, monospace">${nf(first[1], dg)} → ${nf(last[1], dg)}</text>`; }).join("") +
+    `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code, ui-monospace, monospace">${t("jun")}</text><text x="${Wc - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code, ui-monospace, monospace">${t("nov")}</text></svg>`; }
 function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) b.textContent = t("start"); }
 function startV() { const b = document.getElementById("vbtn"); b.textContent = t("stop"); V.timer = setInterval(() => { V.k = (V.k + 1) % V.frames.length; frame(V.k); }, 1100); }
+const imgSrc = (x) => x.img.startsWith("fig:") ? `pg/fig/${x.img.slice(4)}_${lang}.png` : `pg/${x.img}`;
+// ---------------------------------------------------------------- slide decks: numbered bar fixed on top, image zoom
+const deckNav = (slides) => `<div class="pnav" id="pnav"><button type="button" class="arr" id="cprev" aria-label="${t("prevS")}">◀</button>
+  <div class="pcount"><span class="pnum"><b id="pnum">01</b> / ${String(slides.length).padStart(2, "0")}</span><span class="ptitle" id="ptitle"></span></div>
+  <button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
+  <div class="nums" id="cdots">${slides.map((x, i) => `<button type="button" data-s="${i}" title="${L2(x.t)}" aria-label="${t("goTo")} ${i + 1}: ${L2(x.t)}">${i + 1}</button>`).join("")}</div>`;
+function wireDeck(slides, at, onSlide) { const car = document.getElementById("car"), n = slides.length;
+  const go = (i, inst) => { i = Math.max(0, Math.min(n - 1, i)); car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" }); panel.scrollTo({ top: 0, behavior: inst ? "instant" : "smooth" }); };
+  const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); car._i = i;
+    document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
+    document.getElementById("pnum").textContent = String(i + 1).padStart(2, "0"); document.getElementById("ptitle").textContent = L2(slides[i].t);
+    document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === n - 1;
+    const act = document.querySelector("#cdots [aria-current=true]"); if (act) act.scrollIntoView({ block: "nearest", inline: "center" });
+    car.style.height = car.children[i].scrollHeight + "px"; if (onSlide) onSlide(i); };
+  car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(sync, 80); });
+  document.getElementById("cprev").onclick = () => go((car._i || 0) - 1); document.getElementById("cnext").onclick = () => go((car._i || 0) + 1);
+  document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
+  new ResizeObserver(() => { const i = car._i || 0; if (car.children[i]) car.style.height = car.children[i].scrollHeight + "px"; }).observe(car.children[0]);
+  car.querySelectorAll("img").forEach((im) => im.addEventListener("load", () => sync(), { once: true }));
+  if (at) go(at, true); sync(); }
+const lb = document.getElementById("lb"), lbc = document.getElementById("lbc");
+function openLB(node) { lbc.innerHTML = ""; lbc.appendChild(node); lb.hidden = false; document.getElementById("lbx").focus(); }
+function closeLB() { lb.hidden = true; lbc.innerHTML = ""; }
+document.getElementById("lbx").onclick = closeLB; lb.addEventListener("click", (e) => { if (e.target === lb) closeLB(); });
+addEventListener("keydown", (e) => { if (e.key === "Escape" && !lb.hidden) closeLB(); });
+pb.addEventListener("click", (e) => { const im = e.target.closest(".slide .media img.zoomable, #opt canvas, #opt img"); const ch = e.target.closest("#cchart svg, #rchart svg, #mchart svg");
+  if (im) { const big = im.tagName === "CANVAS" ? Object.assign(document.createElement("img"), { src: im.toDataURL() }) : Object.assign(document.createElement("img"), { src: im.src, alt: im.alt }); openLB(big); }
+  else if (ch) { const c = ch.cloneNode(true); c.removeAttribute("width"); c.style.width = "100%"; c.style.height = "auto"; c.style.background = "#050E26"; openLB(c); } });
 const glossary = () => `<table class="gl"><thead><tr><th>${t("gTerm")}</th><th>${t("gWhat")}</th><th>${t("gUse")}</th></tr></thead><tbody>${GL.map(([a, b, c]) => `<tr><td><b>${L2(a)}</b></td><td>${L2(b)}</td><td>${L2(c)}</td></tr>`).join("")}</tbody></table>`;
 async function showP(at) { sel = PCELL; view = ["P"]; draw(); stopV(); panel.classList.add("wide");
   pb.innerHTML = `<div class="k" style="color:var(--neon)">${t("pKick")}</div><h2>Paiaguás · Pantanal (MS)</h2>
   <div class="note">${t("pSub")}</div>
+  ${deckNav(SL)}
   <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${SL.length}">
     ${x.noMedia ? "" : `<div class="media">${x.rain ? `<div id="rchart" style="background:#050E26;padding:10px"></div>` : x.next ? nextCards() : x.coh ? `<div id="cchart" style="background:#050E26;padding:10px"></div>` : x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure></div>
       <div class="vbar"><button type="button" id="vbtn">${t("start")}</button><span class="when" id="vwhen"></span><span class="prog"><i id="vprog"></i></span></div>
-      <div class="pcl" id="pcl">${PCL.map(([k]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${layerName(k)}</button>`).join("")}</div>` : `<img src="pg/${x.img}" alt="${L2(x.t)}" loading="lazy">`}</div>`}
-    <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p>${x.how ? `<p class="how">${L2(x.how)}</p>` : ""}${x.gloss ? glossary() : ""}</section>`).join("")}</div>
-  <div class="nav"><button type="button" class="arr" id="cprev" aria-label="${t("prevS")}">◀</button><div class="dots" id="cdots">${SL.map((_, i) => `<button type="button" data-s="${i}" aria-label="${t("goTo")} ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
+      <div class="pcl" id="pcl">${PCL.map(([k]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${layerName(k)}</button>`).join("")}</div>` : `<img src="${imgSrc(x)}" alt="${L2(x.t)}" loading="lazy" class="zoomable">`}</div>`}
+    <h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p>${x.how ? `<p class="how">${L2(x.how)}</p>` : ""}${x.gloss ? glossary() : ""}</section>`).join("")}</div>
   <a class="btn" href="${location.hostname.endsWith("claude.ai") || location.hostname.includes("claudeusercontent") ? "https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" : "../app/"}" target="_blank" rel="noopener" style="align-self:flex-start">${t("open")}</a>`;
-  panel.classList.add("on"); document.body.classList.add("paneled");
-  const car = document.getElementById("car"); const go = (i, inst) => car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" });
-  const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
-    document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === SL.length - 1; if (i !== 0) stopV(); car._i = i; };
-  car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(sync, 80); }); sync();
-  document.getElementById("cprev").onclick = () => go((car._i || 0) - 1); document.getElementById("cnext").onclick = () => go((car._i || 0) + 1);
-  document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
+  panel.classList.add("on"); document.body.classList.add("paneled"); draw();
+  wireDeck(SL, at, (i) => { if (i !== 0) stopV(); });
   document.getElementById("vbtn").onclick = () => V.timer ? stopV() : startV();
   document.querySelectorAll("#pcl [data-l]").forEach((b) => b.onclick = () => { V.layer = b.dataset.l; document.querySelectorAll("#pcl [data-l]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); frame(V.k); });
-  if (at) { go(at, true); sync(); }
   drawCoh(); drawRain(); const first = !V.frames.length; await loadVideo(); if (first) V.k = Math.max(0, V.frames.findIndex((f) => f.pc && f.pc.s2)); frame(V.k); drawChart(); }
 
 // ---------------------------------------------------------------- highlight areas: real results, lighter than Paiaguás
@@ -676,36 +746,36 @@ const HL = [
     name: { en: "Norte Fire · California, USA", pt: "Incêndio Norte · Califórnia, EUA" }, tag: { en: "WILDFIRE · OCT 16, 2026", pt: "INCÊNDIO · 16/10/2026" },
     sub: { en: "33.48° N · 117.64° W · San Clemente · track 34, frame 18, ascending · 27 passes", pt: "33,48° N · 117,64° O · San Clemente · pista 34, quadro 18, ascendente · 27 passagens" },
     slides: [
-      { img: "norte/previa_nisar.png", t: { en: "Spotted in the free previews", pt: "Visto nas prévias gratuitas" },
+      { img: "fig:norte_preview", t: { en: "Spotted in the free previews", pt: "Visto nas prévias gratuitas" },
         what: { en: "Oct 14 (2 days before) against Oct 26 (10 days after): a dark patch appears exactly where CAL FIRE placed the Norte fire. Inside it, the green channel (≈ HV, vegetation) fell from 213 to 123; the ring around it barely moved (216 → 213).", pt: "14/10 (2 dias antes) contra 26/10 (10 dias depois): uma mancha escura aparece exatamente onde o CAL FIRE situou o Incêndio Norte. Dentro dela, o canal verde (≈ HV, vegetação) caiu de 213 para 123; o anel em volta quase não mudou (216 → 213)." },
         how: { en: "<b>Quick-comparison tier:</b> these are the browse images NASA publishes with every file, the same ones the globe shows for any frame. Even without downloading anything, a 2 km² burn scar shows up.", pt: "<b>Nível de comparação rasa:</b> são as prévias que a NASA publica junto de cada arquivo, as mesmas que o globo mostra para qualquer quadro. Mesmo sem baixar nada, uma cicatriz de 2 km² aparece." } },
-      { img: "norte/nisar_mudanca_hv.png", t: { en: "Full resolution: HV change", pt: "Resolução completa: mudança no HV" },
+      { img: "fig:norte_hv", t: { en: "Full resolution: HV change", pt: "Resolução completa: mudança no HV" },
         what: { en: "With the GCOV files, the burn shows as a drop of about 3 dB in HV (red), in the same shape as the scar seen by Sentinel-2.", pt: "Com os arquivos GCOV, a queimada aparece como uma queda de cerca de 3 dB no HV (vermelho), no mesmo formato da cicatriz vista pelo Sentinel-2." },
         how: { en: "<b>Why HV:</b> burnt canopy stops scattering the L-band wave, so cross-polarised HV falls much more than HH.", pt: "<b>Por que o HV:</b> a copa queimada deixa de espalhar a onda da banda L, então o HV cai muito mais que o HH." } },
-      { img: "norte/consenso.png", t: { en: "Cross-check and honest limits", pt: "Conferência e limites, com honestidade" },
+      { img: "fig:norte_consensus", t: { en: "Cross-check and honest limits", pt: "Conferência e limites, com honestidade" },
         what: { en: "Orange: where radar and optical sensors agree. White: the Sentinel-2 burn scar. The official area is about 230 ha; Landsat dNBR mapped 204 ha.", pt: "Laranja: onde radar e sensores ópticos concordam. Branco: a cicatriz do Sentinel-2. A área oficial é de cerca de 230 ha; o dNBR do Landsat mapeou 204 ha." },
         how: { en: "<b>Limits:</b> a small fire on coastal hills is hard for any radar pair 12 days apart; pixel-by-pixel scores are low. That is why this area stays as a quick detection, not a full analysis like Paiaguás.", pt: "<b>Limites:</b> um incêndio pequeno em morros do litoral é difícil para qualquer par de radar com 12 dias de intervalo; as notas pixel a pixel são baixas. Por isso esta área fica como detecção rápida, não análise completa como o Paiaguás." } }] },
   { id: "matopiba", frames: ["016_A_174"], lon: -43.47, lat: -7.1, k: 6,
     name: { en: "MATOPIBA Cerrado · Maranhão and Piauí", pt: "Cerrado do MATOPIBA · Maranhão e Piauí" }, tag: { en: "FARMING FRONTIER · 2026 DRY SEASON", pt: "FRONTEIRA AGRÍCOLA · SECA DE 2026" },
     sub: { en: "Balsas and the Parnaíba River · track 16, frame 174, ascending · 10 passes from Jun 27 to Oct 25, 2026", pt: "Balsas e rio Parnaíba · pista 16, quadro 174, ascendente · 10 passagens de 27/06 a 25/10/2026" },
     slides: [
-      { img: "matopiba/classes.png", t: { en: "Farming frontier, pixel by pixel", pt: "Fronteira agrícola, pixel a pixel" },
+      { img: "fig:matopiba_classes", t: { en: "Farming frontier, pixel by pixel", pt: "Fronteira agrícola, pixel a pixel" },
         what: { en: "18,180 ha of abrupt drops and 34,380 ha of gradual loss during the dry season, plus 58,724 ha of permanent water along the rivers.", pt: "18.180 ha de quedas abruptas e 34.380 ha de perda gradual na seca, além de 58.724 ha de água permanente ao longo dos rios." },
         how: { en: "<b>Same method as Paiaguás:</b> each date normalised by the area median, then a per-pixel search for a step or a slow trend in HV.", pt: "<b>Mesmo método do Paiaguás:</b> cada data normalizada pela mediana da área e, em cada pixel, a busca por um degrau ou uma tendência lenta no HV." } },
-      { img: "matopiba/quando_mudou.png", t: { en: "When: a dry-season calendar", pt: "Quando: um calendário da seca" },
+      { img: "fig:matopiba_when", t: { en: "When: a dry-season calendar", pt: "Quando: um calendário da seca" },
         what: { en: "The largest wave of abrupt drops falls between Jul 21 and Aug 14 (7,060 ha) and fades in October, when the rains return (under 400 ha per pair).", pt: "A maior onda de quedas abruptas cai entre 21/07 e 14/08 (7.060 ha) e some em outubro, com a volta das chuvas (menos de 400 ha por par)." },
         how: { en: "<b>Hypotheses:</b> second-crop harvest, land clearing and dry-season burning, all typical of this frontier. The radar dates them; checking each field needs ground or optical data.", pt: "<b>Hipóteses:</b> colheita da safrinha, abertura de áreas e queimadas na seca, todas típicas desta fronteira. O radar data cada uma; confirmar talhão por talhão pede dado de campo ou óptico." } },
-      { img: "matopiba/curvas.png", t: { en: "Here, people lead the dance", pt: "Aqui, quem conduz a dança são as pessoas" },
+      { img: "fig:matopiba_rhythm", t: { en: "Here, people lead the dance", pt: "Aqui, quem conduz a dança são as pessoas" },
         what: { en: "HH follows the rain only weakly (r 0.37), and only 12% of pixels respond to it. Only 43 mm fell in the whole period.", pt: "O HH acompanha a chuva só de leve (r 0,37), e só 12% dos pixels respondem a ela. Em todo o período choveu apenas 43 mm." },
         how: { en: "<b>Contrast with Paiaguás:</b> there, rain explained the September jump. Here, in a dry and managed landscape, the changes come from land use, not from the weather.", pt: "<b>Contraste com o Paiaguás:</b> lá, a chuva explicou o salto de setembro. Aqui, numa paisagem seca e manejada, as mudanças vêm do uso da terra, não do tempo." } }] },
   { id: "tocantins", frames: ["045_A_174", "053_D_092"], lon: -47.5, lat: -7.4, k: 6, point: true,
     name: { en: "Tocantins River · Maranhão–Tocantins border", pt: "Rio Tocantins · divisa Maranhão–Tocantins" }, tag: { en: "SOIL MOISTURE · ONE POINT SINCE LAUNCH", pt: "UMIDADE DO SOLO · UM PONTO DESDE O LANÇAMENTO" },
     sub: { en: "7.40° S · 47.50° W · tracks 45 (ascending) and 53 (descending) · 28 GCOV, 23 GUNW and 18 SME2 files", pt: "7,40° S · 47,50° O · pistas 45 (ascendente) e 53 (descendente) · 28 GCOV, 23 GUNW e 18 SME2" },
     slides: [
-      { img: "tocantins/historia_do_ponto.png", t: { en: "One point, since the first file", pt: "Um ponto, desde o primeiro arquivo" },
+      { img: "fig:tocantins_point", t: { en: "One point, since the first file", pt: "Um ponto, desde o primeiro arquivo" },
         what: { en: "From Nov 1, 2025 (BETA data in grey) to Oct 27, 2026. HH follows the rain: correlation 0.78 with antecedent rain, 0.75 with NASA POWER soil moisture and 0.52 with NISAR's own SME2.", pt: "De 01/11/2025 (dados BETA em cinza) a 27/10/2026. O HH acompanha a chuva: correlação de 0,78 com a chuva antecedente, 0,75 com a umidade do NASA POWER e 0,52 com o SME2 do próprio NISAR." },
         how: { en: "<b>How we read it:</b> every pass direction over the same pixel, with daily rain, soil moisture and the coherence of each GUNW pair underneath.", pt: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, com a chuva diária, a umidade do solo e a coerência de cada par GUNW embaixo." } },
-      { img: "tocantins/calendario_produtos.png", t: { en: "What exists, and when", pt: "O que existe, e quando" },
+      { img: "fig:tocantins_calendar", t: { en: "What exists, and when", pt: "O que existe, e quando" },
         what: { en: "GCOV, GUNW and SME2 over this point: a gap from mid-January to mid-June 2026, when NISAR delivered no products here.", pt: "GCOV, GUNW e SME2 sobre este ponto: um buraco de meados de janeiro a meados de junho de 2026, quando o NISAR não entregou produtos aqui." },
         how: { en: "<b>Catalog first:</b> we read the catalog before analysing anything, so gaps are shown instead of hidden.", pt: "<b>Catálogo primeiro:</b> lemos o catálogo antes de analisar qualquer coisa, para mostrar os buracos em vez de escondê-los." } },
       { noMedia: true, t: { en: "Quality control: a pass we threw out", pt: "Controle de qualidade: uma passagem descartada" },
@@ -719,21 +789,16 @@ function drawHL(A, strong) { const S = hlFrames(A); S.forEach((f) => { ctx.begin
   const c = proj([A.lon, A.lat]); if (!c || d3.geoDistance([A.lon, A.lat], proj.invert(proj.translate())) > Math.PI / 2) return;
   if (A.point || A.box) { ctx.beginPath(); ctx.arc(c[0], c[1], 12, 0, 7); ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke(); ctx.setLineDash([]); }
   if (strong) { let top = null; S.forEach((f) => f.geometry.coordinates[0].forEach((q) => { const z = proj(q); if (z && (!top || z[1] < top[1])) top = z; }));
-    if (top) { const txt = L2(A.name); const tw = textW(txt, 14, 700, 0.3); label(txt, Math.max(tw / 2 + 8, Math.min(W - tw / 2 - 8, top[0])), Math.max(W < 760 ? 120 : 70, top[1] - 12), "#7FE8FF", 14, "center", 700, 0.3); } } }
+    if (top) { const txt = L2(A.name); const tw = textW(txt, 14, 700, 0.3); pill(txt, top[0], Math.max(W < 760 ? 120 : 70, top[1] - 22), "#7FE8FF", 14, "center"); } } }
 function openA(A) { if (introOn) endIntro(); const k = A.k; fly(A.lon + (W > 900 ? 300 / (base * k) / RAD : 0), A.lat + (W > 900 ? 0 : -H * 0.26 / (base * k) / RAD), k); setTimeout(() => showA(A), 1150); }
 function showA(A, at) { stopV(); sel = A; view = ["A", A]; draw(); panel.classList.add("wide");
   pb.innerHTML = `<div class="k" style="color:var(--cyan)">${t("hlKick")} · ${L2(A.tag)}</div><h2>${L2(A.name)}</h2><div class="note">${L2(A.sub)}</div>
-  <div class="car" id="car">${A.slides.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${A.slides.length}">${x.noMedia ? "" : `<div class="media"><img src="pg/${x.img}" alt="${L2(x.t)}" loading="lazy"></div>`}
-    <div class="step" style="color:var(--cyan)">${String(i + 1).padStart(2, "0")} / ${String(A.slides.length).padStart(2, "0")}</div><h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p><p class="how">${L2(x.how)}</p></section>`).join("")}</div>
-  <div class="nav"><button type="button" class="arr" id="cprev" aria-label="${t("prevS")}">◀</button><div class="dots" id="cdots">${A.slides.map((_, i) => `<button type="button" data-s="${i}" aria-label="${t("goTo")} ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
+  ${deckNav(A.slides)}
+  <div class="car" id="car">${A.slides.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${A.slides.length}">${x.noMedia ? "" : `<div class="media"><img src="${imgSrc(x)}" alt="${L2(x.t)}" loading="lazy" class="zoomable"></div>`}
+    <h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p><p class="how">${L2(x.how)}</p></section>`).join("")}</div>
   <p class="note">${t("hlNote")}</p>`;
-  panel.classList.add("on"); document.body.classList.add("paneled");
-  const car = document.getElementById("car"), n = A.slides.length; const go = (i, inst) => car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" });
-  const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
-    document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === n - 1; car._i = i; };
-  car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(sync, 80); }); sync();
-  document.getElementById("cprev").onclick = () => go((car._i || 0) - 1); document.getElementById("cnext").onclick = () => go((car._i || 0) + 1);
-  document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s)); if (at) { go(at, true); sync(); } }
+  panel.classList.add("on"); document.body.classList.add("paneled"); draw();
+  wireDeck(A.slides, at); }
 
 // ---------------------------------------------------------------- search, filters, language
 const LUG = [[{ en: "Paiaguás, Pantanal (MS)", pt: "Paiaguás, Pantanal (MS)" }, -56.873, -18.278, 22], [{ en: "Norte Fire, San Clemente (California)", pt: "Incêndio Norte, San Clemente (Califórnia)" }, -117.64, 33.48, 14, "norte"],
@@ -760,6 +825,8 @@ function setLang(l) { lang = l; try { localStorage.setItem("dl-globe-lang", l); 
   else if (view && view[0] === "F") showF(view[1], view[2], true); }
 document.getElementById("l-en").onclick = () => setLang("en"); document.getElementById("l-pt").onclick = () => setLang("pt");
 proj.rotate([60, 15]); addEventListener("resize", size); renderStatic(); size();
+document.getElementById("zin").onclick = () => zoomBy(1.8); document.getElementById("zout").onclick = () => zoomBy(1 / 1.8); document.getElementById("zhome").onclick = home;
+addEventListener("keydown", (e) => { if (e.target.closest && e.target.closest("input")) return; if (e.key === "+" || e.key === "=") zoomBy(1.8); else if (e.key === "-") zoomBy(1 / 1.8); else if (e.key === "0") home(); });
 // ---------------------------------------------------------------- opening: five short beats, then the stories
 const hero = document.getElementById("intro"); let beatI = 0, beatTimer = null, spin = null;
 function renderBeat() { const b = t("beats")[beatI]; document.getElementById("beatK").textContent = b[0]; document.getElementById("beatT").textContent = b[1]; document.getElementById("beatS").textContent = b[2];
@@ -767,17 +834,24 @@ function renderBeat() { const b = t("beats")[beatI]; document.getElementById("be
   const st = document.getElementById("stories"); st.hidden = beatI < t("beats").length - 1;
   st.innerHTML = `<div style="width:100%;font-size:13px;color:var(--ink2)">${t("storiesT")}</div>` + t("stories").map(([id, a, b2]) => `<button type="button" data-story="${id}"><b>${a}</b>${b2}</button>`).join("");
   st.querySelectorAll("[data-story]").forEach((bt) => bt.onclick = () => { endIntro(); const id = bt.dataset.story; if (id === "paiaguas") openP(); else openA(HL.find((A) => A.id === id)); }); }
-function nextBeat() { const el = document.getElementById("beat"); el.classList.add("out");
-  setTimeout(() => { beatI++; if (beatI >= t("beats").length) { beatI = t("beats").length - 1; return; } renderBeat(); el.classList.remove("out"); REVEAL = Math.min(1, (beatI + 1) / 2); if (beatI === t("beats").length - 1) { stopSpin(); fly(-58, -8, 1.05); }
-    if (beatI < t("beats").length - 1) beatTimer = setTimeout(nextBeat, 3600); }, 450); }
+let paused = false;
+function gotoBeat(i) { const el = document.getElementById("beat"); clearTimeout(beatTimer); el.classList.add("out");
+  setTimeout(() => { beatI = Math.max(0, Math.min(t("beats").length - 1, i)); renderBeat(); el.classList.remove("out"); REVEAL = Math.min(1, (beatI + 1) / 2);
+    if (beatI === t("beats").length - 1) { stopSpin(); fly(-58, -8, 1.05); } else if (!spin && !paused) startSpin();
+    if (!paused && beatI < t("beats").length - 1) beatTimer = setTimeout(nextBeat, 3600); }, 350); }
+function nextBeat() { gotoBeat(beatI + 1); }
+function setPaused(v) { paused = v; const b = document.getElementById("ibPlay"); b.textContent = v ? "▶" : "❚❚"; b.setAttribute("aria-label", v ? "Play" : "Pause");
+  if (v) { clearTimeout(beatTimer); stopSpin(); } else { if (beatI < t("beats").length - 1) { beatTimer = setTimeout(nextBeat, 2000); if (!spin) startSpin(); } } }
+document.getElementById("ibPrev").onclick = () => gotoBeat(beatI - 1); document.getElementById("ibNext").onclick = () => gotoBeat(beatI + 1);
+document.getElementById("ibPlay").onclick = () => setPaused(!paused);
 function startSpin() { let last = performance.now(); const go = (now) => { if (!spin) return; const r = proj.rotate(); proj.rotate([r[0] + (now - last) * 0.006, r[1]]); last = now; draw("spin"); spin = requestAnimationFrame(go); }; spin = requestAnimationFrame(go); }
 function stopSpin() { if (spin) { cancelAnimationFrame(spin); spin = null; draw(); } }
-function startIntro() { introOn = true; beatI = 0; REVEAL = 0.25; hero.classList.remove("gone"); hero.hidden = false; document.getElementById("replay").hidden = true; renderBeat(); document.getElementById("beat").classList.remove("out");
+function startIntro() { introOn = true; beatI = 0; paused = false; document.getElementById("ibPlay").textContent = "❚❚"; REVEAL = 0.25; hero.classList.remove("gone"); hero.hidden = false; document.getElementById("replay").hidden = true; renderBeat(); document.getElementById("beat").classList.remove("out");
   clearTimeout(beatTimer); beatTimer = setTimeout(nextBeat, 3600); if (!spin) startSpin(); }
 function endIntro() { introOn = false; clearTimeout(beatTimer); REVEAL = 1; stopSpin(); hero.classList.add("gone"); setTimeout(() => { if (!introOn) hero.hidden = true; }, 800);
   const rp = document.getElementById("replay"); rp.textContent = t("replay"); rp.hidden = false; try { sessionStorage.setItem("dl-intro", "1"); } catch (e) {} }
 document.getElementById("skip").onclick = endIntro; document.getElementById("replay").onclick = () => { closeP(); startIntro(); };
-cv.addEventListener("pointerdown", () => { if (spin) stopSpin(); if (introOn && beatI < t("beats").length - 1) { clearTimeout(beatTimer); beatI = t("beats").length - 2; nextBeat(); } });
+cv.addEventListener("pointerdown", () => { if (spin) stopSpin(); if (introOn && beatI < t("beats").length - 1) gotoBeat(t("beats").length - 1); });
 cv.addEventListener("wheel", () => { if (spin) stopSpin(); }, { passive: true });
 let seen = false; try { seen = sessionStorage.getItem("dl-intro") === "1"; } catch (e) {}
 if (seen) { hero.hidden = true; REVEAL = 1; const rp = document.getElementById("replay"); rp.textContent = t("replay"); rp.hidden = false; } else startIntro();
