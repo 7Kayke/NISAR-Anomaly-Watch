@@ -1,0 +1,13 @@
+nota,nome,lat,lon,area_km2,celula,gcov,gcov_dupla,gcov_dupla_pos_beta,geometrias_boas,maior_buraco_dias,gunw,sme2,primeira,ultima,geometrias,por_que
+81.9,Paiaguás,-18.3,-56.9,,A031-168 x D111-097,49,35,35,5,19,42,40,20260621,20261105,"{""111_D_097"": 2, ""111_D_098"": 5, ""031_A_168"": 5, ""031_A_169"": 9, ""132_A_168"": 9, ""010_D_098"": 5}","planície interna, cheia lenta"
+50.8,Nabileque,-20.3,-57.5,,A132-167 x D111-098,26,25,25,3,21,21,24,20260621,20261105,"{""111_D_099"": 5, ""010_D_099"": 11, ""132_A_167"": 9}","planície do sul, cheia tardia"
+47.2,Barão de Melgaço (rio Cuiabá),-16.19,-55.97,,A031-169 x D010-097,28,25,25,3,22,22,19,20260626,20261105,"{""010_D_097"": 10, ""031_A_169"": 9, ""031_A_170"": 6}",baías e lagoas do norte
+46.0,Nhecolândia (baías e salinas),-19.2,-56.6,,A031-168 x D010-098,25,19,19,3,21,22,22,20260626,20261105,"{""031_A_168"": 5, ""132_A_168"": 9, ""010_D_098"": 5}",milhares de lagoas que enchem e secam
+42.4,Serra do Amolar,-18.0,-57.5,,A132-168 x D111-097,28,23,23,3,24,24,27,20260621,20261031,"{""111_D_097"": 5, ""132_A_168"": 9, ""132_A_169"": 9}","fogo recorrente, morraria + planície"
+38.3,Cáceres (rio Paraguai alto),-16.07,-57.68,,A132-169 x D111-096,27,18,18,3,24,24,26,20260621,20261031,"{""111_D_096"": 4, ""111_D_097"": 5, ""132_A_169"": 9}","régua do rio, entrada do Pantanal"
+35.8,Abobral / Passo do Lontra (rio Miranda),-19.57,-57.03,,A132-168 x D010-098,20,14,14,2,21,16,18,20260626,20261105,"{""132_A_168"": 9, ""010_D_098"": 5}","régua do rio Miranda, campos alagáveis"
+27.2,Ladário / Corumbá (rio Paraguai),-19.0,-57.6,,A132-168 x D111-098,19,14,14,2,24,16,18,20260621,20261031,"{""111_D_098"": 5, ""132_A_168"": 9}","régua do rio Paraguai (referência em solo), cheia abaixo da média em 2026"
+27.2,Estação Ecológica de Taiamã,-16.85,-57.55,,A132-169 x D111-097,19,14,14,2,24,16,18,20260621,20261031,"{""111_D_097"": 5, ""132_A_169"": 9}","planície alagável preservada, água sob vegetação"
+27.2,Porto Jofre / Encontro das Águas,-17.35,-56.75,,A031-169 x D111-097,21,14,14,2,24,16,18,20260621,20261031,"{""111_D_097"": 5, ""031_A_169"": 9}","rio Cuiabá, área de grandes incêndios"
+27.2,Poconé / Transpantaneira,-16.7,-56.7,,A031-169 x D111-097,21,14,14,2,24,16,18,20260621,20261031,"{""111_D_097"": 5, ""031_A_169"": 9}","campos que alagam e secam, pastagem"
+22.3,Rio Taquari (arrombados),-18.4,-56.5,,A031-168 x D010-098,16,10,10,2,24,14,13,20260626,20261105,"{""031_A_168"": 5, ""010_D_098"": 5}",rio que muda de leito: mudança geomorfológica
