@@ -76,6 +76,9 @@ nav > * { pointer-events: auto; }
 .nexts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: #050E26; }
 .nexts div { background: #0A1A40; border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
 .nexts span { font-size: 20px; } .nexts b { font-size: 13.5px; } .nexts small { font-size: 12px; color: var(--ink2); line-height: 1.4; }
+.trio3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .trio3 .thumb { aspect-ratio: auto; display: flex; flex-direction: column; gap: 4px; background: none; border: 0; padding: 0 !important; place-items: stretch; }
+.trio3 canvas { aspect-ratio: 320 / 288; height: auto !important; border-radius: 6px; } .trio3 .cap { position: static; background: none; padding: 0; font-size: 9.5px; color: var(--ink2); }
+.thumb .cap { position: absolute; left: 4px; bottom: 4px; right: 4px; font: 600 10px var(--mono); background: rgba(2,6,15,.85); color: var(--ink); padding: 3px 6px; border-radius: 5px; text-align: left; line-height: 1.35; }
 .sum { background: #0A1A40; border-left: 3px solid var(--cyan); border-radius: 8px; padding: 8px 12px; font-size: 13px; line-height: 1.5; }
 .sum p { margin: 4px 0; } .sum b { color: var(--cyan); font-weight: 600; }
 .step { font: 600 11px var(--mono); color: var(--neon); letter-spacing: 1.5px; }
@@ -158,7 +161,7 @@ const T = {
     nisarLbl: (hh, tr, a) => `NISAR ${hh ? "HH" : "HV"} · track ${tr} ${a ? "asc." : "desc."}`,
     layers: [["nat", "Natural colour"], ["fogo", "Fire"], ["radar", "C-band radar"], ["temp", "Temperature"]],
     glossT: "GLOSSARY: WHAT EACH DATA LAYER MEANS", gTerm: "Term", gWhat: "What it is", gUse: "What we use it for",
-    sumT: "SUMMARY", optT: "SAME PLACE, SAME DATES, IN OPTICAL", optWait: "Searching Planetary Computer…", optNone: "No clear optical scene near this date", optFail: "Planetary Computer not reachable from here",
+    sumT: "SUMMARY", optCalc: "Measuring NDVI pixel by pixel…", chgCap: "NDVI change · orange = lost vegetation · green = gained · grey = cloud", optT: "SAME PLACE, SAME DATES, IN OPTICAL", optWait: "Searching Planetary Computer…", optNone: "No clear optical scene near this date", optFail: "Planetary Computer not reachable from here",
     optRule: (s, g) => `Chosen by calculation, not by hand: the ${s} scene closest to each NISAR file with the least cloud, and the same sensor and ${g} on both dates, so only time changes between the two images.`,
     pathrow: "path/row", tile: "tile", cloud: "cloud", of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next", hlKick: "HIGHLIGHT", hlNote: "Highlight areas use real NISAR results with a lighter analysis than Paiaguás.", hasHL: (n) => `This frame has a highlight: ${n}`, lgHL: "Highlight areas",
     cohKeep: ["track 31 · ascending", "track 132 · ascending", "track 10 · descending", "track 111 · unreliable"],
@@ -187,7 +190,7 @@ const T = {
     nisarLbl: (hh, tr, a) => `NISAR ${hh ? "HH" : "HV"} · pista ${tr} ${a ? "asc." : "desc."}`,
     layers: [["nat", "Cor natural"], ["fogo", "Fogo"], ["radar", "Radar C"], ["temp", "Temperatura"]],
     glossT: "GLOSSÁRIO: O QUE SIGNIFICA CADA DADO", gTerm: "Termo", gWhat: "O que é", gUse: "Para que usamos",
-    sumT: "RESUMO", optT: "MESMO LUGAR, MESMAS DATAS, NO ÓPTICO", optWait: "Buscando no Planetary Computer…", optNone: "Sem cena óptica limpa perto desta data", optFail: "Sem acesso ao Planetary Computer daqui",
+    sumT: "RESUMO", optCalc: "Medindo o NDVI pixel a pixel…", chgCap: "Mudança no NDVI · laranja = perdeu vegetação · verde = ganhou · cinza = nuvem", optT: "MESMO LUGAR, MESMAS DATAS, NO ÓPTICO", optWait: "Buscando no Planetary Computer…", optNone: "Sem cena óptica limpa perto desta data", optFail: "Sem acesso ao Planetary Computer daqui",
     optRule: (s, g) => `Escolhidas por cálculo, não a dedo: a cena do ${s} mais próxima de cada arquivo do NISAR e com menos nuvem, com o mesmo sensor e a mesma ${g} nas duas datas, para que só o tempo mude entre as duas imagens.`,
     pathrow: "órbita/linha", tile: "quadrícula", cloud: "nuvem", of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo", hlKick: "DESTAQUE", hlNote: "As áreas em destaque usam resultados reais do NISAR, com uma análise mais leve que a do Paiaguás.", hasHL: (n) => `Este quadro tem um destaque: ${n}`, lgHL: "Áreas em destaque",
     cohKeep: ["pista 31 · ascendente", "pista 132 · ascendente", "pista 10 · descendente", "pista 111 · não confiável"],
@@ -349,7 +352,7 @@ function showF(f, others, noLive) { stopV(); view = ["F", f, others]; panel.clas
 function whereIs(f) { const c = f._c || (f._c = d3.geoCentroid(f)); const k = countries.find((x) => d3.geoContains(x.f, c));
   let near = null, dmin = 1e9; PLACES.forEach((pl) => { const d = d3.geoDistance(c, [pl[1], pl[2]]) * 6371; if (d < dmin) { dmin = d; near = pl; } });
   return { country: k ? L2(k.n) : null, near: near && dmin < 350 ? { n: L2(near[0]), km: Math.round(dmin / 10) * 10, kind: near[4] } : null }; }
-function summary(f, o0, o1) { const p = f.properties, pt = lang === "pt"; const w = whereIs(f);
+function summary(f, o0, o1, R) { const p = f.properties, pt = lang === "pt"; const w = whereIs(f);
   const span = Math.max(1, Math.round((Date.parse(p.p1) - Date.parse(p.p0)) / 864e5)); const expected = Math.floor(span / 12) + 1; const cov = Math.min(1, p.n / expected);
   const beta = p.p0 < "2026-01-20"; const out = [];
   const where = w.country ? (w.near ? (pt ? `${w.country}, ${w.near.kind === "bio" || w.near.kind === "rio" ? "no " + w.near.n : "a ~" + w.near.km + " km de " + w.near.n}` : `${w.country}, ${w.near.kind === "bio" || w.near.kind === "rio" ? "in the " + w.near.n : "~" + w.near.km + " km from " + w.near.n}`) : w.country) : (pt ? "fora das fronteiras mapeadas (mar, gelo ou ilha)" : "outside mapped borders (sea, ice or island)");
@@ -358,7 +361,20 @@ function summary(f, o0, o1) { const p = f.properties, pt = lang === "pt"; const 
   out.push(pt ? `<b>Quanto o NISAR olhou:</b> ${p.n} passagens em ${span} dias, de ${fd(p.p0)} a ${fd(p.p1)}. Com uma passagem a cada 12 dias seriam ${expected}: ${cov >= 0.85 ? "cobertura praticamente completa" : cov >= 0.5 ? `cobertura com buracos (${Math.round(cov * 100)}%)` : `cobertura irregular (${Math.round(cov * 100)}%)`}.`
               : `<b>How much NISAR looked:</b> ${p.n} passes in ${span} days, from ${fd(p.p0)} to ${fd(p.p1)}. One pass every 12 days would give ${expected}: ${cov >= 0.85 ? "near-complete coverage" : cov >= 0.5 ? `coverage with gaps (${Math.round(cov * 100)}%)` : `irregular coverage (${Math.round(cov * 100)}%)`}.`);
   if (beta) out.push(pt ? "<b>Atenção:</b> os primeiros arquivos são BETA (antes da calibração de 20/01/2026); para medir mudança, comparar a partir de fevereiro." : "<b>Note:</b> the first files are BETA (before the Jan 20, 2026 calibration); to measure change, compare from February on.");
-  if (o0 && o1) { const c = Math.max(o0.properties["eo:cloud_cover"] ?? 0, o1.properties["eo:cloud_cover"] ?? 0); const sn = sensorName(o1);
+  if (R) { const pc = (v) => `${Math.round(v * 100)}%`, d = (v) => nf(v, 2); const MP = pt ? ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const dN = R.ndvi1 - R.ndvi0;
+    if (R.clear < 0.3) out.push(pt ? `<b>Comparação no óptico:</b> só ${pc(R.clear)} da janela está sem nuvem nas duas datas; pouco para concluir. Aqui o radar, que atravessa nuvem, é o caminho.`
+                                   : `<b>Optical comparison:</b> only ${pc(R.clear)} of the window is cloud-free on both dates; too little to conclude. Here radar, which sees through clouds, is the way.`);
+    else { out.push(pt ? `<b>Comparação no óptico (janela de ~30 × 27 km no ponto clicado):</b> entre ${fd(o0.properties.datetime)} e ${fd(o1.properties.datetime)} (${R.days} dias, mesmo sensor), em ${Math.round(R.km2).toLocaleString("pt-BR")} km² sem nuvem nas duas datas (${pc(R.clear)} da janela), o NDVI médio foi de ${d(R.ndvi0)} para ${d(R.ndvi1)} (${dN >= 0 ? "+" : ""}${d(dN)}). <b>${pc(R.loss)}</b> da área perdeu vegetação (queda de NDVI ≥ 0,15) e <b>${pc(R.gain)}</b> ganhou. Água: ${pc(R.water0)} → ${pc(R.water1)}.`
+                           : `<b>Optical comparison (~30 × 27 km window at the clicked point):</b> between ${fd(o0.properties.datetime)} and ${fd(o1.properties.datetime)} (${R.days} days, same sensor), over ${Math.round(R.km2).toLocaleString("en-US")} km² cloud-free on both dates (${pc(R.clear)} of the window), mean NDVI went from ${d(R.ndvi0)} to ${d(R.ndvi1)} (${dN >= 0 ? "+" : ""}${d(dN)}). <b>${pc(R.loss)}</b> of the area lost vegetation (NDVI drop ≥ 0.15) and <b>${pc(R.gain)}</b> gained. Water: ${pc(R.water0)} → ${pc(R.water1)}.`);
+      const kind = R.loss > 0.1 && R.loss > 2 * R.gain ? "loss" : R.gain > 0.1 && R.gain > 2 * R.loss ? "gain" : Math.abs(R.water1 - R.water0) > 0.05 ? "water" : "stable";
+      const season = `${MP[R.m0 - 1]} → ${MP[R.m1 - 1]}`;
+      const T2 = { loss: [`a paisagem secou ou perdeu cobertura: estação seca, colheita, corte ou fogo. Como as datas vão de ${season}, parte disso pode ser o ritmo normal do ano.`, `the landscape dried out or lost cover: dry season, harvest, clearing or fire. With dates from ${season}, part of this may be the normal yearly rhythm.`],
+        gain: [`a vegetação ficou mais verde: chuva, rebrota ou lavoura crescendo (${season}).`, `vegetation got greener: rain, regrowth or a growing crop (${season}).`],
+        water: [`a água mudou de extensão: cheia ou vazante (${season}).`, `water extent changed: flood or recession (${season}).`],
+        stable: [`pouca mudança no óptico entre ${season}. Se houve algo, está abaixo da copa ou no solo, onde a banda L do NISAR enxerga.`, `little optical change between ${season}. If something changed, it is under the canopy or in the soil, where NISAR's L-band sees.`] }[kind];
+      out.push(pt ? `<b>Leitura:</b> ${T2[0]}` : `<b>Reading:</b> ${T2[1]}`); } }
+  else if (o0 && o1) { const c = Math.max(o0.properties["eo:cloud_cover"] ?? 0, o1.properties["eo:cloud_cover"] ?? 0); const sn = sensorName(o1);
     out.push(pt ? `<b>Como conferir no óptico:</b> o ${sn} tem o mesmo enquadramento nas duas datas, com até ${Math.round(c)}% de nuvem: ${c < 15 ? "dá para comparar a olho" : "comparação a olho prejudicada pela nuvem"}.`
                 : `<b>Optical check:</b> ${sn} has the same footprint on both dates, with up to ${Math.round(c)}% cloud: ${c < 15 ? "good for a visual comparison" : "clouds limit a visual comparison"}.`); }
   else if (o1 && !o0) out.push(pt ? "<b>Como conferir no óptico:</b> só há cena limpa perto do último arquivo." : "<b>Optical check:</b> a clear scene exists only near the last file.");
@@ -376,19 +392,53 @@ async function pcSearch(coll, ll, d, win, extra) { const body = { collections: [
 const score = (it, d) => Math.abs(Date.parse(it.properties.datetime) - Date.parse(d)) / 864e5 + 0.5 * (it.properties["eo:cloud_cover"] ?? 50);
 const best = (items, d) => items.slice().sort((a, b) => score(a, d) - score(b, d))[0];
 const sensorName = (it) => it.properties.platform ? it.properties.platform.replace("landsat-", "Landsat ").replace("sentinel-2", "Sentinel-2 ").replace(/^Sentinel-2 ([ab])$/i, (m, x) => "Sentinel-2" + x.toUpperCase()) : it.collection;
+// Optical comparison for any frame (Microsoft Planetary Computer, public STAC + data API), chosen and measured by calculation:
+// 1) a 30 × 27 km window around the clicked point; 2) for NISAR's last file, the scene closest in time with the least cloud
+//    that fully covers the window (Landsat 9 first, then Landsat 8/9, then Sentinel-2); 3) for the first file, the SAME
+//    sensor and path/row (or tile), so only time changes; 4) per-pixel NDVI from surface reflectance on both dates,
+//    clouds and no-data removed, then the share of the window that lost or gained vegetation and the change in water.
+const fixRing = (g) => { const f = { type: "Feature", geometry: JSON.parse(JSON.stringify(g)) }; if (d3.geoArea(f) > 2 * Math.PI) f.geometry.coordinates = f.geometry.coordinates.map((r) => r.slice().reverse()); return f; };
+const covers = (it, box) => { try { const f = fixRing(it.geometry); return [[box[0], box[1]], [box[2], box[1]], [box[2], box[3]], [box[0], box[3]]].every((c) => d3.geoContains(f, c)); } catch (e) { return false; } };
+const PCD = "https://planetarycomputer.microsoft.com/api/data/v1/item";
+function cropURL(it, box, kind) { const ls = it.collection === "landsat-c2-l2"; const q = new URLSearchParams({ collection: it.collection, item: it.id });
+  if (kind === "ndvi") { q.set("expression", ls ? "(nir08-red)/(nir08+red-14545.45)" : "(B08-B04)/(B08+B04-2000)"); q.set("asset_as_band", "true"); q.set("rescale", "-1,1"); }
+  else { (ls ? ["red", "green", "blue"] : ["B04", "B03", "B02"]).forEach((a) => q.append("assets", a)); q.set("rescale", ls ? "7300,18000" : "0,2600"); q.set("color_formula", "Gamma RGB 1.6 Saturation 1.2"); }
+  if (ls) q.set("nodata", "0");
+  return `${PCD}/bbox/${box.map((v) => v.toFixed(4)).join(",")}/320x288.png?${q}`; }
+async function pixels(url) { const r = await fetch(url); if (!r.ok) throw new Error("data " + r.status); const bmp = await createImageBitmap(await r.blob());
+  const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bmp, 0, 0); return { w: c.width, h: c.height, d: x.getImageData(0, 0, c.width, c.height).data, c }; }
+function compare(tc0, nd0, tc1, nd1) { const n = tc0.w * tc0.h; let both = 0, valid = 0, loss = 0, gain = 0, w0 = 0, w1 = 0, s0 = 0, s1 = 0, cl = 0; const map = new Uint8ClampedArray(n * 4);
+  const cloudy = (t, i) => { const r = t.d[i], g = t.d[i + 1], b = t.d[i + 2]; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx > 215 && mx - mn < 40; };
+  for (let k = 0; k < n; k++) { const i = k * 4; const ok0 = tc0.d[i + 3] > 0 && nd0.d[i + 3] > 0, ok1 = tc1.d[i + 3] > 0 && nd1.d[i + 3] > 0;
+    map[i + 3] = 255; map[i] = map[i + 1] = map[i + 2] = 20; if (!ok0 || !ok1) continue; valid++;
+    if (cloudy(tc0, i) || cloudy(tc1, i)) { cl++; map[i] = map[i + 1] = map[i + 2] = 90; continue; }
+    both++; const a = nd0.d[i] / 255 * 2 - 1, b = nd1.d[i] / 255 * 2 - 1; s0 += a; s1 += b; if (a < 0) w0++; if (b < 0) w1++;
+    const dlt = b - a; if (dlt <= -0.15) { loss++; map[i] = 255; map[i + 1] = 107; map[i + 2] = 0; } else if (dlt >= 0.15) { gain++; map[i] = 46; map[i + 1] = 200; map[i + 2] = 90; }
+    else { const v = 40 + Math.round((b + 1) * 40); map[i] = map[i + 1] = map[i + 2] = v; } }
+  const c = document.createElement("canvas"); c.width = tc0.w; c.height = tc0.h; c.getContext("2d").putImageData(new ImageData(map, tc0.w, tc0.h), 0, 0);
+  return { map: c, clear: valid ? both / valid : 0, cloud: valid ? cl / valid : 0, ndvi0: both ? s0 / both : null, ndvi1: both ? s1 / both : null,
+    loss: both ? loss / both : 0, gain: both ? gain / both : 0, water0: both ? w0 / both : 0, water1: both ? w1 / both : 0, px: both }; }
 async function optical(p, ll) { const box = document.getElementById("opt"), note = document.getElementById("optNote"); if (!box) return; const myView = view;
+  const B = [ll[0] - 0.14, ll[1] - 0.12, ll[0] + 0.14, ll[1] + 0.12];
   try { let last = null, coll = null;
     for (const [c, extra] of [["landsat-c2-l2", { platform: { eq: "landsat-9" } }], ["landsat-c2-l2", { platform: { in: ["landsat-8", "landsat-9"] } }], ["sentinel-2-l2a", null]]) {
-      const items = await pcSearch(c, ll, p.p1, 16, extra); if (items.length) { last = best(items, p.p1); coll = c; break; } }
+      const items = (await pcSearch(c, ll, p.p1, 16, extra)).filter((it) => covers(it, B)); if (items.length) { last = best(items, p.p1); coll = c; break; } }
     if (view !== myView) return; if (!last) { box.innerHTML = `<div class="thumb">${t("optNone")}</div><div class="thumb">${t("optNone")}</div>`; return; }
     const same = coll === "landsat-c2-l2" ? { "landsat:wrs_path": { eq: last.properties["landsat:wrs_path"] }, "landsat:wrs_row": { eq: last.properties["landsat:wrs_row"] }, platform: { eq: last.properties.platform } }
       : { "s2:mgrs_tile": { eq: last.properties["s2:mgrs_tile"] } };
-    const firstItems = await pcSearch(coll, ll, p.p0, 24, same); const first = firstItems.length ? best(firstItems, p.p0) : null; if (view !== myView) return;
-    const card = (it, d) => { if (!it) return `<div class="thumb">${t("optNone")}</div>`; const a = it.assets.rendered_preview; const dd = it.properties.datetime.slice(0, 10); const gap = Math.round(Math.abs(Date.parse(dd) - Date.parse(d)) / 864e5);
-      return `<div class="thumb" style="padding:0;position:relative;overflow:hidden">${a ? `<img src="${a.href}" alt="${sensorName(it)} ${fd(dd)}" style="width:100%;height:100%;object-fit:cover" loading="lazy">` : ""}<span style="position:absolute;left:4px;bottom:4px;right:4px;font:600 10.5px var(--mono);background:rgba(2,6,15,.85);color:var(--ink);padding:3px 6px;border-radius:5px;text-align:left">${sensorName(it)} · ${fd(dd)}<br>±${gap} ${t("days")} · ${t("cloud")} ${Math.round(it.properties["eo:cloud_cover"] ?? 0)}%</span></div>`; };
-    box.innerHTML = card(first, p.p0) + card(last, p.p1); const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], first, last);
+    const firstItems = (await pcSearch(coll, ll, p.p0, 24, same)).filter((it) => covers(it, B)); const first = firstItems.length ? best(firstItems, p.p0) : null; if (view !== myView) return;
+    const lab = (it, d) => { const dd = it.properties.datetime.slice(0, 10); const gap = Math.round(Math.abs(Date.parse(dd) - Date.parse(d)) / 864e5); return `${sensorName(it)} · ${fd(dd)}<br>±${gap} ${t("days")} · ${t("cloud")} ${Math.round(it.properties["eo:cloud_cover"] ?? 0)}%`; };
+    const tile = (inner, cap) => `<div class="thumb" style="padding:0;position:relative;overflow:hidden">${inner}<span class="cap">${cap}</span></div>`;
     note.innerHTML = t("optRule")(sensorName(last), coll === "landsat-c2-l2" ? `${t("pathrow")} ${last.properties["landsat:wrs_path"]}/${last.properties["landsat:wrs_row"]}` : `${t("tile")} ${last.properties["s2:mgrs_tile"]}`);
-  } catch (e) { if (view === myView) { box.innerHTML = `<div class="thumb">${t("optFail")}</div><div class="thumb">${t("optFail")}</div>`; } } }
+    if (!first) { box.innerHTML = `<div class="thumb">${t("optNone")}</div>` + tile(`<img src="${cropURL(last, B, "tc")}" alt="" style="width:100%;height:100%;object-fit:cover">`, lab(last, p.p1)); const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], null, last); return; }
+    box.innerHTML = `<div class="thumb">${t("optCalc")}</div><div class="thumb">${t("optCalc")}</div>`;
+    const [tc0, nd0, tc1, nd1] = await Promise.all([cropURL(first, B, "tc"), cropURL(first, B, "ndvi"), cropURL(last, B, "tc"), cropURL(last, B, "ndvi")].map(pixels)); if (view !== myView) return;
+    const R = compare(tc0, nd0, tc1, nd1); R.km2 = R.px * (0.28 * 111.32 * Math.cos(ll[1] * RAD) / tc0.w) * (0.24 * 110.57 / tc0.h); R.days = Math.round((Date.parse(last.properties.datetime) - Date.parse(first.properties.datetime)) / 864e5); R.m0 = +first.properties.datetime.slice(5, 7); R.m1 = +last.properties.datetime.slice(5, 7); R.lat = ll[1];
+    box.outerHTML = `<div class="trio3" id="opt">${tile("", lab(first, p.p0))}${tile("", lab(last, p.p1))}${tile("", t("chgCap"))}</div>`;
+    const cells = document.querySelectorAll("#opt .thumb"); [tc0.c, tc1.c, R.map].forEach((cv2, i) => { cv2.style.cssText = "width:100%;height:100%;object-fit:cover;display:block"; cells[i].prepend(cv2); });
+    const sm = document.getElementById("sum"); if (sm) sm.innerHTML = summary(view[1], first, last, R);
+  } catch (e) { if (view === myView) { const b2 = document.getElementById("opt"); if (b2) b2.innerHTML = `<div class="thumb">${t("optFail")}</div><div class="thumb">${t("optFail")}</div>`; console.log("optical", e); } } }
+
 // live lookup in NASA's public catalog: any place, without the team uploading anything first
 const CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json?provider=ASF&short_name=NISAR_L2_GCOV_PROVISIONAL_V1&short_name=NISAR_L2_GCOV_V1&short_name=NISAR_L2_GCOV_BETA_V1&page_size=1";
 const att = (u, n) => ((u.AdditionalAttributes || []).find((a) => a.Name === n) || {}).Values?.[0];
