@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>NISAR Globo</title>
+<title>NISAR Anomaly Watch</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Fira+Sans:wght@400;500;700;800&display=swap">
 <style>
 :root { --space: #02060F; --panel: rgba(10, 22, 52, 0.88); --edge: #2B4C8C; --ink: #E8F0FF; --ink2: #A9BCE0; --cyan: #7FE8FF; --neon: #EAFE07; --sky: #9CC9FA; --blue: #0042A6;
@@ -92,34 +92,98 @@ body.paneled .badge[data-go], body.paneled .hero { display: none; }
 </style>
 </head>
 <body>
-<canvas id="cv" aria-label="Globo com os quadros do NISAR"></canvas>
+<canvas id="cv" aria-label="Globe with NISAR frames"></canvas>
 <nav>
-  <div class="brand">Delta L · NISAR Anomaly Watch<small>A VALSA DA SUPERFÍCIE, QUADRO A QUADRO</small></div>
+  <div class="brand">Delta L · NISAR Anomaly Watch<small data-i="tag"></small></div>
   <div class="ctrl">
-    <div class="seg" role="group" aria-label="Direção"><button data-dir="all" aria-pressed="true">Todos</button><button data-dir="A" aria-pressed="false">Ascendente</button><button data-dir="D" aria-pressed="false">Descendente</button></div>
-    <form id="busca" role="search" style="display:flex;gap:6px"><input id="q" list="lugares" placeholder="Buscar lugar ou lat, lon" aria-label="Buscar lugar ou coordenadas" style="min-height:36px;border-radius:999px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);padding:0 14px;font:14px var(--display);width:min(240px,50vw)"><datalist id="lugares"></datalist><button class="btn" style="min-height:36px">Ir</button></form>
+    <div class="seg" role="group" aria-label="Pass direction"><button data-dir="all" aria-pressed="true" data-i="dAll"></button><button data-dir="A" aria-pressed="false" data-i="dAsc"></button><button data-dir="D" aria-pressed="false" data-i="dDesc"></button></div>
+    <form id="busca" role="search" style="display:flex;gap:6px"><input id="q" list="lugares" aria-label="Search" style="min-height:36px;border-radius:999px;border:1px solid var(--edge);background:var(--panel);color:var(--ink);padding:0 14px;font:14px var(--display);width:min(240px,50vw)"><datalist id="lugares"></datalist><button class="btn" style="min-height:36px" data-i="go"></button></form>
+    <div class="seg" role="group" aria-label="Language"><button id="l-en" aria-pressed="true">EN</button><button id="l-pt" aria-pressed="false">PT</button></div>
   </div>
 </nav>
-<div class="hero"><h1>Cada quadro do NISAR, no planeta inteiro.</h1><p>Arraste para girar, role para aproximar, clique em qualquer quadro para ver o primeiro e o último arquivo.</p></div>
+<div class="hero"><h1 data-i="h1"></h1><p data-i="hint"></p></div>
 
+<div class="stats"><div><b id="sF">–</b><span data-i="stFrames"></span></div><div><b data-i="st12"></b><span data-i="st12b"></span></div><div><b data-i="stL"></b><span data-i="stLb"></span></div></div>
+<div class="legend"><b style="color:var(--ink)" data-i="lgT"></b><div class="ramp"></div><div style="display:flex;justify-content:space-between"><span data-i="lgFew"></span><span data-i="lgMany"></span></div><span><span style="color:var(--neon)">■</span> <span data-i="lgFull"></span></span></div>
+<div class="demo" id="demo"></div>
 
-<div class="stats"><div><b id="sF">–</b><span>quadros sobre terra</span></div><div><b>12 dias</b><span>para repetir a passagem</span></div><div><b>banda L</b><span>vê através de nuvem e de noite</span></div></div>
-<div class="legend"><b style="color:var(--ink)">Passagens por quadro</b><div class="ramp"></div><div style="display:flex;justify-content:space-between"><span>poucas</span><span>muitas</span></div><span><span style="color:var(--neon)">■</span> Área com análise completa</span></div>
-<div class="demo">PROTÓTIPO · quadros e datas ilustrativos. Na versão final vêm do catálogo da NASA (CMR).</div>
-
-<aside id="panel" aria-live="polite"><button class="x" id="close" aria-label="Fechar">×</button><div id="pbody"></div></aside>
+<aside id="panel" aria-live="polite"><button class="x" id="close" aria-label="Close">×</button><div id="pbody"></div></aside>
 
 <script src="d3.min.js"></script>
 <script src="topojson-client.min.js"></script>
 <script src="dados.js"></script>
 <script>
 (() => {
+// ---------------------------------------------------------------- language
+let lang = "en"; try { lang = localStorage.getItem("dl-globe-lang") || "en"; } catch (e) {}
+const T = {
+  en: { tag: "THE SURFACE WALTZ, FRAME BY FRAME", dAll: "All", dAsc: "Ascending", dDesc: "Descending", go: "Go", search: "Search a place or lat, lon",
+    h1: "Every NISAR frame, across the whole planet.", hint: "Drag to rotate, scroll to zoom, click any frame to see its first and last file.",
+    stFrames: "frames over land", st12: "12 days", st12b: "to repeat the pass", stL: "L-band", stLb: "sees through clouds and at night",
+    lgT: "Passes per frame", lgFew: "few", lgMany: "many", lgFull: "Area with full analysis",
+    demo: "PROTOTYPE · illustrative frames and dates. The final version reads them from NASA's catalog (CMR).",
+    real: (n, d) => `Real frames from NASA's catalog (CMR) · ${n} GCOV files · ${d}`,
+    shallow: "QUICK COMPARISON", frame: "Frame", track: "track", asc: "ascending (≈ 5:30 am)", desc: "descending (≈ 6:30 pm)", fno: "frame",
+    first: "First file", last: "Last file", passes: "GCOV passes", span: "Time span", days: "days",
+    prev0: "Preview of the first file", prev1: "Preview of the last file", noPrev: "Preview not publicly available",
+    realNote: "Real data from NASA's catalog (CMR):", asking: "Checking NASA's catalog (CMR) at this point…",
+    shallowNote: "Here we only look at the frame's first and last files: the two previews (browse images) NASA publishes with each product and the catalog summary. Good for comparing places and choosing where to dig deeper.",
+    others: "OTHER FRAMES AT THIS POINT", hasFull: "This frame has a full analysis: Paiaguás", ask: "Request a full analysis of this frame",
+    liveNone: "NASA's catalog checked just now: NISAR has not published any GCOV for this point yet.",
+    liveOk: (n) => `Real data, checked just now in NASA's catalog (CMR): ${n} GCOV files cover this point, across all pass directions.`,
+    liveFail: "NASA's catalog is not reachable from here: showing illustrative values.", fileOf: "File from",
+    study: (n) => `Study region · the ${n} NISAR frames that pass over Paiaguás`, crop: "Crop analysed in detail", cropB: "13 × 13 km · every file since launch",
+    pKick: "DEMARCATED AREA · FULL ANALYSIS", pSub: "18.28° S · 56.87° W · 13 × 13 km · 4 pass directions · 27 passes from Jun 21 to Nov 5, 2026",
+    open: "Open the data and technical sheet", start: "Start", stop: "Stop", sameDay: "same day",
+    noScene: (l) => `No clear ${l.toLowerCase()} scene near this date`, waitPC: "Planetary Computer images: waiting for run_carrossel.py",
+    nisarLbl: (hh, tr, a) => `NISAR ${hh ? "HH" : "HV"} · track ${tr} ${a ? "asc." : "desc."}`,
+    layers: [["nat", "Natural colour"], ["fogo", "Fire"], ["radar", "C-band radar"], ["temp", "Temperature"]],
+    glossT: "GLOSSARY: WHAT EACH DATA LAYER MEANS", gTerm: "Term", gWhat: "What it is", gUse: "What we use it for",
+    of: "of", goTo: "Go to", prevS: "Previous", nextS: "Next",
+    cohKeep: ["track 31 · ascending", "track 132 · ascending", "track 10 · descending", "track 111 · unreliable"],
+    cohAxis: "height = % of the area that lost coherence (changed) between the two passes", cohNorm: "normal band: under 10% (ground did not move)",
+    cohTip: "without coherence", months: ["Jul", "Aug", "Sep", "Oct"], jun: "Jun", nov: "Nov",
+    mS: ["NDVI (Sentinel-2)", "Burn/drying % (Sentinel-2)", "Temperature °C (Landsat)", "VH dB (Sentinel-1)"], mLoss: "NISAR loses coherence" },
+  pt: { tag: "A VALSA DA SUPERFÍCIE, QUADRO A QUADRO", dAll: "Todos", dAsc: "Ascendente", dDesc: "Descendente", go: "Ir", search: "Buscar lugar ou lat, lon",
+    h1: "Cada quadro do NISAR, no planeta inteiro.", hint: "Arraste para girar, role para aproximar, clique em qualquer quadro para ver o primeiro e o último arquivo.",
+    stFrames: "quadros sobre terra", st12: "12 dias", st12b: "para repetir a passagem", stL: "banda L", stLb: "vê através de nuvem e de noite",
+    lgT: "Passagens por quadro", lgFew: "poucas", lgMany: "muitas", lgFull: "Área com análise completa",
+    demo: "PROTÓTIPO · quadros e datas ilustrativos. Na versão final vêm do catálogo da NASA (CMR).",
+    real: (n, d) => `Quadros reais do catálogo da NASA (CMR) · ${n} arquivos GCOV · ${d}`,
+    shallow: "COMPARAÇÃO RASA", frame: "Quadro", track: "pista", asc: "ascendente (≈ 5h30)", desc: "descendente (≈ 18h30)", fno: "quadro",
+    first: "Primeiro arquivo", last: "Último arquivo", passes: "Passagens GCOV", span: "Intervalo", days: "dias",
+    prev0: "Prévia do primeiro arquivo", prev1: "Prévia do último arquivo", noPrev: "Prévia sem acesso público",
+    realNote: "Dados reais do catálogo da NASA (CMR):", asking: "Consultando o catálogo da NASA (CMR) neste ponto…",
+    shallowNote: "Aqui só olhamos o primeiro e o último arquivo do quadro: as duas prévias (browse) que a NASA publica junto de cada produto e o resumo do catálogo. Serve para comparar lugares e escolher onde aprofundar.",
+    others: "OUTROS QUADROS NESTE PONTO", hasFull: "Este quadro tem análise completa: Paiaguás", ask: "Pedir análise completa deste quadro",
+    liveNone: "Catálogo da NASA consultado agora: o NISAR ainda não publicou nenhum GCOV deste ponto.",
+    liveOk: (n) => `Dados reais, consultados agora no catálogo da NASA (CMR): ${n} arquivos GCOV cobrem este ponto, somando todas as direções de passagem.`,
+    liveFail: "Sem acesso ao catálogo da NASA daqui: mostrando valores ilustrativos.", fileOf: "Arquivo de",
+    study: (n) => `Região estudada · ${n} quadros do NISAR que passam sobre o Paiaguás`, crop: "Recorte analisado em detalhe", cropB: "13 × 13 km · todos os arquivos desde o lançamento",
+    pKick: "ÁREA DEMARCADA · ANÁLISE COMPLETA", pSub: "18,28° S · 56,87° O · 13 × 13 km · 4 direções de passagem · 27 passagens de 21/06 a 05/11/2026",
+    open: "Abrir os dados e a ficha técnica", start: "Iniciar", stop: "Parar", sameDay: "mesmo dia",
+    noScene: (l) => `Sem cena limpa de ${l.toLowerCase()} perto desta data`, waitPC: "Imagens do Planetary Computer: aguardando o run_carrossel.py",
+    nisarLbl: (hh, tr, a) => `NISAR ${hh ? "HH" : "HV"} · pista ${tr} ${a ? "asc." : "desc."}`,
+    layers: [["nat", "Cor natural"], ["fogo", "Fogo"], ["radar", "Radar C"], ["temp", "Temperatura"]],
+    glossT: "GLOSSÁRIO: O QUE SIGNIFICA CADA DADO", gTerm: "Termo", gWhat: "O que é", gUse: "Para que usamos",
+    of: "de", goTo: "Ir para", prevS: "Anterior", nextS: "Próximo",
+    cohKeep: ["pista 31 · ascendente", "pista 132 · ascendente", "pista 10 · descendente", "pista 111 · não confiável"],
+    cohAxis: "altura = % da área que perdeu a coerência (mudou) entre as duas passagens", cohNorm: "faixa normal: menos de 10% (chão parado)",
+    cohTip: "sem coerência", months: ["jul", "ago", "set", "out"], jun: "jun", nov: "nov",
+    mS: ["NDVI (Sentinel-2)", "Queima/secagem % (Sentinel-2)", "Temperatura °C (Landsat)", "VH dB (Sentinel-1)"], mLoss: "NISAR perde coerência" } };
+const t = (k) => T[lang][k];
+const L2 = (o) => (o && typeof o === "object" ? o[lang] : o);
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fd = (s) => { const [y, m, d] = s.slice(0, 10).split("-"); return lang === "pt" ? `${d}/${m}/${y}` : `${MON[+m - 1]} ${+d}, ${y}`; };
+const nf = (v, n) => lang === "pt" ? v.toFixed(n).replace(".", ",") : v.toFixed(n);
+const loc = () => (lang === "pt" ? "pt-BR" : "en-US");
+
+// ---------------------------------------------------------------- globe
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
 const land = topojson.feature(WORLD, WORLD.objects.land), borders = topojson.mesh(WORLD, WORLD.objects.countries, (a, b) => a !== b);
-let frames = FRAMES.features, REAL = false; const P = { lon: -56.873, lat: -18.278 };
+let frames = FRAMES.features, REAL = false, QINFO = null; const P = { lon: -56.873, lat: -18.278 };
 const PG = ["031_A_169", "132_A_168", "010_D_098", "111_D_098"];
 const PCELL = { type: "Polygon", coordinates: [[[-56.933, -18.218], [-56.813, -18.218], [-56.813, -18.338], [-56.933, -18.338], [-56.933, -18.218]]] };
-document.getElementById("sF").textContent = frames.length.toLocaleString("pt-BR");
 let maxN = d3.max(frames, (f) => f.properties.n); let col = d3.scaleSequential([0, maxN], d3.interpolateRgbBasis(["#3A6FD0", "#5FB4F0", "#9FF0FF"]));
 let W, H, dpr, dir = "all", sel = null;
 const proj = d3.geoOrthographic().clipAngle(90).precision(0.3);
@@ -134,57 +198,70 @@ const RAD = Math.PI / 180, tex = { data: null, w: 0, h: 0 }; const off = documen
     tex.data = x.getImageData(0, 0, c.width, c.height).data; tex.w = c.width; tex.h = c.height; draw(); }; im.src = "terra.jpg"; }
 function drawEarth(fast) { const r = proj.scale(), [cx, cy] = proj.translate(); const s = fast ? 0.4 : Math.min(1.5, dpr);
   const x0 = Math.max(0, Math.floor(cx - r)), y0 = Math.max(0, Math.floor(cy - r)), x1 = Math.min(W, Math.ceil(cx + r)), y1 = Math.min(H, Math.ceil(cy + r));
-  const w = Math.max(1, Math.round((x1 - x0) * s)), h = Math.max(1, Math.round((y1 - y0) * s)); off.width = w; off.height = h; const im = octx.createImageData(w, h), d = im.data, T = tex.data, tw = tex.w, th = tex.h;
+  const w = Math.max(1, Math.round((x1 - x0) * s)), h = Math.max(1, Math.round((y1 - y0) * s)); off.width = w; off.height = h; const im = octx.createImageData(w, h), d = im.data, Tx = tex.data, tw = tex.w, th = tex.h;
   const [rl, rp] = proj.rotate(); const l0 = -rl * RAD, p0 = -rp * RAD, sp = Math.sin(p0), cp = Math.cos(p0);
   for (let j = 0; j < h; j++) { const yy = -((y0 + (j + 0.5) / s) - cy) / r; for (let i = 0; i < w; i++) { const xx = ((x0 + (i + 0.5) / s) - cx) / r; const rho2 = xx * xx + yy * yy; if (rho2 > 1) continue;
     const rho = Math.sqrt(rho2), c = Math.asin(rho), sc = Math.sin(c), cc = Math.cos(c); const lat = rho ? Math.asin(cc * sp + yy * sc * cp / rho) : p0; const lon = l0 + Math.atan2(xx * sc, rho * cc * cp - yy * sc * sp);
     const u = (((lon / RAD + 180) % 360) + 360) % 360 / 360, v = (90 - lat / RAD) / 180; const ti = ((Math.min(th - 1, (v * th) | 0)) * tw + Math.min(tw - 1, (u * tw) | 0)) * 4, o = (j * w + i) * 4;
-    const sh = 0.5 + 0.4 * cc; d[o] = T[ti] * sh; d[o + 1] = T[ti + 1] * sh; d[o + 2] = T[ti + 2] * sh; d[o + 3] = 255; } }
+    const sh = 0.5 + 0.4 * cc; d[o] = Tx[ti] * sh; d[o + 1] = Tx[ti + 1] * sh; d[o + 2] = Tx[ti + 2] * sh; d[o + 3] = 255; } }
   octx.putImageData(im, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(off, x0, y0, x1 - x0, y1 - y0); }
-const PT = { Brazil: "Brasil", Bolivia: "Bolívia", Paraguay: "Paraguai", Argentina: "Argentina", Uruguay: "Uruguai", Chile: "Chile", Peru: "Peru", Colombia: "Colômbia", Venezuela: "Venezuela", Ecuador: "Equador",
-  Guyana: "Guiana", Suriname: "Suriname", Mexico: "México", "United States of America": "Estados Unidos", Canada: "Canadá", Greenland: "Groenlândia", Spain: "Espanha", France: "França", Germany: "Alemanha", Italy: "Itália",
-  "United Kingdom": "Reino Unido", Portugal: "Portugal", Russia: "Rússia", China: "China", India: "Índia", Japan: "Japão", Australia: "Austrália", Antarctica: "Antártida", "South Africa": "África do Sul", Egypt: "Egito",
-  Algeria: "Argélia", Libya: "Líbia", Morocco: "Marrocos", Nigeria: "Nigéria", Angola: "Angola", Mozambique: "Moçambique", Kazakhstan: "Cazaquistão", Mongolia: "Mongólia", Indonesia: "Indonésia", Iran: "Irã", "Saudi Arabia": "Arábia Saudita",
-  "Dem. Rep. Congo": "R. D. do Congo", Ethiopia: "Etiópia", Sudan: "Sudão", Chad: "Chade", Niger: "Níger", Mali: "Mali", Namibia: "Namíbia", Turkey: "Turquia", Pakistan: "Paquistão", Afghanistan: "Afeganistão", "New Zealand": "Nova Zelândia", Cuba: "Cuba", "Fr. Guiana": "Guiana Francesa" };
-const countries = topojson.feature(WORLD, WORLD.objects.countries).features.map((f) => ({ n: PT[f.properties.name] || f.properties.name, c: d3.geoCentroid(f), a: d3.geoArea(f) }));
-const OCEANS = [["Oceano Atlântico", -30, -5], ["Oceano Atlântico", -40, 30], ["Oceano Pacífico", -120, -10], ["Oceano Pacífico", 170, 20], ["Oceano Índico", 80, -20], ["Oceano Austral", 0, -62], ["Oceano Ártico", 0, 84]];
-const PLACES = [["Pantanal", -57.2, -18.0, 3.5, "bio"], ["Amazônia", -62, -4.5, 2.2, "bio"], ["Cerrado", -48.5, -13.5, 3, "bio"], ["Caatinga", -40, -8, 3.5, "bio"], ["Mata Atlântica", -44.5, -21.5, 4, "bio"], ["Chaco", -61, -23, 3.5, "bio"],
-  ["Rio Paraguai", -57.75, -20.2, 6, "rio"], ["Rio Taquari", -56.3, -18.6, 8, "rio"], ["Rio Amazonas", -55, -2.2, 4, "rio"],
+
+// ---------------------------------------------------------------- names on the map
+const CPT = { Brazil: "Brasil", Bolivia: "Bolívia", Paraguay: "Paraguai", Uruguay: "Uruguai", Colombia: "Colômbia", Ecuador: "Equador", Guyana: "Guiana", Mexico: "México",
+  "United States of America": "Estados Unidos", Canada: "Canadá", Greenland: "Groenlândia", Spain: "Espanha", France: "França", Germany: "Alemanha", Italy: "Itália", "United Kingdom": "Reino Unido",
+  Russia: "Rússia", India: "Índia", Japan: "Japão", Australia: "Austrália", Antarctica: "Antártida", "South Africa": "África do Sul", Egypt: "Egito", Algeria: "Argélia", Libya: "Líbia", Morocco: "Marrocos",
+  Nigeria: "Nigéria", Mozambique: "Moçambique", Kazakhstan: "Cazaquistão", Mongolia: "Mongólia", Indonesia: "Indonésia", Iran: "Irã", "Saudi Arabia": "Arábia Saudita", "Dem. Rep. Congo": "R. D. do Congo",
+  Ethiopia: "Etiópia", Sudan: "Sudão", Chad: "Chade", Niger: "Níger", Namibia: "Namíbia", Turkey: "Turquia", Pakistan: "Paquistão", Afghanistan: "Afeganistão", "New Zealand": "Nova Zelândia", "Fr. Guiana": "Guiana Francesa" };
+const NAME_EN = { "United States of America": "United States", "Dem. Rep. Congo": "DR Congo", "Fr. Guiana": "French Guiana" };
+const countries = topojson.feature(WORLD, WORLD.objects.countries).features.map((f) => ({ n: { en: NAME_EN[f.properties.name] || f.properties.name, pt: CPT[f.properties.name] || f.properties.name }, c: d3.geoCentroid(f), a: d3.geoArea(f) }));
+const OCEANS = [[{ en: "Atlantic Ocean", pt: "Oceano Atlântico" }, -30, -5], [{ en: "Atlantic Ocean", pt: "Oceano Atlântico" }, -40, 30], [{ en: "Pacific Ocean", pt: "Oceano Pacífico" }, -120, -10],
+  [{ en: "Pacific Ocean", pt: "Oceano Pacífico" }, 170, 20], [{ en: "Indian Ocean", pt: "Oceano Índico" }, 80, -20], [{ en: "Southern Ocean", pt: "Oceano Austral" }, 0, -62], [{ en: "Arctic Ocean", pt: "Oceano Ártico" }, 0, 84]];
+// [name, lon, lat, min zoom, kind] — kind: bio (biome), rio (river), cap (capital), city
+const PLACES = [[{ en: "Pantanal", pt: "Pantanal" }, -57.2, -18.0, 3.5, "bio"], [{ en: "Amazon", pt: "Amazônia" }, -62, -4.5, 2.2, "bio"], [{ en: "Cerrado", pt: "Cerrado" }, -48.5, -13.5, 3, "bio"],
+  [{ en: "Caatinga", pt: "Caatinga" }, -40, -8, 3.5, "bio"], [{ en: "Atlantic Forest", pt: "Mata Atlântica" }, -44.5, -21.5, 4, "bio"], [{ en: "Gran Chaco", pt: "Chaco" }, -61, -23, 3.5, "bio"],
+  [{ en: "Paraguay River", pt: "Rio Paraguai" }, -57.75, -20.2, 6, "rio"], [{ en: "Taquari River", pt: "Rio Taquari" }, -56.3, -18.6, 8, "rio"], [{ en: "Amazon River", pt: "Rio Amazonas" }, -55, -2.2, 4, "rio"],
+  ["Brasília", -47.88, -15.79, 3.5, "cap"], [{ en: "Asunción", pt: "Assunção" }, -57.58, -25.26, 4.5, "cap"], ["La Paz", -68.15, -16.5, 4.5, "cap"], ["Buenos Aires", -58.38, -34.6, 4, "cap"], ["Lima", -77.04, -12.05, 4, "cap"], ["Bogotá", -74.07, 4.71, 4, "cap"],
   ["Corumbá", -57.65, -19.01, 7], ["Campo Grande", -54.62, -20.47, 5], ["Cuiabá", -56.1, -15.6, 5], ["Coxim", -54.76, -18.5, 8], ["Aquidauana", -55.79, -20.47, 8], ["Poconé", -56.62, -16.26, 9], ["Miranda", -56.38, -20.24, 9],
-  ["Manaus", -60.02, -3.1, 4], ["Brasília", -47.88, -15.79, 4], ["São Paulo", -46.63, -23.55, 4], ["Rio de Janeiro", -43.2, -22.9, 4], ["Belém", -48.5, -1.45, 4], ["Palmas", -48.33, -10.18, 5], ["Porto Alegre", -51.23, -30.03, 4],
-  ["Salvador", -38.5, -12.97, 4], ["Fortaleza", -38.54, -3.72, 4], ["Santa Cruz de la Sierra", -63.18, -17.78, 5], ["Assunção", -57.58, -25.26, 5], ["Buenos Aires", -58.38, -34.6, 4], ["Lima", -77.04, -12.05, 4], ["Bogotá", -74.07, 4.71, 4]];
-function label(t, x, y, c, size, align, weight) { ctx.font = `${weight || 600} ${size}px "Fira Sans", system-ui, sans-serif`; ctx.textAlign = align || "center"; ctx.lineJoin = "round";
-  ctx.lineWidth = 3.5; ctx.strokeStyle = "rgba(2,6,15,0.85)"; ctx.strokeText(t, x, y); ctx.fillStyle = c; ctx.fillText(t, x, y); }
+  ["Manaus", -60.02, -3.1, 4], ["São Paulo", -46.63, -23.55, 4], ["Rio de Janeiro", -43.2, -22.9, 4], ["Belém", -48.5, -1.45, 4], ["Palmas", -48.33, -10.18, 5], ["Porto Alegre", -51.23, -30.03, 4],
+  ["Salvador", -38.5, -12.97, 4], ["Fortaleza", -38.54, -3.72, 4], ["Santa Cruz de la Sierra", -63.18, -17.78, 5]];
+const STY = { // colours tuned for a dark satellite basemap: warm for countries, cool for water, green for biomes, white for towns
+  country: { c: "rgba(255,226,160,0.95)", w: 700, sp: 1.2 }, ocean: { c: "rgba(140,200,255,0.75)", w: 400, sp: 2, it: true },
+  bio: { c: "#A8F0B8", w: 700, sp: 2.2 }, rio: { c: "#8FD3FF", w: 500, sp: 0.4, it: true }, cap: { c: "#FFFFFF", w: 700, sp: 0.2 }, city: { c: "#EEF3FF", w: 500, sp: 0.2 } };
+function label(txt, x, y, c, size, align, weight, sp, it) { ctx.save(); ctx.font = `${it ? "italic " : ""}${weight || 600} ${size}px "Fira Sans", system-ui, sans-serif`; ctx.textAlign = align || "center"; ctx.textBaseline = "middle";
+  if ("letterSpacing" in ctx) ctx.letterSpacing = `${sp || 0}px`; ctx.lineJoin = "round";
+  ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 4; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(4,10,24,0.78)"; ctx.strokeText(txt, x, y); ctx.shadowBlur = 0; ctx.fillStyle = c; ctx.fillText(txt, x, y); ctx.restore(); }
+function textW(txt, size, weight, sp, it) { ctx.save(); ctx.font = `${it ? "italic " : ""}${weight} ${size}px "Fira Sans", system-ui, sans-serif`; if ("letterSpacing" in ctx) ctx.letterSpacing = `${sp || 0}px`; const w = ctx.measureText(txt).width; ctx.restore(); return w; }
+function drawLabels(k, fast) { const [cx, cy] = proj.translate(), ctr = proj.invert([cx, cy]); const boxes = [];
+  const free = (x, y, w, h) => { if (x < 0 || y < 56 || x + w > W || y + h > H) return false; if (boxes.some((b) => x < b[0] + b[2] && x + w > b[0] && y < b[1] + b[3] && y + h > b[1])) return false; boxes.push([x, y, w, h]); return true; };
+  const put = (txt, lon, lat, st, size, dot) => { if (d3.geoDistance([lon, lat], ctr) > Math.PI / 2 - 0.08) return; const p = proj([lon, lat]); if (!p) return;
+    const w = textW(txt, size, st.w, st.sp, st.it); const x = dot ? p[0] + 7 : p[0] - w / 2; if (!free(x - 3, p[1] - size / 2 - 2, w + 6, size + 4)) return;
+    if (dot) { ctx.beginPath(); ctx.arc(p[0], p[1], dot === "cap" ? 3.6 : 2.6, 0, 7); ctx.fillStyle = dot === "cap" ? "#FFFFFF" : "#DCE8FF"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = dot === "cap" ? "#0042A6" : "rgba(4,10,24,0.9)"; ctx.stroke(); }
+    label(txt, x + (dot ? 0 : w / 2), p[1], st.c, size, dot ? "left" : "center", st.w, st.sp, st.it); };
+  PLACES.filter((p) => p[4] === "cap" && k >= p[3]).forEach(([n, lo, la]) => put(L2(n), lo, la, STY.cap, 13, "cap"));
+  PLACES.filter((p) => !p[4] && k >= p[3]).forEach(([n, lo, la]) => put(L2(n), lo, la, STY.city, 12, "city"));
+  PLACES.filter((p) => (p[4] === "bio" || p[4] === "rio") && k >= p[3]).forEach(([n, lo, la, , kd]) => put(kd === "bio" ? L2(n).toUpperCase() : L2(n), lo, la, STY[kd], kd === "bio" ? 12 : 11.5));
+  const px = (proj.scale()) ** 2; countries.filter((c) => c.a * px > (fast ? 9000 : 4000)).sort((a, b) => b.a - a.a).slice(0, fast ? 25 : 120)
+    .forEach((c) => put(L2(c.n).toUpperCase(), c.c[0], c.c[1], STY.country, Math.max(10.5, Math.min(15, 8.5 + k))));
+  if (k < 3) OCEANS.forEach(([n, lo, la]) => put(L2(n), lo, la, STY.ocean, 12.5)); }
 function studyFrames() { return REAL ? frames.filter((f) => PG.includes(f.properties.id)) : frames.filter((f) => d3.geoContains(f, [P.lon, P.lat])); }
-function drawStudy(k) { const S = studyFrames(); if (!S.length) return;
+function drawStudy() { const S = studyFrames(); if (!S.length) return;
   S.forEach((f) => { ctx.beginPath(); path(f); ctx.fillStyle = "rgba(234,254,7,0.10)"; ctx.fill(); });
   S.forEach((f) => { ctx.beginPath(); path(f); ctx.setLineDash([9, 6]); ctx.lineWidth = 3; ctx.strokeStyle = "rgba(0,0,0,0.6)"; ctx.stroke(); ctx.lineDashOffset = 7; ctx.lineWidth = 2; ctx.strokeStyle = "#EAFE07"; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; });
   let top = null; S.forEach((f) => f.geometry.coordinates[0].forEach((c) => { const q = proj(c); if (q && (!top || q[1] < top[1])) top = q; }));
-  if (top) label(`Região estudada · ${S.length} quadros do NISAR que passam sobre o Paiaguás`, top[0], Math.max(64, top[1] - 10), "#EAFE07", 14, "center", 700);
+  if (top) label(t("study")(S.length), top[0], Math.max(70, top[1] - 12), "#EAFE07", 14, "center", 700, 0.3);
   const c = proj([P.lon, P.lat]); if (!c) return; const r = Math.max(14, 0.06 * proj.scale() * RAD);
   ctx.beginPath(); ctx.arc(c[0], c[1], r, 0, 7); ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.strokeStyle = "#FFFFFF"; ctx.stroke(); ctx.setLineDash([]);
   ctx.beginPath(); path(PCELL); ctx.fillStyle = "rgba(255,107,0,0.55)"; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FF6B00"; ctx.stroke();
   ctx.beginPath(); ctx.moveTo(c[0] - r * 0.7, c[1] + r * 0.7); ctx.lineTo(c[0] - r - 28, c[1] + r + 28); ctx.lineWidth = 1.5; ctx.strokeStyle = "#FFFFFF"; ctx.stroke();
-  label("Recorte analisado em detalhe", c[0] - r - 32, c[1] + r + 34, "#FFFFFF", 13, "right", 700);
-  label("13 × 13 km · todos os arquivos desde o lançamento", c[0] - r - 32, c[1] + r + 50, "#FFD27A", 11.5, "right", 500); }
-function drawLabels(k, fast) { const [cx, cy] = proj.translate(), ctr = proj.invert([cx, cy]); const boxes = []; const free = (x, y, w, h) => { if (x < 0 || y < 40 || x + w > W || y + h > H) return false; if (boxes.some((b) => x < b[0] + b[2] && x + w > b[0] && y < b[1] + b[3] && y + h > b[1])) return false; boxes.push([x, y, w, h]); return true; };
-  const put = (t, lon, lat, c, size, weight, dot) => { if (d3.geoDistance([lon, lat], ctr) > Math.PI / 2 - 0.08) return; const p = proj([lon, lat]); if (!p) return; ctx.font = `${weight || 600} ${size}px "Fira Sans", system-ui, sans-serif`;
-    const w = ctx.measureText(t).width; const x = dot ? p[0] + 6 : p[0] - w / 2, y = p[1] - size / 2 - (dot ? 0 : 0); if (!free(x - 2, y - 2, w + 4, size + 4)) return;
-    if (dot) { ctx.beginPath(); ctx.arc(p[0], p[1], 2.6, 0, 7); ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = "#02060F"; ctx.stroke(); }
-    label(t, dot ? p[0] + 6 : p[0], p[1] + size / 2 - 2, c, size, dot ? "left" : "center", weight); };
-  PLACES.filter((p) => !p[4] && k >= p[3]).forEach(([n, lo, la]) => put(n, lo, la, "#FFFFFF", 12, 600, true));
-  PLACES.filter((p) => p[4] && k >= p[3]).forEach(([n, lo, la, , t]) => put(t === "rio" ? n : n.toUpperCase(), lo, la, t === "rio" ? "#9FD8FF" : "#B9F5C8", t === "rio" ? 11 : 12, t === "rio" ? 500 : 700));
-  const px = (proj.scale()) ** 2; countries.filter((c) => c.a * px > (fast ? 9000 : 4000)).sort((a, b) => b.a - a.a).slice(0, fast ? 25 : 120)
-    .forEach((c) => put(k > 6 ? c.n.toUpperCase() : c.n, c.c[0], c.c[1], "#FFE9A8", Math.max(11, Math.min(16, 9 + k)), 700));
-  if (k < 3) OCEANS.forEach(([n, lo, la]) => put(n, lo, la, "rgba(159,216,255,0.85)", 12, 500)); }
+  label(t("crop"), c[0] - r - 32, c[1] + r + 32, "#FFFFFF", 13, "right", 700);
+  label(t("cropB"), c[0] - r - 32, c[1] + r + 48, "#FFD27A", 11.5, "right", 500); }
 function draw(fast) {
   ctx.fillStyle = "#02060F"; ctx.fillRect(0, 0, W, H);
   stars.forEach(([x, y, r]) => { ctx.fillStyle = `rgba(200,220,255,${0.25 + r / 3})`; ctx.fillRect(x * W, y * H, r, r); });
-  const [cx, cy] = proj.translate(), r = proj.scale();
   if (tex.data) drawEarth(fast); else { ctx.beginPath(); path({ type: "Sphere" }); ctx.fillStyle = "#0B2250"; ctx.fill(); }
   ctx.beginPath(); path(grat); ctx.strokeStyle = "rgba(127,232,255,0.06)"; ctx.lineWidth = 0.6; ctx.stroke();
   if (!tex.data) { ctx.beginPath(); path(land); ctx.fillStyle = "#1C3A2E"; ctx.fill(); }
-  ctx.beginPath(); path(borders); ctx.strokeStyle = "rgba(200,220,255,0.18)"; ctx.lineWidth = 0.5; ctx.stroke();
+  ctx.beginPath(); path(borders); ctx.strokeStyle = "rgba(255,236,190,0.28)"; ctx.lineWidth = 0.6; ctx.stroke();
   const k = proj.scale() / base; const step = fast && k < 2 ? 3 : 1;
   ctx.lineWidth = k > 4 ? 1.1 : 0.5;
   for (let i = 0; i < frames.length; i += step) { const f = frames[i]; if (!vis(f)) continue;
@@ -192,10 +269,9 @@ function draw(fast) {
   if (sel && sel !== PCELL) { ctx.beginPath(); path(sel); ctx.fillStyle = "rgba(255,255,255,0.10)"; ctx.fill();
     ctx.setLineDash([7, 5]); ctx.lineWidth = 2.6; ctx.strokeStyle = "rgba(0,0,0,0.7)"; ctx.stroke(); ctx.lineDashOffset = 6; ctx.strokeStyle = "#FFFFFF"; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0; }
   drawLabels(k, fast);
-  if (sel === PCELL) drawStudy(k);
+  if (sel === PCELL) drawStudy();
   ctx.beginPath(); path({ type: "Sphere" }); ctx.strokeStyle = "rgba(127,232,255,0.35)"; ctx.lineWidth = 1.2; ctx.stroke();
 }
-// rotate by drag, zoom by wheel / pinch
 let drag = null, moved = false;
 cv.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, r: proj.rotate() }; moved = false; cv.classList.add("drag"); cv.setPointerCapture(e.pointerId); });
 cv.addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
@@ -203,11 +279,10 @@ cv.addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clie
 cv.addEventListener("pointerup", (e) => { cv.classList.remove("drag"); const was = drag; drag = null; if (!moved && was) pick(e.clientX, e.clientY); else draw(); });
 cv.addEventListener("wheel", (e) => { e.preventDefault(); proj._k = Math.max(0.8, Math.min(60, proj._k * Math.exp(-e.deltaY * 0.0015))); proj.scale(base * proj._k); draw(true); clearTimeout(cv._t); cv._t = setTimeout(() => draw(), 120); }, { passive: false });
 function fly(lon, lat, k) { const r0 = proj.rotate(), k0 = proj._k; const ri = d3.interpolate(r0, [-lon, -lat]), ki = d3.interpolateNumber(k0, k);
-  const t0 = performance.now(); const tick = (now) => { const t = Math.min(1, (now - t0) / 1100), e = d3.easeCubicInOut(t); proj.rotate(ri(e)); proj._k = ki(e); proj.scale(base * proj._k); draw(t < 1); if (t < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
-const fd = (s) => s.split("-").reverse().join("/");
+  const t0 = performance.now(); const tick = (now) => { const tt = Math.min(1, (now - t0) / 1100), e = d3.easeCubicInOut(tt); proj.rotate(ri(e)); proj._k = ki(e); proj.scale(base * proj._k); draw(tt < 1); if (tt < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
 const gid = (p) => `${String(p.t).padStart(3, "0")}_${p.d}_${String(p.f).padStart(3, "0")}`;
-const gname = (p) => `pista ${p.t} · ${p.d === "A" ? "ascendente (≈ 5h30)" : "descendente (≈ 18h30)"} · quadro ${p.f}`;
-let lastLL = null;
+const gname = (p) => `${t("track")} ${p.t} · ${p.d === "A" ? t("asc") : t("desc")} · ${t("fno")} ${p.f}`;
+let lastLL = null, view = null;
 function pick(x, y) {
   const ll = proj.invert([x, y]); if (!ll || d3.geoDistance(ll, proj.invert(proj.translate())) > Math.PI / 2) return;
   if (d3.geoContains(PCELL, ll) || d3.geoDistance(ll, [P.lon, P.lat]) < 0.004 * 60 / proj._k) { showP(); return; }
@@ -215,70 +290,95 @@ function pick(x, y) {
   showF(hits[0], hits.slice(1));
 }
 const panel = document.getElementById("panel"), pb = document.getElementById("pbody");
-function closeP() { stopV(); panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
+function closeP() { stopV(); view = null; panel.classList.remove("on", "wide"); document.body.classList.remove("paneled"); sel = null; draw(); }
 function openP() { const k = REAL ? 9 : 11; fly(P.lon + (W > 900 ? 300 / (base * k) / RAD : 0), P.lat + (W > 900 ? 0 : -140 / (base * k) / RAD), k); setTimeout(showP, 1150); }
 document.getElementById("close").onclick = closeP;
-function showF(f, others) { stopV(); panel.classList.remove("wide"); sel = f; const p = f.properties; draw();
+const thumb = (u, d, label, i) => `<div class="thumb" id="b${i}">${u ? `<img src="${u}" alt="NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('${t("noPrev")}'))">` : `${label}<br>(${fd(d)})`}</div>`;
+function showF(f, others, noLive) { stopV(); view = ["F", f, others]; panel.classList.remove("wide"); sel = f; const p = f.properties; draw();
   const days = (Date.parse(p.p1) - Date.parse(p.p0)) / 864e5;
-  pb.innerHTML = `<div class="k">COMPARAÇÃO RASA</div><h2>Quadro ${gid(p)}</h2><div class="note">${gname(p)}</div>
-  <div class="grid2"><div class="cell"><div class="l">Primeiro arquivo</div><div class="v">${fd(p.p0)}</div></div><div class="cell"><div class="l">Último arquivo</div><div class="v">${fd(p.p1)}</div></div>
-  <div class="cell"><div class="l">Passagens GCOV</div><div class="v">${p.n}</div></div><div class="cell"><div class="l">Intervalo</div><div class="v">${Math.round(days)} dias</div></div></div>
-  <div class="grid2">${[[p.b0, p.p0, "primeiro"], [p.b1, p.p1, "último"]].map(([u, d, w], i) => `<div class="thumb" id="b${i}">${u ? `<img src="${u}" alt="Prévia NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('Prévia sem acesso público'))">` : `Prévia do ${w} arquivo<br>(${fd(d)})`}</div>`).join("")}</div>
-  ${p.real ? `<div class="note" style="color:#8FD9A8">Dados reais do catálogo da NASA (CMR): ${p.g0 ? p.g0.slice(0, 26) + "…" : ""}</div>` : `<div class="note" id="live" style="color:#FFD27A">Consultando o catálogo da NASA (CMR) neste ponto…</div>`}
-  <p class="note">Aqui só olhamos o primeiro e o último arquivo do quadro: as duas prévias (browse) que a NASA publica junto de cada produto e o resumo do catálogo. Serve para comparar lugares e escolher onde aprofundar.</p>
-  ${others.length ? `<div class="k">OUTROS QUADROS NESTE PONTO</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} passagens</button>`).join("")}</div>` : ""}
-  ${(REAL ? PG.includes(p.id) : d3.geoContains(f, [P.lon, P.lat])) ? `<button type="button" class="btn solid" id="toP">Este quadro tem análise completa: Paiaguás</button>` : `<a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Análise completa: quadro " + gid(p))}" target="_blank" rel="noopener">Pedir análise completa deste quadro</a>`}`;
+  pb.innerHTML = `<div class="k">${t("shallow")}</div><h2>${t("frame")} ${gid(p)}</h2><div class="note">${gname(p)}</div>
+  <div class="grid2"><div class="cell"><div class="l">${t("first")}</div><div class="v">${fd(p.p0)}</div></div><div class="cell"><div class="l">${t("last")}</div><div class="v">${fd(p.p1)}</div></div>
+  <div class="cell"><div class="l">${t("passes")}</div><div class="v">${p.n}</div></div><div class="cell"><div class="l">${t("span")}</div><div class="v">${Math.round(days)} ${t("days")}</div></div></div>
+  <div class="grid2">${thumb(p.b0, p.p0, t("prev0"), 0)}${thumb(p.b1, p.p1, t("prev1"), 1)}</div>
+  ${p.real ? `<div class="note" style="color:#8FD9A8">${t("realNote")} ${p.g0 ? p.g0.slice(0, 26) + "…" : ""}</div>` : `<div class="note" id="live" style="color:#FFD27A">${t("asking")}</div>`}
+  <p class="note">${t("shallowNote")}</p>
+  ${others.length ? `<div class="k">${t("others")}</div><div class="list">${others.map((o, i) => `<button data-o="${i}">${gid(o.properties)} · ${o.properties.n} ${lang === "pt" ? "passagens" : "passes"}</button>`).join("")}</div>` : ""}
+  ${(REAL ? PG.includes(p.id) : d3.geoContains(f, [P.lon, P.lat])) ? `<button type="button" class="btn solid" id="toP">${t("hasFull")}</button>` : `<a class="btn" href="https://github.com/7Kayke/NISAR-Anomaly-Watch/issues/new?title=${encodeURIComponent("Full analysis: frame " + gid(p))}" target="_blank" rel="noopener">${t("ask")}</a>`}`;
   const tp = document.getElementById("toP"); if (tp) tp.onclick = openP;
   pb.querySelectorAll("[data-o]").forEach((b) => b.onclick = () => showF(others[+b.dataset.o], [f, ...others.filter((_, j) => j !== +b.dataset.o)]));
-  panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL && !p.real) live(lastLL); }
-// Consulta ao vivo do catálogo da NASA: qualquer lugar, sem a equipe subir dados antes.
+  panel.classList.add("on"); document.body.classList.add("paneled"); if (lastLL && !p.real && !noLive) live(lastLL); }
+// live lookup in NASA's public catalog: any place, without the team uploading anything first
 const CMR = "https://cmr.earthdata.nasa.gov/search/granules.umm_json?provider=ASF&short_name=NISAR_L2_GCOV_PROVISIONAL_V1&short_name=NISAR_L2_GCOV_V1&short_name=NISAR_L2_GCOV_BETA_V1&page_size=1";
 const att = (u, n) => ((u.AdditionalAttributes || []).find((a) => a.Name === n) || {}).Values?.[0];
 const browse = (u) => ((u.RelatedUrls || []).find((r) => r.Type === "GET RELATED VISUALIZATION" && /\.(png|jpe?g)$/i.test(r.URL)) || {}).URL;
 async function live(ll) { const el = document.getElementById("live"); const q = `&point=${ll[0].toFixed(4)},${ll[1].toFixed(4)}`;
   try { const [a, b] = await Promise.all([fetch(CMR + q + "&sort_key=start_date"), fetch(CMR + q + "&sort_key=-start_date")].map((p) => p.then((r) => { if (!r.ok) throw 0; return r.json(); })));
     if (!document.getElementById("live")) return;
-    if (!a.hits) { el.textContent = "Catálogo da NASA consultado agora: o NISAR ainda não publicou nenhum GCOV deste ponto."; return; }
+    if (!a.hits) { el.textContent = t("liveNone"); return; }
     const u0 = a.items[0].umm, u1 = b.items[0].umm, d0 = u0.TemporalExtent.RangeDateTime.BeginningDateTime.slice(0, 10), d1 = u1.TemporalExtent.RangeDateTime.BeginningDateTime.slice(0, 10);
-    const cells = pb.querySelectorAll(".grid2 .cell .v"); cells[0].textContent = fd(d0); cells[1].textContent = fd(d1); cells[2].textContent = a.hits; cells[3].textContent = Math.round((Date.parse(d1) - Date.parse(d0)) / 864e5) + " dias";
-    pb.querySelector("h2").textContent = `Pista ${att(u1, "TRACK_NUMBER") ?? "?"} · quadro ${att(u1, "FRAME_NUMBER") ?? "?"}`;
-    [[u0, "b0", d0], [u1, "b1", d1]].forEach(([u, id, d]) => { const url = browse(u), box = document.getElementById(id); if (url) box.innerHTML = `<img src="${url}" alt="Prévia NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('Prévia sem acesso público'))">`; else box.innerHTML = `Arquivo de ${fd(d)}<br>${u.GranuleUR.slice(0, 60)}…`; });
-    el.style.color = "#8FD9A8"; el.textContent = `Dados reais, consultados agora no catálogo da NASA (CMR): ${a.hits} arquivos GCOV cobrem este ponto, somando todas as direções de passagem.`;
-  } catch (e) { if (el) el.textContent = "Sem acesso ao catálogo da NASA daqui: mostrando valores ilustrativos."; } }
+    const cells = pb.querySelectorAll(".grid2 .cell .v"); cells[0].textContent = fd(d0); cells[1].textContent = fd(d1); cells[2].textContent = a.hits; cells[3].textContent = Math.round((Date.parse(d1) - Date.parse(d0)) / 864e5) + " " + t("days");
+    pb.querySelector("h2").textContent = `${t("track")} ${att(u1, "TRACK_NUMBER") ?? "?"} · ${t("fno")} ${att(u1, "FRAME_NUMBER") ?? "?"}`;
+    [[u0, "b0", d0], [u1, "b1", d1]].forEach(([u, id, d]) => { const url = browse(u), box = document.getElementById(id); if (url) box.innerHTML = `<img src="${url}" alt="NISAR ${fd(d)}" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.replaceWith(document.createTextNode('${t("noPrev")}'))">`; else box.innerHTML = `${t("fileOf")} ${fd(d)}<br>${u.GranuleUR.slice(0, 60)}…`; });
+    el.style.color = "#8FD9A8"; el.textContent = t("liveOk")(a.hits);
+  } catch (e) { if (el) el.textContent = t("liveFail"); } }
+
+// ---------------------------------------------------------------- Paiaguás guide (slides)
 const SL = [
-  { t: "O período inteiro, passagem a passagem", video: true,
-    what: "Todas as passagens do NISAR sobre o Paiaguás, de 21/06 a 05/11/2026, lado a lado com a imagem do Planetary Computer mais próxima de cada data. Do inverno para a primavera, a planície seca: o verde some na falsa cor e o radar escurece.",
-    how: "<b>Como vimos:</b> à esquerda, o arquivo GCOV do NISAR (banda L, HV em dB) daquela passagem. À direita, Sentinel-2, Sentinel-1 ou Landsat do mesmo recorte, a no máximo 5 a 8 dias, com a mesma escala de cor em todas as datas. Escuro no radar = pouca vegetação em pé." },
-  { t: "Outros satélites, a mesma história", chart: true,
-    what: "De julho a outubro, o Sentinel-2 vê o verde cair (NDVI de 0,64 para 0,39) e a área marcada como queima ou secagem chegar a 16% em 22/10. O Landsat mede a superfície até 13 °C mais quente, e o Sentinel-1 (banda C) escurece em setembro, junto com a perda de coerência do NISAR.",
-    how: "<b>Como medimos:</b> NDVI e dNBR (queda do índice de queima desde a primeira cena limpa, limiar 0,27) nos pixels sem nuvem do Sentinel-2; temperatura da banda térmica do Landsat; mediana do VH do Sentinel-1. A secagem na foto é gradual e parte dela é da estação seca; o NISAR marca setembro como o salto. Não aparece cicatriz nítida de fogo nas imagens." },
-  { t: "Setembro: o chão mudou", img: "gunw_par_20260908_20260920_031A.png",
-    what: "Entre 08/09 e 20/09, 41% da área perdeu a coerência. No mesmo intervalo, as pistas 132 (03→15/09) e 10 (06→18/09) viram 24 a 25%. Fora de setembro, fica perto de 4%.",
-    how: "<b>Como vimos:</b> no produto GUNW, o NISAR compara a fase de duas passagens separadas por 12 dias. Se a superfície muda (fogo, água, pisoteio, corte), a fase deixa de bater e a coerência cai abaixo de 0,3. Três trilhos independentes, de lados e horários diferentes, confirmam o mesmo." },
-  { t: "O controle: um período calmo", img: "gunw_par_20260628_20260710_031A.png",
-    what: "Mesmo lugar e mesmo trilho, de 28/06 a 10/07: só 2% da área sem coerência. O chão ficou parado.",
-    how: "<b>Por que importa:</b> é a prova de que o vale de setembro não é ruído do instrumento. O método é o mesmo; só a superfície mudou." },
-  { t: "Como ler a coerência ao longo do ano", coh: true,
-    what: "Cada barra é uma comparação entre duas passagens do mesmo satélite, com 12 dias de intervalo: ela começa na primeira data e termina na segunda. Quanto mais alta a barra, maior a parte da área que mudou nesses 12 dias. Até agosto, as barras ficam rente ao chão (abaixo de 10%). Em setembro, três pistas diferentes sobem juntas para 24 a 41%.",
-    how: "<b>Por que três cores contam como prova:</b> cada cor é uma direção de passagem diferente (lado e horário diferentes). Se fosse defeito de uma passagem, só uma cor subiria. A pista 111 (cinza tracejado) fica de fora: ela marca perda até em junho, quando nada mudou, então não é confiável aqui." },
-  { t: "O que mudou, pixel a pixel", img: "031_A_169_classes.png",
-    what: "Cerca de 710 ha de alagamento passageiro, 496 ha de água permanente, 127 ha de queda abrupta da vegetação e 684 ha de ganho lento.",
-    how: "<b>Como classificamos:</b> normalizamos cada data pela mediana da área (tira o efeito do instrumento) e, em cada pixel, procuramos o degrau no HV entre antes e depois (teste t). O que não tem degrau vira ritmo sazonal ou tendência lenta." },
-  { t: "Quando mudou", img: "031_A_169_quando_mudou.png",
-    what: "A maior parte das quedas abruptas acontece em setembro e outubro, junto com o vale de coerência.",
-    how: "<b>Como lemos:</b> a cor de cada pixel é a data do degrau detectado. Duas medidas diferentes (brilho e coerência) apontam para o mesmo mês." },
-  { t: "Três tempos numa imagem", img: "031_A_169_rgb_temporal.png",
-    what: "Cinza é o que ficou igual. Cor é o que mudou, e a cor diz em que período.",
-    how: "<b>Como montamos:</b> vermelho = HV no início, verde = no meio, azul = no fim do período. Um truque clássico de radar para ver a mudança de uma vez só." },
-  { t: "O ritmo da área com a chuva", img: "031_A_169_curvas.png",
-    what: "O HH sobe e desce com a umidade do solo: correlação de 0,59 a 0,81 com o SME2, o produto de umidade do próprio NISAR.",
-    how: "<b>Como conferimos:</b> comparamos a curva do radar com a chuva diária, a umidade do NASA POWER e o SME2. É a valsa invisível: o solo respira com a chuva antes de qualquer mudança aparecer na foto." },
-  { t: "A história do ponto", img: "ponto_historia.png",
-    what: "No ponto acompanhado (círculo amarelo no mapa), o HV cai cerca de 0,7 dB entre 08/09 e 27/09, visto pelas pistas 31 e 132.",
-    how: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, desde o primeiro arquivo, com a chuva e a coerência de cada par.", gloss: true }
+  { t: { en: "The whole period, pass by pass", pt: "O período inteiro, passagem a passagem" }, video: true,
+    what: { en: "Every NISAR pass over Paiaguás, from Jun 21 to Nov 5, 2026, side by side with the closest Planetary Computer image for each date. From winter into spring the floodplain dries out: green fades in the false colour and the radar darkens.",
+            pt: "Todas as passagens do NISAR sobre o Paiaguás, de 21/06 a 05/11/2026, lado a lado com a imagem do Planetary Computer mais próxima de cada data. Do inverno para a primavera, a planície seca: o verde some na falsa cor e o radar escurece." },
+    how: { en: "<b>How we saw it:</b> on the left, NISAR's GCOV file (L-band, HV in dB) for that pass. On the right, Sentinel-2, Sentinel-1 or Landsat over the same crop, at most 5 to 8 days apart, with the same colour scale on every date. Dark radar = little standing vegetation.",
+           pt: "<b>Como vimos:</b> à esquerda, o arquivo GCOV do NISAR (banda L, HV em dB) daquela passagem. À direita, Sentinel-2, Sentinel-1 ou Landsat do mesmo recorte, a no máximo 5 a 8 dias, com a mesma escala de cor em todas as datas. Escuro no radar = pouca vegetação em pé." } },
+  { t: { en: "Other satellites, same story", pt: "Outros satélites, a mesma história" }, chart: true,
+    what: { en: "From July to October, Sentinel-2 sees green fall (NDVI from 0.64 to 0.39) and the area flagged as burnt or dried reach 16% on Oct 22. Landsat measures the surface up to 13 °C warmer, and Sentinel-1 (C-band) darkens in September, together with NISAR's coherence loss.",
+            pt: "De julho a outubro, o Sentinel-2 vê o verde cair (NDVI de 0,64 para 0,39) e a área marcada como queima ou secagem chegar a 16% em 22/10. O Landsat mede a superfície até 13 °C mais quente, e o Sentinel-1 (banda C) escurece em setembro, junto com a perda de coerência do NISAR." },
+    how: { en: "<b>How we measured:</b> NDVI and dNBR (drop of the burn index since the first clear scene, threshold 0.27) on Sentinel-2 cloud-free pixels; temperature from Landsat's thermal band; median Sentinel-1 VH. Drying in the photos is gradual and partly seasonal; NISAR flags September as the jump. No sharp fire scar shows in the images.",
+           pt: "<b>Como medimos:</b> NDVI e dNBR (queda do índice de queima desde a primeira cena limpa, limiar 0,27) nos pixels sem nuvem do Sentinel-2; temperatura da banda térmica do Landsat; mediana do VH do Sentinel-1. A secagem na foto é gradual e parte dela é da estação seca; o NISAR marca setembro como o salto. Não aparece cicatriz nítida de fogo nas imagens." } },
+  { t: { en: "September: the ground changed", pt: "Setembro: o chão mudou" }, img: "gunw_par_20260908_20260920_031A.png",
+    what: { en: "Between Sep 8 and Sep 20, 41% of the area lost coherence. In the same window, tracks 132 (Sep 3→15) and 10 (Sep 6→18) saw 24 to 25%. Outside September it stays near 4%.",
+            pt: "Entre 08/09 e 20/09, 41% da área perdeu a coerência. No mesmo intervalo, as pistas 132 (03→15/09) e 10 (06→18/09) viram 24 a 25%. Fora de setembro, fica perto de 4%." },
+    how: { en: "<b>How we saw it:</b> in the GUNW product, NISAR compares the phase of two passes 12 days apart. If the surface changes (fire, water, trampling, clearing), the phase stops matching and coherence drops below 0.3. Three independent tracks, from different sides and times of day, confirm the same.",
+           pt: "<b>Como vimos:</b> no produto GUNW, o NISAR compara a fase de duas passagens separadas por 12 dias. Se a superfície muda (fogo, água, pisoteio, corte), a fase deixa de bater e a coerência cai abaixo de 0,3. Três trilhos independentes, de lados e horários diferentes, confirmam o mesmo." } },
+  { t: { en: "The control: a calm period", pt: "O controle: um período calmo" }, img: "gunw_par_20260628_20260710_031A.png",
+    what: { en: "Same place, same track, Jun 28 to Jul 10: only 2% of the area without coherence. The ground stayed still.", pt: "Mesmo lugar e mesmo trilho, de 28/06 a 10/07: só 2% da área sem coerência. O chão ficou parado." },
+    how: { en: "<b>Why it matters:</b> it proves the September dip is not instrument noise. Same method; only the surface changed.", pt: "<b>Por que importa:</b> é a prova de que o vale de setembro não é ruído do instrumento. O método é o mesmo; só a superfície mudou." } },
+  { t: { en: "How to read coherence through the year", pt: "Como ler a coerência ao longo do ano" }, coh: true,
+    what: { en: "Each bar compares two passes of the same satellite, 12 days apart: it starts on the first date and ends on the second. The higher the bar, the larger the share of the area that changed in those 12 days. Until August the bars hug the floor (under 10%). In September, three different tracks rise together to 24–41%.",
+            pt: "Cada barra é uma comparação entre duas passagens do mesmo satélite, com 12 dias de intervalo: ela começa na primeira data e termina na segunda. Quanto mais alta a barra, maior a parte da área que mudou nesses 12 dias. Até agosto, as barras ficam rente ao chão (abaixo de 10%). Em setembro, três pistas diferentes sobem juntas para 24 a 41%." },
+    how: { en: "<b>Why three colours count as proof:</b> each colour is a different pass direction (different side and time). If it were a fault in one pass, only one colour would rise. Track 111 (dashed grey) is left out: it shows loss even in June, when nothing changed, so it is not reliable here.",
+           pt: "<b>Por que três cores contam como prova:</b> cada cor é uma direção de passagem diferente (lado e horário diferentes). Se fosse defeito de uma passagem, só uma cor subiria. A pista 111 (cinza tracejado) fica de fora: ela marca perda até em junho, quando nada mudou, então não é confiável aqui." } },
+  { t: { en: "What changed, pixel by pixel", pt: "O que mudou, pixel a pixel" }, img: "031_A_169_classes.png",
+    what: { en: "About 710 ha of short-lived flooding, 496 ha of permanent water, 127 ha of abrupt vegetation loss and 684 ha of slow gain.", pt: "Cerca de 710 ha de alagamento passageiro, 496 ha de água permanente, 127 ha de queda abrupta da vegetação e 684 ha de ganho lento." },
+    how: { en: "<b>How we classified:</b> we normalise each date by the area median (removes instrument effects) and, in each pixel, look for a step in HV between before and after (t-test). Anything without a step becomes seasonal rhythm or a slow trend.",
+           pt: "<b>Como classificamos:</b> normalizamos cada data pela mediana da área (tira o efeito do instrumento) e, em cada pixel, procuramos o degrau no HV entre antes e depois (teste t). O que não tem degrau vira ritmo sazonal ou tendência lenta." } },
+  { t: { en: "When it changed", pt: "Quando mudou" }, img: "031_A_169_quando_mudou.png",
+    what: { en: "Most abrupt drops happen in September and October, together with the coherence dip.", pt: "A maior parte das quedas abruptas acontece em setembro e outubro, junto com o vale de coerência." },
+    how: { en: "<b>How to read it:</b> each pixel's colour is the date of the detected step. Two different measurements (brightness and coherence) point to the same month.", pt: "<b>Como lemos:</b> a cor de cada pixel é a data do degrau detectado. Duas medidas diferentes (brilho e coerência) apontam para o mesmo mês." } },
+  { t: { en: "Three moments in one image", pt: "Três tempos numa imagem" }, img: "031_A_169_rgb_temporal.png",
+    what: { en: "Grey is what stayed the same. Colour is what changed, and the colour tells you when.", pt: "Cinza é o que ficou igual. Cor é o que mudou, e a cor diz em que período." },
+    how: { en: "<b>How we built it:</b> red = HV at the start, green = middle, blue = end of the period. A classic radar trick to see change at a glance.", pt: "<b>Como montamos:</b> vermelho = HV no início, verde = no meio, azul = no fim do período. Um truque clássico de radar para ver a mudança de uma vez só." } },
+  { t: { en: "The area's rhythm with the rain", pt: "O ritmo da área com a chuva" }, img: "031_A_169_curvas.png",
+    what: { en: "HH rises and falls with soil moisture: correlation of 0.59 to 0.81 with SME2, NISAR's own soil-moisture product.", pt: "O HH sobe e desce com a umidade do solo: correlação de 0,59 a 0,81 com o SME2, o produto de umidade do próprio NISAR." },
+    how: { en: "<b>How we checked:</b> we compared the radar curve with daily rain, NASA POWER soil moisture and SME2. This is the invisible waltz: the soil breathes with the rain before any change shows up in a photo.",
+           pt: "<b>Como conferimos:</b> comparamos a curva do radar com a chuva diária, a umidade do NASA POWER e o SME2. É a valsa invisível: o solo respira com a chuva antes de qualquer mudança aparecer na foto." } },
+  { t: { en: "The story of the point", pt: "A história do ponto" }, img: "ponto_historia.png", gloss: true,
+    what: { en: "At the tracked point, HV drops about 0.7 dB between Sep 8 and Sep 27, seen by tracks 31 and 132.", pt: "No ponto acompanhado, o HV cai cerca de 0,7 dB entre 08/09 e 27/09, visto pelas pistas 31 e 132." },
+    how: { en: "<b>How to read it:</b> every pass direction over the same pixel since the first file, with rain and the coherence of each pair.", pt: "<b>Como lemos:</b> todas as direções de passagem no mesmo pixel, desde o primeiro arquivo, com a chuva e a coerência de cada par." } }
 ];
+const GL = [
+  ["HH", { en: "Radar sent and received horizontally. Reacts to soil and water: rises with wet soil, drops sharply over still water (a mirror).", pt: "Radar que sai e volta na horizontal. Reage ao solo e à água: sobe com solo úmido e cai muito em água parada (espelho)." }, { en: "Moisture and flooding", pt: "Umidade e alagamento" }],
+  ["HV", { en: "Sent horizontally, received vertically. Only happens when the wave scatters in branches and leaves: the gauge of standing vegetation.", pt: "Sai na horizontal e volta na vertical. Só acontece quando a onda se espalha em galhos e folhas: é o termômetro da vegetação em pé." }, { en: "Vegetation, burning, clearing", pt: "Vegetação, queimada, desmate" }],
+  [{ en: "dB (decibel)", pt: "dB (decibel)" }, { en: "Scale of radar brightness. Closer to 0 = brighter; −25 dB = almost nothing came back. A 3 dB drop is half the signal.", pt: "Escala do brilho do radar. Mais perto de 0 = mais brilho; −25 dB = quase nada voltou. Uma queda de 3 dB é metade do sinal." }, { en: "Size of the change", pt: "Tamanho da mudança" }],
+  [{ en: "Coherence", pt: "Coerência" }, { en: "From 0 to 1: how well two passes 12 days apart “match” in wave phase. Near 1 = same ground; below 0.3 = something moved.", pt: "De 0 a 1: o quanto duas passagens com 12 dias de intervalo “batem” na fase da onda. Perto de 1 = chão igual; abaixo de 0,3 = algo mexeu." }, { en: "Changes a photo cannot show", pt: "Mudanças que a foto não mostra" }],
+  [{ en: "L-band", pt: "Banda L" }, { en: "NISAR's ~24 cm wave. Goes through clouds, smoke and canopy, day and night.", pt: "Onda de ~24 cm do NISAR. Atravessa nuvem, fumaça e copas, de dia e de noite." }, { en: "Seeing under clouds and inside forest", pt: "Ver sob nuvem e dentro da mata" }],
+  [{ en: "Track and direction", pt: "Pista e direção" }, { en: "The satellite's path. Ascending passes ~5:30 am, descending ~6:30 pm, looking from opposite sides.", pt: "O caminho do satélite. Ascendente passa ~5h30, descendente ~18h30, olhando de lados opostos." }, { en: "Independent confirmation", pt: "Confirmação independente" }],
+  ["GCOV", { en: "NISAR product with HH and HV brightness on a map grid.", pt: "Produto do NISAR com o brilho HH e HV em grade de mapa." }, { en: "Vegetation and water maps", pt: "Mapas de vegetação e água" }],
+  ["GUNW", { en: "Product comparing two passes: coherence and displacement in centimetres.", pt: "Produto que compara duas passagens: coerência e deslocamento em centímetros." }, { en: "Coherence loss, motion", pt: "Perda de coerência, movimento" }],
+  ["SME2", { en: "Soil moisture estimated by NISAR (m³/m³), at 200 m.", pt: "Umidade do solo estimada pelo NISAR (m³/m³), em 200 m." }, { en: "The “invisible waltz” of moisture", pt: "A “valsa invisível” da umidade" }],
+  ["NDVI / dNBR", { en: "Indices from Sentinel-2 photos: vegetation greenness and burn mark.", pt: "Índices das fotos do Sentinel-2: verde da vegetação e marca de queima." }, { en: "Cross-check with optical", pt: "Conferência com o óptico" }]];
 const GEOS = ["031_A_169", "132_A_168", "010_D_098", "111_D_098"];
-const PCL = [["nat", "Cor natural", "s2", "natural"], ["fogo", "Fogo", "s2", "queimada"], ["radar", "Radar C", "s1", "radar"], ["temp", "Temperatura", "landsat", "temperatura"]];
+const PCL = [["nat", "s2", "natural"], ["fogo", "s2", "queimada"], ["radar", "s1", "radar"], ["temp", "landsat", "temperatura"]];
+const layerName = (k) => t("layers").find((x) => x[0] === k)[1];
 const V = { g: {}, frames: [], car: null, k: 0, timer: null, layer: "nat" };
 async function u8(url) { const bmp = await createImageBitmap(await (await fetch(url)).blob(), { colorSpaceConversion: "none", premultiplyAlpha: "none" });
   const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height; const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bmp, 0, 0);
@@ -286,66 +386,67 @@ async function u8(url) { const bmp = await createImageBitmap(await (await fetch(
 async function loadVideo() { if (V.frames.length) return;
   await Promise.all(GEOS.map(async (id) => { const meta = await (await fetch(`pg/${id}/app.json`)).json(); const [hv, hh] = await Promise.all([u8(`pg/${id}/hv_u8.png`), u8(`pg/${id}/hh_u8.png`)]); V.g[id] = { meta, hv, hh }; }));
   try { const r = await fetch("pg/carrossel/carrossel.json"); if (r.ok) V.car = await r.json(); } catch (e) {}
-  const m = {}; GEOS.forEach((id) => { const G = V.g[id], [, H, W] = G.meta.forma, n = H * W; G.meta.datas.forEach((d, k) => {
+  const m = {}; GEOS.forEach((id) => { const G = V.g[id], [, Hh, Ww] = G.meta.forma, n = Hh * Ww; G.meta.datas.forEach((d, k) => {
     let hv = 0, hh = 0, s = 0; for (let j = 0; j < n; j += 53) { s++; if (G.hv[k * n + j]) hv++; if (G.hh[k * n + j]) hh++; }
     const cov = Math.max(hv, hh) / s; if (cov < 0.3) return; const score = cov + (hv / s > 0.3 ? 1 : 0);
     if (!m[d] || score > m[d].score) m[d] = { d, id, k, score }; }); });
   V.frames = Object.values(m).sort((a, b) => a.d < b.d ? -1 : 1);
   V.frames.forEach((f) => { f.pc = V.car ? V.car.datas.find((x) => x.data_nisar === f.d) : null; }); }
-function frame(i) { const cv = document.getElementById("vcv"); if (!cv || !V.frames.length) return; const f = V.frames[i], G = V.g[f.id]; const [, H, W] = G.meta.forma, n = H * W;
-  cv.width = W; cv.height = H; const ctx2 = cv.getContext("2d"); const im = ctx2.createImageData(W, H); const d = im.data;
+function frame(i) { const vc = document.getElementById("vcv"); if (!vc || !V.frames.length) return; const f = V.frames[i], G = V.g[f.id]; const [, Hh, Ww] = G.meta.forma, n = Hh * Ww;
+  vc.width = Ww; vc.height = Hh; const c2 = vc.getContext("2d"); const im = c2.createImageData(Ww, Hh); const d = im.data;
   let c = 0; for (let j = 0; j < n; j += 97) if (G.hv[f.k * n + j]) c++; const hh = c <= 5; const arr = hh ? G.hh : G.hv; const [lo, hi] = hh ? [-22, 0] : [-26, -8];
   for (let j = 0; j < n; j++) { const u = arr[f.k * n + j]; const o = j * 4; d[o + 3] = 255; if (!u) continue; const db = -30 + (u - 1) / 254 * 30; const v = Math.max(0, Math.min(255, (db - lo) / (hi - lo) * 255)); d[o] = d[o + 1] = d[o + 2] = v; }
-  ctx2.putImageData(im, 0, 0);
+  c2.putImageData(im, 0, 0);
   const [tr, dr] = f.id.split("_"); document.getElementById("vwhen").textContent = fd(f.d); document.getElementById("vprog").style.width = ((i + 1) / V.frames.length * 100) + "%";
-  document.getElementById("vl").textContent = `NISAR ${hh ? "HH" : "HV"} · pista ${+tr} ${dr === "A" ? "asc." : "desc."}`;
-  const L = PCL.find((x) => x[0] === V.layer); const s = f.pc && f.pc[L[2]]; const img = document.getElementById("vpc"), ph = document.getElementById("vph");
-  if (s && s.imagens && s.imagens[L[3]]) { img.src = "pg/carrossel/" + s.imagens[L[3]]; img.style.filter = L[0] === "nat" ? "brightness(1.8) contrast(1.1)" : ""; img.hidden = false; ph.hidden = true;
-    document.getElementById("vr").textContent = `${s.satelite} · ${fd(s.data)} · ${s.dias ? "±" + s.dias + " d" : "mesmo dia"}`; }
-  else { img.hidden = true; ph.hidden = false; ph.textContent = V.car ? `Sem cena limpa de ${L[1].toLowerCase()} perto desta data` : "Imagens do Planetary Computer: aguardando o run_carrossel.py"; document.getElementById("vr").textContent = "Planetary Computer"; } }
-async function drawCoh() { const el = document.getElementById("cchart"); if (!el) return; let P; try { P = await (await fetch("pg/gunw.json")).json(); } catch (e) { return; }
-  const keep = { "031_A_169": ["#EAFE07", "pista 31 · ascendente"], "132_A_168": ["#7FE8FF", "pista 132 · ascendente"], "010_D_098": ["#FF8A3D", "pista 10 · descendente"], "111_D_098": ["#8A94A8", "pista 111 · não confiável"] };
-  P = P.filter((p) => keep[p.geometria]); const W = 560, H = 250, L = 40, B = 34, T = 14, R = 10;
-  const t0 = Date.parse("2026-06-18"), t1 = Date.parse("2026-10-06"); const X = (d) => L + (Date.parse(d) - t0) / (t1 - t0) * (W - L - R), Y = (v) => T + (1 - v / 100) * (H - T - B);
-  const months = [["2026-07-01", "jul"], ["2026-08-01", "ago"], ["2026-09-01", "set"], ["2026-10-01", "out"]];
-  let g = `<svg viewBox="0 0 ${W} ${H + 62}" width="100%" role="img" aria-label="Porcentagem da área sem coerência em cada par de passagens">`;
-  g += `<rect x="${L}" y="${Y(10)}" width="${W - L - R}" height="${Y(0) - Y(10)}" fill="#2E7D4F" opacity=".25"/>`;
-  g += `<rect x="${X("2026-09-01")}" y="${T}" width="${X("2026-09-22") - X("2026-09-01")}" height="${H - T - B}" fill="#EAFE07" opacity=".08"/>`;
-  [0, 25, 50, 75, 100].forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ffffff" opacity=".08"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end" fill="#A9BCE0" font-size="10" font-family="Fira Code">${v}%</text>`; });
-  months.forEach(([d, n]) => { g += `<text x="${X(d)}" y="${H - B + 16}" fill="#A9BCE0" font-size="11" font-family="Fira Sans">${n}</text>`; });
-  g += `<text x="${L}" y="${H - 4}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">altura = % da área que perdeu a coerência (mudou) entre as duas passagens</text>`;
-  P.forEach((p) => { const [c] = keep[p.geometria], bad = p.geometria.startsWith("111"); const x1 = X(p.data1), x2 = X(p.data2), y = Y(p.area_coerencia_baixa_pct);
-    g += `<line x1="${x1}" x2="${x2}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${bad ? 2 : 4}" stroke-linecap="round" ${bad ? 'stroke-dasharray="4 4" opacity=".7"' : ""}><title>${fd(p.data1)} → ${fd(p.data2)} · ${keep[p.geometria][1]} · ${p.area_coerencia_baixa_pct.toFixed(0)}% sem coerência</title></line>`;
+  document.getElementById("vl").textContent = t("nisarLbl")(hh, +tr, dr === "A");
+  const Ly = PCL.find((x) => x[0] === V.layer); const s = f.pc && f.pc[Ly[1]]; const img = document.getElementById("vpc"), ph = document.getElementById("vph");
+  if (s && s.imagens && s.imagens[Ly[2]]) { img.src = "pg/carrossel/" + s.imagens[Ly[2]]; img.style.filter = Ly[0] === "nat" ? "brightness(1.8) contrast(1.1)" : ""; img.hidden = false; ph.hidden = true;
+    document.getElementById("vr").textContent = `${s.satelite} · ${fd(s.data)} · ${s.dias ? "±" + s.dias + " d" : t("sameDay")}`; }
+  else { img.hidden = true; ph.hidden = false; ph.textContent = V.car ? t("noScene")(layerName(V.layer)) : t("waitPC"); document.getElementById("vr").textContent = "Planetary Computer"; } }
+async function drawCoh() { const el = document.getElementById("cchart"); if (!el) return; let Pp; try { Pp = await (await fetch("pg/gunw.json")).json(); } catch (e) { return; }
+  const names = t("cohKeep"); const keep = { "031_A_169": ["#EAFE07", names[0]], "132_A_168": ["#7FE8FF", names[1]], "010_D_098": ["#FF8A3D", names[2]], "111_D_098": ["#8A94A8", names[3]] };
+  Pp = Pp.filter((p) => keep[p.geometria]); const Wc = 560, Hc = 250, Lc = 40, B = 34, Tc = 14, R = 10;
+  const t0 = Date.parse("2026-06-18"), t1 = Date.parse("2026-10-06"); const X = (d) => Lc + (Date.parse(d) - t0) / (t1 - t0) * (Wc - Lc - R), Y = (v) => Tc + (1 - v / 100) * (Hc - Tc - B);
+  const months = ["2026-07-01", "2026-08-01", "2026-09-01", "2026-10-01"].map((d, i) => [d, t("months")[i]]);
+  let g = `<svg viewBox="0 0 ${Wc} ${Hc + 62}" width="100%" role="img" aria-label="${t("cohAxis")}">`;
+  g += `<rect x="${Lc}" y="${Y(10)}" width="${Wc - Lc - R}" height="${Y(0) - Y(10)}" fill="#2E7D4F" opacity=".25"/>`;
+  g += `<rect x="${X("2026-09-01")}" y="${Tc}" width="${X("2026-09-22") - X("2026-09-01")}" height="${Hc - Tc - B}" fill="#EAFE07" opacity=".08"/>`;
+  [0, 25, 50, 75, 100].forEach((v) => { g += `<line x1="${Lc}" x2="${Wc - R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#ffffff" opacity=".08"/><text x="${Lc - 6}" y="${Y(v) + 4}" text-anchor="end" fill="#A9BCE0" font-size="10" font-family="Fira Code">${v}%</text>`; });
+  months.forEach(([d, n]) => { g += `<text x="${X(d)}" y="${Hc - B + 16}" fill="#A9BCE0" font-size="11" font-family="Fira Sans">${n}</text>`; });
+  g += `<text x="${Lc}" y="${Hc - 4}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">${t("cohAxis")}</text>`;
+  Pp.forEach((p) => { const [c] = keep[p.geometria], bad = p.geometria.startsWith("111"); const x1 = X(p.data1), x2 = X(p.data2), y = Y(p.area_coerencia_baixa_pct);
+    g += `<line x1="${x1}" x2="${x2}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="${bad ? 2 : 4}" stroke-linecap="round" ${bad ? 'stroke-dasharray="4 4" opacity=".7"' : ""}><title>${fd(p.data1)} → ${fd(p.data2)} · ${keep[p.geometria][1]} · ${p.area_coerencia_baixa_pct.toFixed(0)}% ${t("cohTip")}</title></line>`;
     const lx = p.geometria.startsWith("132") ? [x1 - 6, "end"] : p.geometria.startsWith("010") ? [x2 + 6, "start"] : [(x1 + x2) / 2, "middle"];
     if (!bad && p.area_coerencia_baixa_pct > 20) g += `<text x="${lx[0]}" y="${p.geometria.startsWith("031") ? y - 7 : y + 4}" text-anchor="${lx[1]}" fill="${c}" font-size="11" font-weight="700" font-family="Fira Code">${p.area_coerencia_baixa_pct.toFixed(0)}%</text>`; });
-  g += `<g transform="translate(${L},${H + 10})">` + Object.values(keep).map(([c, n], i) => `<g transform="translate(${(i % 2) * 250},${Math.floor(i / 2) * 16})"><line x1="0" x2="18" y1="0" y2="0" stroke="${c}" stroke-width="4" ${i === 3 ? 'stroke-dasharray="4 4"' : ""}/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${n}</text></g>`).join("") + `<g transform="translate(0,32)"><rect x="0" y="-6" width="18" height="10" fill="#2E7D4F" opacity=".6"/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">faixa normal: menos de 10% (chão parado)</text></g>` + "</g></svg>";
+  g += `<g transform="translate(${Lc},${Hc + 10})">` + Object.values(keep).map(([c, n], i) => `<g transform="translate(${(i % 2) * 250},${Math.floor(i / 2) * 16})"><line x1="0" x2="18" y1="0" y2="0" stroke="${c}" stroke-width="4" ${i === 3 ? 'stroke-dasharray="4 4"' : ""}/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${n}</text></g>`).join("") + `<g transform="translate(0,32)"><rect x="0" y="-6" width="18" height="10" fill="#2E7D4F" opacity=".6"/><text x="24" y="4" fill="#E8F0FF" font-size="11" font-family="Fira Sans">${t("cohNorm")}</text></g>` + "</g></svg>";
   el.innerHTML = g; }
 function drawChart() { const el = document.getElementById("mchart"); if (!el || !V.car) return;
-  const rows = V.car.datas; const S = [["NDVI (Sentinel-2)", (r) => r.s2?.ndvi_mediana, "#7CFC8A", 2], ["Queima/secagem % (Sentinel-2)", (r) => r.s2?.queimada_pct, "#FF8A3D", 1], ["Temperatura °C (Landsat)", (r) => r.landsat?.temperatura_mediana_c, "#FFD27A", 1], ["VH dB (Sentinel-1)", (r) => r.s1?.vh_mediana_db, "#9FC8FF", 1]];
-  const W = 540, h = 52, t0 = Date.parse(rows[0].data_nisar), t1 = Date.parse(rows.at(-1).data_nisar), X = (d) => 8 + (Date.parse(d) - t0) / (t1 - t0) * (W - 110);
+  const rows = V.car.datas; const nm = t("mS"); const S = [[nm[0], (r) => r.s2?.ndvi_mediana, "#7CFC8A", 2], [nm[1], (r) => r.s2?.queimada_pct, "#FF8A3D", 1], [nm[2], (r) => r.landsat?.temperatura_mediana_c, "#FFD27A", 1], [nm[3], (r) => r.s1?.vh_mediana_db, "#9FC8FF", 1]];
+  const Wc = 540, h = 52, t0 = Date.parse(rows[0].data_nisar), t1 = Date.parse(rows.at(-1).data_nisar), X = (d) => 8 + (Date.parse(d) - t0) / (t1 - t0) * (Wc - 110);
   const sx = X("2026-09-03"), ex = X("2026-09-20");
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${S.length * h + 22}" width="100%" role="img" aria-label="Índices do Planetary Computer ao longo do tempo">` +
-    `<rect x="${sx}" y="0" width="${ex - sx}" height="${S.length * h}" fill="#EAFE07" opacity=".14"/><text x="${sx + 2}" y="${S.length * h + 14}" fill="#EAFE07" font-size="10" font-family="Fira Code">NISAR perde coerência</text>` +
+  el.innerHTML = `<svg viewBox="0 0 ${Wc} ${S.length * h + 22}" width="100%" role="img" aria-label="Planetary Computer">` +
+    `<rect x="${sx}" y="0" width="${ex - sx}" height="${S.length * h}" fill="#EAFE07" opacity=".14"/><text x="${sx + 2}" y="${S.length * h + 14}" fill="#EAFE07" font-size="10" font-family="Fira Code">${t("mLoss")}</text>` +
     S.map(([n, f, c, dg], i) => { const pts = rows.map((r) => [r.data_nisar, f(r)]).filter((p) => p[1] != null); const vs = pts.map((p) => p[1]); const lo = Math.min(...vs), hi = Math.max(...vs);
       const Y = (v) => i * h + 8 + (1 - (v - lo) / (hi - lo || 1)) * (h - 22); const dpath = pts.map((p, j) => `${j ? "L" : "M"}${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join("");
       const last = pts.at(-1), first = pts[0];
       return `<text x="8" y="${i * h + 8}" fill="#A9BCE0" font-size="10.5" font-family="Fira Sans">${n}</text><path d="${dpath}" fill="none" stroke="${c}" stroke-width="2"/>` +
-        `<text x="${W - 96}" y="${Y(last[1]) + 4}" fill="${c}" font-size="11" font-family="Fira Code">${first[1].toFixed(dg)} → ${last[1].toFixed(dg)}</text>`; }).join("") +
-    `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">jun</text><text x="${W - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">nov</text></svg>`; }
-function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) b.textContent = "Iniciar"; }
-function startV() { const b = document.getElementById("vbtn"); b.textContent = "Parar"; V.timer = setInterval(() => { V.k = (V.k + 1) % V.frames.length; frame(V.k); }, 1100); }
-async function showP() { sel = PCELL; draw(); stopV(); panel.classList.add("wide");
-  pb.innerHTML = `<div class="k" style="color:var(--neon)">ÁREA DEMARCADA · ANÁLISE COMPLETA</div><h2>Paiaguás · Pantanal (MS)</h2>
-  <div class="note">18,28° S · 56,87° O · 13 × 13 km · 4 direções de passagem · 27 passagens de 21/06 a 05/11/2026</div>
-  <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} de ${SL.length}">
+        `<text x="${Wc - 96}" y="${Y(last[1]) + 4}" fill="${c}" font-size="11" font-family="Fira Code">${nf(first[1], dg)} → ${nf(last[1], dg)}</text>`; }).join("") +
+    `<text x="8" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">${t("jun")}</text><text x="${Wc - 110}" y="${S.length * h + 14}" fill="#A9BCE0" font-size="10" font-family="Fira Code">${t("nov")}</text></svg>`; }
+function stopV() { if (V.timer) { clearInterval(V.timer); V.timer = null; } const b = document.getElementById("vbtn"); if (b) b.textContent = t("start"); }
+function startV() { const b = document.getElementById("vbtn"); b.textContent = t("stop"); V.timer = setInterval(() => { V.k = (V.k + 1) % V.frames.length; frame(V.k); }, 1100); }
+const glossary = () => `<div class="k" style="margin-top:4px">${t("glossT")}</div><table class="gl"><thead><tr><th>${t("gTerm")}</th><th>${t("gWhat")}</th><th>${t("gUse")}</th></tr></thead><tbody>${GL.map(([a, b, c]) => `<tr><td><b>${L2(a)}</b></td><td>${L2(b)}</td><td>${L2(c)}</td></tr>`).join("")}</tbody></table>`;
+async function showP(at) { sel = PCELL; view = ["P"]; draw(); stopV(); panel.classList.add("wide");
+  pb.innerHTML = `<div class="k" style="color:var(--neon)">${t("pKick")}</div><h2>Paiaguás · Pantanal (MS)</h2>
+  <div class="note">${t("pSub")}</div>
+  <div class="car" id="car">${SL.map((x, i) => `<section class="slide" aria-label="${i + 1} ${t("of")} ${SL.length}">
     <div class="media">${x.coh ? `<div id="cchart" style="background:#050E26;padding:10px"></div>` : x.chart ? `<div id="mchart" style="background:#050E26;padding:10px"></div>` : x.video ? `<div class="duo"><figure><canvas id="vcv" aria-label="NISAR"></canvas><figcaption id="vl"></figcaption></figure><figure><img id="vpc" alt="Planetary Computer" hidden><div class="vph" id="vph"></div><figcaption id="vr"></figcaption></figure></div>
-      <div class="vbar"><button type="button" id="vbtn">Iniciar</button><span class="when" id="vwhen"></span><span class="prog"><i id="vprog"></i></span></div>
-      <div class="pcl" id="pcl">${PCL.map(([k, n]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${n}</button>`).join("")}</div>` : `<img src="pg/${x.img}" alt="${x.t}" loading="lazy">`}</div>
-    <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${x.t}</h3><p class="what">${x.what}</p><p class="how">${x.how}</p>${x.gloss ? `<div class="k" style="margin-top:4px">GLOSSÁRIO: O QUE SIGNIFICA CADA DADO</div><table class="gl"><thead><tr><th>Termo</th><th>O que é</th><th>Para que usamos</th></tr></thead><tbody><tr><td><b>HH</b></td><td>Radar que sai e volta na horizontal. Reage ao solo e à água: sobe com solo úmido e cai muito em água parada (espelho).</td><td>Umidade e alagamento</td></tr><tr><td><b>HV</b></td><td>Sai na horizontal e volta na vertical. Só acontece quando a onda se espalha em galhos e folhas: é o termômetro da vegetação em pé.</td><td>Vegetação, queimada, desmate</td></tr><tr><td><b>dB (decibel)</b></td><td>Escala do brilho do radar. Mais perto de 0 = mais brilho; −25 dB = quase nada voltou. Uma queda de 3 dB é metade do sinal.</td><td>Tamanho da mudança</td></tr><tr><td><b>Coerência</b></td><td>De 0 a 1: o quanto duas passagens com 12 dias de intervalo “batem” na fase da onda. Perto de 1 = chão igual; abaixo de 0,3 = algo mexeu.</td><td>Mudanças que a foto não mostra</td></tr><tr><td><b>Banda L</b></td><td>Onda de ~24 cm do NISAR. Atravessa nuvem, fumaça e copas, de dia e de noite.</td><td>Ver sob nuvem e dentro da mata</td></tr><tr><td><b>Pista e direção</b></td><td>O caminho do satélite. Ascendente passa ~5h30, descendente ~18h30, olhando de lados opostos.</td><td>Confirmação independente</td></tr><tr><td><b>GCOV</b></td><td>Produto do NISAR com o brilho HH e HV em grade de mapa.</td><td>Mapas de vegetação e água</td></tr><tr><td><b>GUNW</b></td><td>Produto que compara duas passagens: coerência e deslocamento em centímetros.</td><td>Perda de coerência, movimento</td></tr><tr><td><b>SME2</b></td><td>Umidade do solo estimada pelo NISAR (m³/m³), em 200 m.</td><td>A “valsa invisível” da umidade</td></tr><tr><td><b>NDVI / dNBR</b></td><td>Índices das fotos do Sentinel-2: verde da vegetação e marca de queima.</td><td>Conferência com o óptico</td></tr></tbody></table>` : ""}</section>`).join("")}</div>
-  <div class="nav"><button type="button" class="arr" id="cprev" aria-label="Anterior">◀</button><div class="dots" id="cdots">${SL.map((_, i) => `<button type="button" data-s="${i}" aria-label="Ir para ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="Próximo">▶</button></div>
-  <a class="btn" href="https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" target="_blank" rel="noopener" style="align-self:flex-start">Abrir os dados e a ficha técnica</a>`;
+      <div class="vbar"><button type="button" id="vbtn">${t("start")}</button><span class="when" id="vwhen"></span><span class="prog"><i id="vprog"></i></span></div>
+      <div class="pcl" id="pcl">${PCL.map(([k]) => `<button type="button" data-l="${k}" aria-pressed="${k === V.layer}">${layerName(k)}</button>`).join("")}</div>` : `<img src="pg/${x.img}" alt="${L2(x.t)}" loading="lazy">`}</div>
+    <div class="step">${String(i + 1).padStart(2, "0")} / ${String(SL.length).padStart(2, "0")}</div><h3>${L2(x.t)}</h3><p class="what">${L2(x.what)}</p><p class="how">${L2(x.how)}</p>${x.gloss ? glossary() : ""}</section>`).join("")}</div>
+  <div class="nav"><button type="button" class="arr" id="cprev" aria-label="${t("prevS")}">◀</button><div class="dots" id="cdots">${SL.map((_, i) => `<button type="button" data-s="${i}" aria-label="${t("goTo")} ${i + 1}"></button>`).join("")}</div><button type="button" class="arr" id="cnext" aria-label="${t("nextS")}">▶</button></div>
+  <a class="btn" href="https://claude.ai/artifact/LYa2M4VTvQk8EoPo6biHyR" target="_blank" rel="noopener" style="align-self:flex-start">${t("open")}</a>`;
   panel.classList.add("on"); document.body.classList.add("paneled");
-  const car = document.getElementById("car"); const go = (i) => car.scrollTo({ left: i * car.clientWidth, behavior: "smooth" });
+  const car = document.getElementById("car"); const go = (i, inst) => car.scrollTo({ left: i * car.clientWidth, behavior: inst ? "instant" : "smooth" });
   const sync = () => { const i = Math.round(car.scrollLeft / car.clientWidth); document.querySelectorAll("#cdots button").forEach((b, j) => b.setAttribute("aria-current", String(j === i)));
     document.getElementById("cprev").disabled = i === 0; document.getElementById("cnext").disabled = i === SL.length - 1; if (i !== 0) stopV(); car._i = i; };
   car.addEventListener("scroll", () => { clearTimeout(car._t); car._t = setTimeout(sync, 80); }); sync();
@@ -353,26 +454,38 @@ async function showP() { sel = PCELL; draw(); stopV(); panel.classList.add("wide
   document.querySelectorAll("#cdots button").forEach((b) => b.onclick = () => go(+b.dataset.s));
   document.getElementById("vbtn").onclick = () => V.timer ? stopV() : startV();
   document.querySelectorAll("#pcl [data-l]").forEach((b) => b.onclick = () => { V.layer = b.dataset.l; document.querySelectorAll("#pcl [data-l]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); frame(V.k); });
-  drawCoh(); await loadVideo(); V.k = Math.max(0, V.frames.findIndex((f) => f.pc && f.pc.s2)); frame(V.k); drawChart(); }
-const LUG = [["Paiaguás, Pantanal (MS)", -56.873, -18.278, 22], ["Pantanal", -57.0, -18.5, 5], ["Manaus (AM)", -60.02, -3.1, 6], ["Palmas (TO)", -48.33, -10.18, 6], ["Corumbá (MS)", -57.65, -19.01, 7], ["São Paulo (SP)", -46.63, -23.55, 6],
-  ["Brasília (DF)", -47.88, -15.79, 6], ["Belém (PA)", -48.5, -1.45, 6], ["Cuiabá (MT)", -56.1, -15.6, 6], ["Porto Alegre (RS)", -51.23, -30.03, 6], ["Amazônia", -62, -5, 3], ["Andes", -70, -20, 3], ["Califórnia", -119, 36.5, 4], ["Himalaia", 86.9, 28, 4], ["Groenlândia", -42, 72, 3]];
-document.getElementById("lugares").innerHTML = LUG.map((l) => `<option value="${l[0]}">`).join("");
+  if (at) { go(at, true); sync(); }
+  drawCoh(); const first = !V.frames.length; await loadVideo(); if (first) V.k = Math.max(0, V.frames.findIndex((f) => f.pc && f.pc.s2)); frame(V.k); drawChart(); }
+
+// ---------------------------------------------------------------- search, filters, language
+const LUG = [[{ en: "Paiaguás, Pantanal (MS)", pt: "Paiaguás, Pantanal (MS)" }, -56.873, -18.278, 22], [{ en: "Pantanal", pt: "Pantanal" }, -57.0, -18.5, 5], [{ en: "Manaus, Brazil", pt: "Manaus (AM)" }, -60.02, -3.1, 6],
+  [{ en: "Palmas, Brazil", pt: "Palmas (TO)" }, -48.33, -10.18, 6], [{ en: "Corumbá, Brazil", pt: "Corumbá (MS)" }, -57.65, -19.01, 7], [{ en: "São Paulo, Brazil", pt: "São Paulo (SP)" }, -46.63, -23.55, 6],
+  [{ en: "Brasília, Brazil", pt: "Brasília (DF)" }, -47.88, -15.79, 6], [{ en: "Belém, Brazil", pt: "Belém (PA)" }, -48.5, -1.45, 6], [{ en: "Cuiabá, Brazil", pt: "Cuiabá (MT)" }, -56.1, -15.6, 6],
+  [{ en: "Porto Alegre, Brazil", pt: "Porto Alegre (RS)" }, -51.23, -30.03, 6], [{ en: "Amazon", pt: "Amazônia" }, -62, -5, 3], [{ en: "Andes", pt: "Andes" }, -70, -20, 3], [{ en: "California", pt: "Califórnia" }, -119, 36.5, 4],
+  [{ en: "Himalayas", pt: "Himalaia" }, 86.9, 28, 4], [{ en: "Greenland", pt: "Groenlândia" }, -42, 72, 3]];
+const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 document.getElementById("busca").onsubmit = (e) => { e.preventDefault(); const q = document.getElementById("q").value.trim(); const m = q.match(/^(-?\d+(?:[.,]\d+)?)\s*[,; ]\s*(-?\d+(?:[.,]\d+)?)$/);
   if (m) { const lat = +m[1].replace(",", "."), lon = +m[2].replace(",", "."); fly(lon, lat, 7); return; }
-  const n = q.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const l = LUG.find((x) => x[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(n));
-  if (l) { fly(l[1], l[2], l[3]); if (l[0].startsWith("Paiagu")) { openP(); } } };
-if (0) document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => { const [lon, lat] = b.dataset.go.split(",").map(Number); fly(lon, lat, 7);
-  setTimeout(() => { const h = frames.filter((f) => vis(f) && d3.geoContains(f, [lon, lat])); if (h.length) showF(h[0], h.slice(1)); }, 1150); });
+  const n = norm(q); const l = LUG.find((x) => norm(x[0].en).includes(n) || norm(x[0].pt).includes(n));
+  if (l) { if (l[1] === P.lon) openP(); else fly(l[1], l[2], l[3]); } };
 document.querySelectorAll("[data-dir]").forEach((b) => b.onclick = () => { dir = b.dataset.dir; document.querySelectorAll("[data-dir]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); draw(); });
-proj.rotate([60, 15]); addEventListener("resize", size); size();
+function renderStatic() { document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+  document.querySelectorAll("[data-i]").forEach((el) => { el.textContent = t(el.dataset.i); });
+  document.getElementById("q").placeholder = t("search"); document.getElementById("lugares").innerHTML = LUG.map((l) => `<option value="${L2(l[0])}">`).join("");
+  document.getElementById("sF").textContent = frames.length.toLocaleString(loc());
+  const demo = document.getElementById("demo"); demo.textContent = QINFO ? t("real")(QINFO.arquivos.toLocaleString(loc()), QINFO.gerado) : t("demo");
+  document.getElementById("l-en").setAttribute("aria-pressed", String(lang === "en")); document.getElementById("l-pt").setAttribute("aria-pressed", String(lang === "pt")); }
+function setLang(l) { lang = l; try { localStorage.setItem("dl-globe-lang", l); } catch (e) {} renderStatic(); draw();
+  if (view && view[0] === "P") { const i = document.getElementById("car")?._i || 0; const playing = !!V.timer; showP(i).then(() => { if (playing) startV(); }); }
+  else if (view && view[0] === "F") showF(view[1], view[2], true); }
+document.getElementById("l-en").onclick = () => setLang("en"); document.getElementById("l-pt").onclick = () => setLang("pt");
+proj.rotate([60, 15]); addEventListener("resize", size); renderStatic(); size();
 fetch("quadros.json").then((r) => r.ok ? r.json() : null).then((Q) => { if (!Q || !Q.quadros || !Q.quadros.length) return;
   frames = Q.quadros.map((q) => { let ring = q.p.slice(); if (ring[0][0] !== ring.at(-1)[0] || ring[0][1] !== ring.at(-1)[1]) ring.push(ring[0]);
     const f = { type: "Feature", properties: { ...q, real: true }, geometry: { type: "Polygon", coordinates: [ring] } };
     if (d3.geoArea(f) > 2 * Math.PI) f.geometry.coordinates[0] = ring.slice().reverse(); return f; });
-  REAL = true; maxN = d3.max(frames, (f) => f.properties.n); col = d3.scaleSequential([0, maxN], d3.interpolateRgbBasis(["#3A6FD0", "#5FB4F0", "#9FF0FF"]));
-  document.getElementById("sF").textContent = frames.length.toLocaleString("pt-BR");
-  document.querySelector(".demo").textContent = `Quadros reais do catálogo da NASA (CMR) · ${Q.arquivos.toLocaleString("pt-BR")} arquivos GCOV · ${Q.gerado}`;
-  document.querySelector(".demo").style.color = "#8FD9A8"; document.querySelector(".demo").style.borderColor = "#2E7D4F"; draw(); }).catch(() => {});
+  REAL = true; QINFO = Q; maxN = d3.max(frames, (f) => f.properties.n); col = d3.scaleSequential([0, maxN], d3.interpolateRgbBasis(["#3A6FD0", "#5FB4F0", "#9FF0FF"]));
+  const demo = document.getElementById("demo"); demo.style.color = "#8FD9A8"; demo.style.borderColor = "#2E7D4F"; demo.style.background = "#06200FCC"; renderStatic(); draw(); }).catch(() => {});
 })();
 </script>
 </body>
