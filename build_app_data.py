@@ -15,6 +15,8 @@ import argparse
 import json
 import re
 import shutil
+
+import numpy as np
 from datetime import datetime
 from pathlib import Path
 
@@ -32,6 +34,18 @@ def _num(v):
         return None if v in (None, "", "None") else float(v)
     except (TypeError, ValueError):
         return None
+
+
+def clean(o):
+    """JSON válido para o navegador: NaN e infinito viram null."""
+    import math
+    if isinstance(o, dict):
+        return {k: clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [clean(v) for v in o]
+    if isinstance(o, float) and not math.isfinite(o):
+        return None
+    return o
 
 
 def fmt(v, n=1):
@@ -206,16 +220,22 @@ def build_point(folder, region_id):
            "fonte": "NISAR L2 GCOV, L2 GUNW, L3 SME2 (NASA/JPL, ASF DAAC); clima: NASA POWER"}
     dest = APP / region_id
     dest.mkdir(parents=True, exist_ok=True)
-    (dest / f"ponto_{pid}.json").write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")
+    (dest / f"ponto_{pid}.json").write_text(json.dumps(clean(out), ensure_ascii=False, allow_nan=False), encoding="utf-8")
     for extra in ("animacao_ponto.gif", "historia_do_ponto.png"):
         if (folder / extra).exists():
             shutil.copy(folder / extra, dest / f"{pid}_{extra}")
     return {"id": pid, "nome": f["nome"], "lat": f["ponto"]["lat"], "lon": f["ponto"]["lon"], "arquivo": f"{region_id}/ponto_{pid}.json"}
 
 
+def png_u8(a, path):
+    """Matriz uint8 como PNG em tons de cinza sem perda: o navegador lê os valores de volta no canvas.
+    (Formato servido em qualquer lugar, ao contrário de .bin.) Pilhas (T, H, W) vão empilhadas na vertical."""
+    from PIL import Image
+    Image.fromarray(np.ascontiguousarray(a), mode="L").save(path, optimize=True)
+
+
 def build_area(folder, region_id):
     """Mapas de mudança da área: uma entrada por geometria (pista/direção/quadro), mais concordância e coerência."""
-    import numpy as np
     folder = Path(folder)
     dest = APP / region_id / "area"
     dest.mkdir(parents=True, exist_ok=True)
@@ -224,8 +244,11 @@ def build_area(folder, region_id):
         m = json.loads((sub / "app" / "app.json").read_text(encoding="utf-8"))
         gd = dest / sub.name
         gd.mkdir(exist_ok=True)
-        for fn in ("app.json", "hv_u8.bin", "hh_u8.bin", "mapas_u8.bin"):
-            shutil.copy(sub / "app" / fn, gd / fn)
+        shutil.copy(sub / "app" / "app.json", gd / "app.json")
+        T_, H_, W_ = m["forma"]
+        for fn, n in (("hv_u8", T_), ("hh_u8", T_), ("mapas_u8", 6)):
+            a = np.fromfile(sub / "app" / f"{fn}.bin", dtype="uint8").reshape(n * H_, W_)
+            png_u8(a, gd / f"{fn}.png")
         f = json.loads((sub / "ficha_tecnica.json").read_text(encoding="utf-8")) if (sub / "ficha_tecnica.json").exists() else {}
         res = f.get("resumo", {})
         geos.append({"id": sub.name, "pasta": f"{region_id}/area/{sub.name}", "passagens": len(m["datas"]),
@@ -243,7 +266,30 @@ def build_area(folder, region_id):
         out["clima"] = {"chuva_mm": {iso(k): v for k, v in c.get("PRECTOTCORR", {}).items()},
                         "umidade_solo": {iso(k): v for k, v in c.get("GWETTOP", {}).items()}}
     gw = folder / "gunw"
+    out["achados"] = []
     if (gw / "pares.json").exists():
+        import statistics
+        pares = [p for p in json.loads((gw / "pares.json").read_text(encoding="utf-8")) if "erro" not in p and p.get("coerencia_mediana") is not None]
+        med = {}
+        for p_ in pares:
+            med.setdefault(p_["geometria"].split("_")[0], []).append(p_["coerencia_mediana"])
+        ok_tracks = {k for k, v in med.items() if statistics.median(v) >= 0.4}
+        hit = [p_ for p_ in pares if p_["geometria"].split("_")[0] in ok_tracks and p_["area_coerencia_baixa_pct"] >= 20]
+        if len({p_["geometria"].split("_")[0] for p_ in hit}) >= 2:
+            d0 = min(p_["data1"] for p_ in hit); d1 = max(p_["data2"] for p_ in hit)
+            lo_, hi_ = min(p_["area_coerencia_baixa_pct"] for p_ in hit), max(p_["area_coerencia_baixa_pct"] for p_ in hit)
+            base = [p_["area_coerencia_baixa_pct"] for p_ in pares if p_["geometria"].split("_")[0] in ok_tracks and p_ not in hit]
+            b = statistics.median(base) if base else None
+            ntr = len({p_["geometria"].split("_")[0] for p_ in hit})
+            fa, fb = datetime.fromisoformat(d0), datetime.fromisoformat(d1)
+            out["achados"].append({"tipo": "chao", "valor": {"pt": f"{fmt(lo_, 0)}–{fmt(hi_, 0)}% da área", "en": f"{lo_:.0f}–{hi_:.0f}% of the area"},
+                "pt": f"Entre {fa:%d/%m} e {fb:%d/%m}, {fmt(lo_, 0)} a {fmt(hi_, 0)}% da área perdeu a coerência (abaixo de 0,3), contra {fmt(b, 0)}% nos outros pares. {ntr} trilhos independentes viram o mesmo: a superfície mudou de verdade (fogo, secagem ou manejo), mesmo onde a imagem parece igual.",
+                "en": f"Between {fa:%b %d} and {fb:%b %d}, {lo_:.0f} to {hi_:.0f}% of the area lost coherence (below 0.3), against {b:.0f}% in the other pairs. {ntr} independent tracks saw the same: the surface really changed (fire, drying or land management), even where the image looks the same."})
+        if med:
+            bad = sorted(k for k in med if k not in ok_tracks)
+            if bad:
+                out.setdefault("limitacoes", []).append({"pt": f"Trilho(s) {', '.join(bad)} com coerência baixa em quase todos os pares: fora das conclusões sobre o chão.",
+                                                         "en": f"Track(s) {', '.join(bad)} have low coherence in almost every pair: left out of ground conclusions."})
         out["gunw"] = [p for p in json.loads((gw / "pares.json").read_text(encoding="utf-8")) if "erro" not in p]
         tif = gw / "coerencia_media.tif"
         if tif.exists() and geos:
@@ -255,8 +301,8 @@ def build_area(folder, region_id):
             c = c[:H * st, :W * st].reshape(H, st, W, st)
             with np.errstate(invalid="ignore"):
                 c = np.nanmean(c, axis=(1, 3))
-            np.where(np.isfinite(c), np.clip(c * 254 + 1, 1, 255), 0).astype("uint8").tofile(dest / "coerencia_u8.bin")
-            out["coerencia"] = f"{region_id}/area/coerencia_u8.bin"
+            png_u8(np.where(np.isfinite(c), np.clip(c * 254 + 1, 1, 255), 0).astype("uint8"), dest / "coerencia_u8.png")
+            out["coerencia"] = f"{region_id}/area/coerencia_u8.png"
     return out
 
 
@@ -284,7 +330,7 @@ def main():
                                                   "area_ponto": caso.get("ponto"), "bbox": g.get("bbox"),
                                                   "periodo": g.get("periodo"), "malha": f"{a.id}/malha.geojson" if g else None, "pontos": pts,
                                                   "area": area}]
-    idx_f.write_text(json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
+    idx_f.write_text(json.dumps(clean(idx), ensure_ascii=False, indent=1, allow_nan=False), encoding="utf-8")
     print(f"ok: {a.id}, {len(pts)} ponto(s) -> {APP}")
 
 

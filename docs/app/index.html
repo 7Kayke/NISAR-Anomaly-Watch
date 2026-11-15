@@ -311,12 +311,18 @@ const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
 // ---------- data ----------
 async function getJSON(u) { const r = await fetch(u); if (!r.ok) throw new Error(u); return r.json(); }
-async function getBin(u) { const r = await fetch(u); if (!r.ok) throw new Error(u); return new Uint8Array(await r.arrayBuffer()); }
+async function getBin(u) {
+  // matrizes uint8 guardadas como PNG em tons de cinza (sem perda); lemos o canal vermelho de volta
+  const r = await fetch(u); if (!r.ok) throw new Error(u); const blob = await r.blob();
+  const bmp = await createImageBitmap(blob, { colorSpaceConversion: "none", premultiplyAlpha: "none" });
+  const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height; const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(bmp, 0, 0); const d = ctx.getImageData(0, 0, bmp.width, bmp.height).data; const out = new Uint8Array(bmp.width * bmp.height);
+  for (let i = 0; i < out.length; i++) out[i] = d[i * 4]; return out; }
 async function loadGeo(id) {
   S.geo = S.area.geometrias.find((g) => g.id === id) || S.area.geometrias[0];
   const base = "data/" + S.geo.pasta + "/";
   S.meta = await getJSON(base + "app.json");
-  [S.hv, S.hh, S.maps] = await Promise.all([getBin(base + "hv_u8.bin"), getBin(base + "hh_u8.bin"), getBin(base + "mapas_u8.bin")]);
+  [S.hv, S.hh, S.maps] = await Promise.all([getBin(base + "hv_u8.png"), getBin(base + "hh_u8.png"), getBin(base + "mapas_u8.png")]);
   const [T_] = S.meta.forma; S.t = T_ - 1; S.before = 0; S.after = T_ - 1;
   $("tslider").max = T_ - 1; $("tslider").value = S.t;
   const opts = S.meta.datas.map((d, i) => `<option value="${i}">${fdate(d)}</option>`).join("");
@@ -465,7 +471,8 @@ function renderWhat() {
   $("dropbars").innerHTML = drops.length ? drops.map(([k, v]) => { const [a, b] = k.split("→"); return `<div class="barrow"><span class="mono">${fdate(a)} → ${fdate(b)}</span><span class="b" style="width:${Math.max(2, 100 * v / mx)}%;background:#FF6B00"></span><span class="n">${fmt(v, 0)} ha</span></div>`; }).join("") : `<p class="muted">–</p>`;
   const why = [];
   drops.sort((a, b) => b[1] - a[1]).slice(0, 3).forEach(([k, v]) => { const [a, b] = k.split("→"); const mm = sumRain(a, b);
-    if (mm == null) return; why.push(fill(t(mm < 15 ? "whyDry" : "whyWet"), { a: fdate(a), b: fdate(b), ha: fmt(v, 0), mm: fmt(mm, 0) })); });
+    if (mm == null) return; const days = Math.max(1, (Date.parse(b) - Date.parse(a)) / 864e5);
+    why.push(fill(t(mm / days < 1.5 ? "whyDry" : "whyWet"), { a: fdate(a), b: fdate(b), ha: fmt(v, 0), mm: fmt(mm, 0) })); });
   if (ha[S.meta.classes[4]?.nome] > 0) why.push(fill(t("whyRise"), { ha: fmt(ha[S.meta.classes[4].nome], 0) }));
   if (ha[S.meta.classes[5]?.nome] > 0) why.push(fill(t("whyWater"), { ha: fmt(ha[S.meta.classes[5].nome], 0) }));
   if (ha[S.meta.classes[2]?.nome] > 0) why.push(fill(t("whyRhythm"), { ha: fmt(ha[S.meta.classes[2].nome], 0) }));
@@ -475,7 +482,10 @@ function renderWhat() {
   if (vi.correlacao_area_HH_vs_chuva_antecedente != null) cards.push(["invisivel", `r ${fmt(vi.correlacao_area_HH_vs_chuva_antecedente, 2)}`, lang === "pt" ? "O brilho HH da área inteira acompanha a chuva dos 7 dias anteriores: a água no solo, invisível ao olho." : "The whole area's HH brightness follows the previous 7 days of rain: water in the soil, invisible to the eye."]);
   if (vi.pixels_que_respondem_a_chuva_pct != null) cards.push(["invisivel", `${fmt(vi.pixels_que_respondem_a_chuva_pct, 0)}%`, lang === "pt" ? "dos pixels respondem forte à chuva (r > 0,6): onde a água entra e sai do solo." : "of the pixels respond strongly to rain (r > 0.6): where water goes in and out of the soil."]);
   if (vi.tendencia_mediana_db_mes != null) cards.push(["lento", `${fmt(vi.tendencia_mediana_db_mes, 2)} ${t("dbmo")}`, lang === "pt" ? "Tendência mediana do HV na área: a valsa lenta, que nenhuma imagem isolada mostra." : "Median HV trend in the area: the slow waltz no single image shows."]);
-  $("invisible").innerHTML = cards.map(([k, v, txt]) => `<article class="card t-${k}"><span class="tag">${esc(k === "invisivel" ? (lang === "pt" ? "valsa invisível" : "invisible waltz") : (lang === "pt" ? "mudança lenta" : "slow change"))}</span><span class="val">${esc(v)}</span><p style="margin:0;color:var(--soft)">${esc(txt)}</p></article>`).join("");
+  const areaCards = (S.area?.achados || []).map((a) => [a.tipo, typeof a.valor === "object" ? (a.valor[lang] || a.valor.en) : a.valor, a[lang] || a.en]);
+  const tagOf = (k) => ({ invisivel: lang === "pt" ? "valsa invisível" : "invisible waltz", lento: lang === "pt" ? "mudança lenta" : "slow change", chao: lang === "pt" ? "chão" : "ground", visivel: lang === "pt" ? "valsa visível" : "visible waltz" }[k] || k);
+  $("invisible").innerHTML = areaCards.concat(cards).map(([k, v, txt]) => `<article class="card t-${k}"><span class="tag">${esc(tagOf(k))}</span><span class="val">${esc(v)}</span><p style="margin:0;color:var(--soft)">${esc(txt)}</p></article>`).join("");
+  if (false) $("invisible").innerHTML = cards.map(([k, v, txt]) => `<article class="card t-${k}"><span class="tag">${esc(k === "invisivel" ? (lang === "pt" ? "valsa invisível" : "invisible waltz") : (lang === "pt" ? "mudança lenta" : "slow change"))}</span><span class="val">${esc(v)}</span><p style="margin:0;color:var(--soft)">${esc(txt)}</p></article>`).join("");
 }
 function renderTrust() {
   const ag = S.area?.assertividade;
@@ -485,6 +495,7 @@ function renderTrust() {
     $("agree").innerHTML = h + "</tbody></table>"; }
   const lims = [];
   if (S.area?.geometrias?.length) { const g = S.area.geometrias; lims.push(lang === "pt" ? `${g.length} direções de passagem; a principal tem ${g[0].passagens} datas (${fdate(g[0].primeira)} a ${fdate(g[0].ultima)}).` : `${g.length} pass directions; the main one has ${g[0].passagens} dates (${fdate(g[0].primeira)} to ${fdate(g[0].ultima)}).`); }
+  (S.area?.limitacoes || []).forEach((l) => lims.push(l[lang] || l.en));
   (S.point?.limitacoes || []).forEach((l) => lims.push(l[lang] || l.en));
   lims.push(lang === "pt" ? "As causas são hipóteses: o radar mostra o que mudou e quando; o porquê precisa de confirmação em campo." : "Causes are hypotheses: radar shows what changed and when; the why needs field confirmation.");
   $("lims").innerHTML = lims.map((l) => `<li>${esc(l)}</li>`).join("");
