@@ -47,7 +47,7 @@ jobs:
           NAME=$(basename "$CASE" .json)
           FLAG=""
           if [ "$SKIP_NISAR" = "true" ]; then FLAG="--skip-nisar"; fi
-          python run_case.py --case "$CASE" --out "docs/results/$NAME" $FLAG
+          python run_funnel.py --case "$CASE" --out "docs/results/$NAME" $FLAG
 
       - name: Guardar tudo como artefato
         uses: actions/upload-artifact@v4
@@ -61,6 +61,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/results
+          git add docs/results docs/api
           git commit -m "Resultados: $CASE" || echo "Nada novo para publicar"
           git push

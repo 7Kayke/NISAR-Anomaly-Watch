@@ -90,27 +90,39 @@ def write_ficha(outdir, ficha):
     return ficha
 
 
+def _metric_line(m):
+    return (f"precisão {m.get('precisao')}, sensibilidade {m.get('sensibilidade')}, F1 {m.get('f1')}, "
+            f"IoU {m.get('iou')}, falso alarme {m.get('falso_alarme')}")
+
+
 def narrative(ficha):
     """Texto em linguagem simples a partir dos números (sem inventar nada)."""
-    lines = []
+    lines = [f"# {ficha.get('nome', 'Análise')}", ""]
     ev = ficha.get("evento", {})
-    lines.append(f"# {ficha.get('nome', 'Análise')}")
-    lines.append("")
     if ev:
         lines.append(f"Evento de referência: {ev.get('descricao')} ({ev.get('data')}).")
+    if ficha.get("funil"):
+        lines += ["", "## Funil de coleta", "", "| Fonte | " + " | ".join(["catálogo", "cobre a área", "qualidade", "pareados"]) + " | aproveitamento |",
+                  "|---|---|---|---|---|---|"]
+        for f in ficha["funil"]:
+            n = {e["etapa"]: e["n"] for e in f["etapas"]}
+            cells = [str(n.get(k, "-")) for k in ["catalogo", "cobre_area", "qualidade", "pareados"]]
+            tot = f.get("aproveitamento_total_pct")
+            lines.append(f"| {f['fonte']} | " + " | ".join(cells) + f" | {'-' if tot is None else str(tot) + '%'} |")
     for src, res in ficha.get("resultados", {}).items():
-        st = res.get("stats", {})
-        m = res.get("metricas", {})
-        lines.append("")
-        lines.append(f"## {src}")
-        lines.append(f"- Perda de vegetação detectada: {st.get('vegetacao_area_ha')} ha; água nova: {st.get('agua_area_ha')} ha.")
-        if m:
-            lines.append(f"- Contra a verdade de campo: precisão {m.get('precisao')}, sensibilidade {m.get('sensibilidade')}, "
-                         f"F1 {m.get('f1')}, IoU {m.get('iou')}, falso alarme {m.get('falso_alarme')}.")
+        lines += ["", f"## {src}"]
+        st = res.get("stats") or {}
+        if st:
+            lines.append(f"- Perda de vegetação detectada: {st.get('vegetacao_area_ha')} ha; água nova: {st.get('agua_area_ha')} ha.")
+        for k, v in res.items():
+            if k.startswith("metricas") and isinstance(v, dict):
+                lines.append(f"- {k.replace('_', ' ')} contra a verdade de campo: {_metric_line(v)}.")
+            elif k not in ("stats",) and not isinstance(v, (dict, list)):
+                lines.append(f"- {k.replace('_', ' ')}: {v}")
     ctx = ficha.get("contexto", {}).get("chuva")
     if ctx:
-        lines.append("")
-        lines.append(f"Chuva entre as datas (NASA POWER): {ctx.get('total_mm')} mm.")
-    lines.append("")
-    lines.append("Parte do código e do texto teve apoio de IA (Claude); números calculados pelo pipeline e revisados pela equipe.")
+        lines += ["", f"Chuva entre as datas (NASA POWER): {ctx.get('total_mm')} mm."]
+    if ficha.get("erros"):
+        lines += ["", "## Etapas que falharam", ""] + [f"- {k}: {v}" for k, v in ficha["erros"].items()]
+    lines += ["", "Parte do código e do texto teve apoio de IA (Claude); números calculados pelo pipeline e revisados pela equipe."]
     return "\n".join(lines)

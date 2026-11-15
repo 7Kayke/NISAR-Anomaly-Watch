@@ -1,0 +1,19 @@
+{
+  "versao": "1",
+  "fontes": [
+    {"id": "nisar-gcov", "colecao": "NISAR_L2_GCOV_V1 / NISAR_L2_GCOV_PROVISIONAL_V1", "catalogo": "NASA Earthdata CMR", "tipo": "radar banda L (24 cm)", "mede": "retroespalhamento HH e HV: estrutura da vegetação, água, solo", "resolucao_m": 10, "papel": "evidência"},
+    {"id": "sentinel-1-rtc", "colecao": "sentinel-1-rtc", "catalogo": "Microsoft Planetary Computer", "tipo": "radar banda C (5,6 cm)", "mede": "retroespalhamento VV e VH com correção de relevo", "resolucao_m": 10, "papel": "evidência"},
+    {"id": "landsat-c2-l2", "colecao": "landsat-c2-l2", "catalogo": "Microsoft Planetary Computer", "tipo": "óptico + térmico (USGS/NASA)", "mede": "reflectância (dNBR) e temperatura da superfície (ΔLST)", "resolucao_m": 30, "papel": "evidência (2 votos: queimada e calor)"},
+    {"id": "sentinel-2-l2a", "colecao": "sentinel-2-l2a", "catalogo": "Microsoft Planetary Computer", "tipo": "óptico", "mede": "dNBR e cor natural", "resolucao_m": 10, "papel": "verdade de campo (não vota no consenso)"},
+    {"id": "naip", "colecao": "naip", "catalogo": "Microsoft Planetary Computer", "tipo": "foto aérea (só EUA)", "mede": "contexto visual do antes", "resolucao_m": 0.6, "papel": "contexto"},
+    {"id": "aster-l1t", "colecao": "aster-l1t", "catalogo": "Microsoft Planetary Computer", "tipo": "óptico + térmico", "mede": "histórico; o acervo do PC termina antes de 2026", "resolucao_m": 15, "papel": "contexto"},
+    {"id": "cop-dem-glo-30", "colecao": "cop-dem-glo-30", "catalogo": "Microsoft Planetary Computer", "tipo": "relevo", "mede": "declividade, sombra e layover do radar", "resolucao_m": 30, "papel": "máscara"}
+  ],
+  "etapas_do_funil": ["catalogo", "cobre_area", "qualidade", "pareados"],
+  "endpoints": {
+    "GET /v1/collections": "esta lista",
+    "GET /v1/search?bbox=w,s,e,n&date=AAAA-MM-DD": "funil sem baixar pixels (API local)",
+    "POST /v1/analyses": "dispara a análise (API local) ou abre uma Issue no GitHub (usuário final)",
+    "GET /v1/analyses/{id}": "ficha técnica; estático em docs/api/v1/analyses/{id}.json"
+  }
+}

@@ -50,3 +50,38 @@ NASA/JPL NISAR (ASF DAAC); ESA Copernicus Sentinel-1 and Sentinel-2 via Microsof
 Planetary Computer; NASA POWER; CAL FIRE incident reports. Libraries: numpy,
 scipy, matplotlib, pyproj, rasterio, h5py, pystac-client, planetary-computer,
 odc-stac, earthaccess.
+
+
+## Unified collection funnel (multi-sensor)
+
+`run_funnel.py` searches every source for the same area and event date and records how many items survive each stage:
+`catalog → covers the area (≥90 %) → quality (cloud inside the area ≤20 %, thermal band present, VV+VH, same orbit) → paired (before/after, same geometry, smallest gap)`.
+Per-stage counts and yield percentages are written to `funil.json` and the technical sheet.
+
+| Role | Sources |
+|---|---|
+| Evidence (votes) | NISAR GCOV (L-band HV), Sentinel-1 RTC (C-band VH, calibrated), Landsat 8/9 C2 L2 dNBR, Landsat ΔLST (relative surface temperature) |
+| Ground truth (does not vote) | Sentinel-2 L2A dNBR > 0.1 |
+| Mask | Copernicus DEM 30 m: radar layover and shadow per sensor look direction (Sentinel-1 right-looking, NISAR left-looking) |
+| Context | NAIP aerial photo (before), ASTER L1T, NASA POWER rainfall |
+
+A pixel enters the consensus when at least 2 available sources detect change; confidence = votes / sources that could see the pixel.
+The consensus is validated against the Sentinel-2 scar (precision, recall, F1, IoU, false-alarm rate).
+
+```bash
+python run_funnel.py --case cases/norte_fire.json --out docs/results/norte_fire_funil
+```
+
+## REST API
+
+Local (computer A): `pip install -r requirements-api.txt && uvicorn api.app:app --port 8000`, then open `http://localhost:8000/docs`.
+
+| Method | Path | Does |
+|---|---|---|
+| GET | `/v1/collections` | sources and what each measures |
+| GET | `/v1/search?bbox=w,s,e,n&date=YYYY-MM-DD` | runs only the funnel (no pixel download) |
+| POST | `/v1/analyses` | starts a full analysis in the background |
+| GET | `/v1/analyses/{id}` | status and technical sheet |
+| GET | `/v1/analyses/{id}/files/{name}` | figures, JSON, CSV |
+
+End users without a server read the same responses as static JSON from GitHub Pages: `docs/api/v1/collections.json` and `docs/api/v1/analyses/{id}.json`.

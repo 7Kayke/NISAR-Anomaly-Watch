@@ -59,6 +59,53 @@ def group_by_geometry(granules):
     return groups
 
 
+def _umm_geometry(g):
+    try:
+        pts = g["umm"]["SpatialExtent"]["HorizontalSpatialDomain"]["Geometry"]["GPolygons"][0]["Boundary"]["Points"]
+        return {"type": "Polygon", "coordinates": [[(p["Longitude"], p["Latitude"]) for p in pts]]}
+    except (KeyError, IndexError, TypeError):
+        return None
+
+
+def funnel(grid, event_date, days=36,
+           short_names=("NISAR_L2_GCOV_V1", "NISAR_L2_GCOV_PROVISIONAL_V1")):
+    """Funil do NISAR: catálogo -> cobre a área -> mesma maturidade -> par na mesma geometria."""
+    from datetime import datetime, timedelta
+    from .funnel import Funnel, coverage, pair_by_key, MIN_COVER
+    ev = datetime.fromisoformat(event_date)
+    t0 = (ev - timedelta(days=days)).strftime("%Y-%m-%d")
+    t1 = (ev + timedelta(days=days)).strftime("%Y-%m-%d")
+    fun = Funnel("NISAR GCOV (banda L)", " + ".join(short_names))
+    grans = []
+    for sn in short_names:
+        for g in search(grid.bbox, t0, t1, short_name=sn):
+            grans.append((sn, g))
+    cat = fun.add("catalogo", grans, f"{t0} a {t1}, coleções {', '.join(short_names)}")
+    cov = []
+    for sn, g in cat:
+        geom = _umm_geometry(g)
+        if geom and coverage(geom, grid.bbox) >= MIN_COVER:
+            cov.append((sn, g))
+    cov = fun.add("cobre_area", cov, f"cobre >= {int(MIN_COVER*100)}% da área")
+    def dt(x):
+        return datetime.strptime(parse_name(x[1]["umm"]["GranuleUR"])["inicio"], "%Y%m%dT%H%M%S")
+    def geo(x):
+        i = parse_name(x[1]["umm"]["GranuleUR"])
+        return (i["pista"], i["direcao"], i["quadro"])
+    best = None
+    for maturity in short_names:          # prefere um par inteiro dentro da MESMA coleção
+        same = [x for x in cov if x[0] == maturity]
+        best = pair_by_key(same, ev, key=geo, date_of=dt)
+        if best:
+            fun.add("qualidade", same, f"mesma coleção ({maturity})")
+            break
+    if not best:
+        best = pair_by_key(cov, ev, key=geo, date_of=dt)
+        fun.add("qualidade", cov, "coleções misturadas (declarar na ficha)")
+    fun.add("pareados", [best[1], best[2]] if best else [], "mesma pista, direção e quadro; menor intervalo")
+    return fun, best
+
+
 def _find(h5, wanted):
     hits = {}
     def visit(name, obj):
