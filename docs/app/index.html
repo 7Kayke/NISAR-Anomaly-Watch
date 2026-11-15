@@ -496,8 +496,10 @@ function renderPoint() {
   const tagN = { visivel: ["visible waltz", "valsa visível"], invisivel: ["invisible waltz", "valsa invisível"], chao: ["ground", "chão"], lento: ["slow change", "mudança lenta"], qualidade: ["quality check", "qualidade"] };
   $("ptcards").innerHTML = P.achados.map((a) => `<article class="card t-${esc(a.tipo)}"><span class="tag">${esc((tagN[a.tipo] || [a.tipo, a.tipo])[lang === "pt" ? 1 : 0])}</span><span class="val">${esc(typeof a.valor === "object" ? a.valor[lang] || a.valor.en : a.valor)}</span><p style="margin:0;color:var(--soft)">${esc(a[lang] || a.en)}</p></article>`).join("");
   const byG = {}; P.serie.filter((s) => !s.anom).forEach((s) => { (byG[s.g] = byG[s.g] || []).push(s); });
-  const main = Object.keys(byG).sort((a, b) => byG[b].length - byG[a].length)[0];
-  $("ptcharts").innerHTML = main ? `<figure class="panel" style="margin:0;max-width:820px"><figcaption><h3>${esc(geoName(main))}</h3><span class="muted">HV · HH (dB)</span></figcaption><div class="chartbox">${lineChart(byG[main].map((s) => ({ t: Date.parse(s.d), a: s.hv, b: s.hh })), -1)}</div></figure>` : "";
+  const seenTk = new Set();
+  const order = Object.keys(byG).sort((a, b) => byG[b].filter((x) => x.hv != null).length - byG[a].filter((x) => x.hv != null).length)
+    .filter((g) => { const tk = g.split("_").slice(0, 2).join("_"); if (seenTk.has(tk)) return false; seenTk.add(tk); return true; }).slice(0, 4);
+  $("ptcharts").innerHTML = order.map((g) => `<figure class="panel" style="margin:0"><figcaption><h3>${esc(geoName(g))}</h3><span class="muted">HV · HH (dB) · ${byG[g].length} ${lang === "pt" ? "passagens" : "passes"}</span></figcaption><div class="chartbox">${lineChart(byG[g].map((s) => ({ t: Date.parse(s.d), a: s.hv, b: s.hh })), -1)}</div><div class="legend"><span><span class="swatch" style="background:var(--asc)"></span> HV</span><span><span class="swatch" style="background:var(--sm)"></span> HH</span></div></figure>`).join("");
   $("dl-point").href = "data/" + (S.region.pontos?.[0]?.arquivo || "");
 }
 // ---------- copy ----------
